@@ -1,4 +1,23 @@
-# React + Vite
+# MayoMix
+
+## Pages
+
+The login page is at `/` (or `/login`). The profile page is at `/profile`.
+
+The profile loads the signed-in user's name, photo, genres, and taste lists from the FastAPI service at `http://127.0.0.1:8000`. Keep that API running; Vite proxies `/api` requests to it during development and preview.
+
+To view the production build locally:
+
+```sh
+npm.cmd run build
+npm.cmd run preview
+```
+
+Open the URL printed by Vite (usually `http://localhost:4173/` for login or `http://localhost:4173/profile` for the profile). Keep the preview command running while you view the pages.
+
+For live development, run `npm.cmd run dev` and open the Vite URL with `/profile` appended.
+
+## Vite notes
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
