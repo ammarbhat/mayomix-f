@@ -4,20 +4,72 @@ import './ProfilePage.css'
 
 const emptyProfile = { user: null, topAlbums: [], songs: [], rotationAlbums: [], genres: [], artists: [] }
 
-function textValue(item) {
-  return itemDetails(item).title || ''
-}
-
 function AppHeader({ onSignOut }) {
   return (
     <header className="profile-header">
-      <a className="profile-brand" href="/profile"><img src="/images/mayomix-logo.png" alt="" /><span>MayoMix</span></a>
+      <a className="profile-brand" href="/profile"><img src="/images/mayomix-logo.png" alt="" /><span>mayomix</span></a>
       <nav className="profile-actions" aria-label="Profile actions">
-        <button className="profile-action back-action" type="button" onClick={onSignOut} aria-label="Sign out"><span>↑</span></button>
+        <button className="profile-action back-action" type="button" onClick={onSignOut} aria-label="Sign out"><span>⌃</span></button>
         <a className="profile-action search-action" href="#top-albums" aria-label="Jump to top albums"><img src="/images/search-interface-symbol.png" alt="" /></a>
         <a className="profile-action current-action" href="#profile" aria-label="Current profile"><span /></a>
       </nav>
     </header>
+  )
+}
+
+function PlaceholderCards({ count = 3, className = '' }) {
+  return Array.from({ length: count }, (_, index) => (
+    <div className={`placeholder-card ${className}`} key={`placeholder-${index}`} aria-hidden="true">
+      <div className="placeholder-square" />
+      {className === 'top-album-placeholder' && <div className="placeholder-rating" />}
+    </div>
+  ))
+}
+
+function Artwork({ item, className = '' }) {
+  const details = itemDetails(item)
+  return (
+    <div className={`artwork ${className}`}>
+      {details.image && <img src={details.image} alt="" loading="lazy" onError={(event) => { event.currentTarget.remove() }} />}
+    </div>
+  )
+}
+
+function RatingVinyls({ item }) {
+  const details = itemDetails(item)
+  const value = Number(details.rating ?? details.score ?? details.value ?? details.rating_value)
+  if (!Number.isFinite(value)) return null
+  const rating = Math.max(0, Math.min(10, value))
+  return (
+    <div className="rating-vinyls" role="img" aria-label={`Rated ${rating} out of 10`}>
+      {Array.from({ length: 5 }, (_, index) => <span className="vinyl-rating" key={index}>
+        <img src="/images/vinyl-half.png" alt="" style={{ opacity: rating > index * 2 ? 1 : 0.16 }} />
+        <img className="vinyl-half-right" src="/images/vinyl-half.png" alt="" style={{ opacity: rating > index * 2 + 1 ? 1 : 0.16 }} />
+      </span>)}
+    </div>
+  )
+}
+
+function MediaSection({ id, title, items, loading, type = 'artwork' }) {
+  const className = `media-grid media-grid-${type}`
+  return (
+    <section className={`music-section music-section-${type}`} id={id}>
+      <h2>{title}</h2>
+      <div className={className}>
+        {items.slice(0, 3).map((entry, index) => {
+          const item = itemDetails(entry)
+          return (
+            <article className="media-card" key={item.mbid || `${item.title}-${index}`}>
+              <Artwork item={item} />
+              {type === 'top-album' ? <RatingVinyls item={entry} /> : null}
+              {type === 'song' && <div className="media-copy"><h3 title={item.title}>{item.title || 'Unknown song'}</h3><p title={item.artist}>{item.artist || item.album || ''}</p></div>}
+            </article>
+          )
+        })}
+        {!loading && items.length === 0 && <PlaceholderCards className={`${type}-placeholder`} />}
+        {loading && items.length === 0 && <PlaceholderCards className={`${type}-placeholder`} />}
+      </div>
+    </section>
   )
 }
 
@@ -47,7 +99,7 @@ function ProfilePage() {
           category,
           results[index].status === 'fulfilled' ? results[index].value : [],
         ]))
-        const savedGenres = Array.isArray(user.fav_genres) ? user.fav_genres.map(textValue).filter(Boolean) : []
+        const savedGenres = Array.isArray(user.fav_genres) ? user.fav_genres.map(itemDetails).map((item) => item.title).filter(Boolean) : []
         setProfile({
           user,
           topAlbums: taste.top_albums,
@@ -56,8 +108,7 @@ function ProfilePage() {
           artists: taste.top_artists,
           genres: savedGenres.length ? savedGenres : taste.top_genres,
         })
-        const failedCategories = results.filter((result) => result.status === 'rejected').length
-        if (failedCategories) setError('Some taste lists could not be loaded from the API.')
+        if (results.some((result) => result.status === 'rejected')) setError('Some taste lists could not be loaded.')
       } catch (requestError) {
         if (cancelled) return
         if (/401|unauthorized|unauthenticated|not authenticated|credentials/i.test(requestError.message)) {
@@ -65,7 +116,7 @@ function ProfilePage() {
           window.location.replace('/login')
           return
         }
-        setError(requestError.message || 'Could not load profile data from the API.')
+        setError(requestError.message || 'Could not load profile data.')
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -82,90 +133,44 @@ function ProfilePage() {
 
   if (!token) return null
 
+  const user = profile.user || {}
+  const handle = user.username || user.handle || user.name || 'listener'
+  const bio = user.bio || user.biography || user.about || ''
+
   return (
     <main className="profile-page" id="profile">
       <AppHeader onSignOut={signOut} />
       <div className="profile-wrap">
         <section className="profile-board" aria-label="Your music profile">
-          <aside className="identity-panel">
-            <img
-              className="identity-art"
-              src={profile.user?.pfp_link || '/images/profile-vinyl.png'}
-              alt="Profile"
-              onError={(event) => { event.currentTarget.src = '/images/profile-vinyl.png' }}
-            />
-            <h1>{profile.user?.name || (loading ? 'Loading…' : 'Your profile')}</h1>
-            <div className="identity-rule" />
-            <section className="identity-section">
-              <h2>Genres</h2>
-              <div className="identity-well genre-well">
-                {profile.genres.map((genre, index) => <span key={`${textValue(genre)}-${index}`}>{textValue(genre)}</span>)}
-                {!loading && profile.genres.length === 0 && <p className="empty-note">No genres yet</p>}
-              </div>
+          <aside className="profile-sidebar">
+            <section className="identity-panel">
+              <img className="identity-art" src={user.pfp_link || '/images/profile-vinyl.png'} alt="Profile" onError={(event) => { event.currentTarget.src = '/images/profile-vinyl.png' }} />
+              <h1>{user.name || (loading ? 'Loading…' : 'Your profile')}</h1>
+              <p className="identity-handle">@{handle}</p>
+              <p className="identity-bio">{bio}</p>
             </section>
-            <section className="identity-section artists-section">
-              <h2>Artists</h2>
-              <div className="identity-well artist-well">
-                {profile.artists.map((artist, index) => <span key={`${textValue(artist)}-${index}`}><b>{String(index + 1).padStart(2, '0')}</b>{textValue(artist)}</span>)}
-                {!loading && profile.artists.length === 0 && <p className="empty-note">No artists yet</p>}
+            <section className="details-panel" aria-label="Your favorites">
+              <div className="identity-section">
+                <h2>Top genres</h2>
+                <div className="identity-list genre-list">
+                  {profile.genres.slice(0, 5).map((genre, index) => <span key={`${itemDetails(genre).title}-${index}`}>{itemDetails(genre).title}</span>)}
+                  {!loading && profile.genres.length === 0 && <span className="muted-placeholder">No genres yet</span>}
+                </div>
+              </div>
+              <div className="identity-section artist-section">
+                <h2>Top artists</h2>
+                <div className="identity-list artist-list">
+                  {profile.artists.slice(0, 4).map((artist, index) => <span key={`${itemDetails(artist).mbid || itemDetails(artist).title}-${index}`}>{itemDetails(artist).title}</span>)}
+                  {!loading && profile.artists.length === 0 && <span className="muted-placeholder">No artists yet</span>}
+                </div>
               </div>
             </section>
           </aside>
 
           <div className="listening-panel">
-            <section className="music-section" id="top-albums">
-              <div className="music-heading"><h2>Top Albums</h2></div>
-              <div className="albums-well">
-                {profile.topAlbums.map((album, index) => {
-                  const item = itemDetails(album)
-                  return <article className="album-item" key={item.mbid || item.title || index}>
-                    <div className={`album-cover album-cover-${index % 3 + 1}`}>
-                      {item.image ? <img className="api-cover" src={item.image} alt="" /> : <img src="/images/two-concentric-disks.png" alt="" />}
-                      <span>{String(index + 1).padStart(2, '0')}</span>
-                    </div>
-                    <h3>{item.title || 'Album'}</h3>
-                  </article>
-                })}
-                {!loading && profile.topAlbums.length === 0 && <p className="empty-note">No top albums yet</p>}
-              </div>
-            </section>
-
-            <section className="music-section rotation-section" id="rotation">
-              <div className="music-heading"><h2>Rotation</h2></div>
-              <div className="rotation-well">
-                <div className="songs-column">
-                  <h3>songs</h3>
-                  <div className="song-grid">
-                    {profile.songs.map((song, index) => {
-                      const item = itemDetails(song)
-                      return <article className="song-item" key={item.mbid || item.title || index}>
-                        <div className={`song-cover song-cover-${index % 3}`}>
-                          {item.image ? <img className="api-cover" src={item.image} alt="" /> : <img src="/images/two-concentric-disks.png" alt="" />}
-                          <span>{String(index + 1).padStart(2, '0')}</span>
-                        </div>
-                        <p title={item.title}>{item.title || 'Song'}</p>
-                      </article>
-                    })}
-                    {!loading && profile.songs.length === 0 && <p className="empty-note">No songs in rotation</p>}
-                  </div>
-                </div>
-                <div className="rotation-divider" />
-                <div className="rotation-albums">
-                  <h3>albums</h3>
-                  <div className="rotation-album-list">
-                    {profile.rotationAlbums.map((album, index) => {
-                      const item = itemDetails(album)
-                      return <div className={`rotation-album-cover album-cover-${index % 3 + 1}`} key={item.mbid || item.title || index} title={item.title}>
-                        {item.image ? <img className="api-cover" src={item.image} alt="" /> : <img src="/images/two-concentric-disks.png" alt="" />}
-                        <span>{String(index + 1).padStart(2, '0')}</span>
-                      </div>
-                    })}
-                    {!loading && profile.rotationAlbums.length === 0 && <p className="empty-note">No albums in rotation</p>}
-                  </div>
-                </div>
-              </div>
-            </section>
-            {loading && <p className="profile-status" role="status">Loading profile data…</p>}
+            <MediaSection id="top-albums" title="Top Albums" items={profile.topAlbums} loading={loading} type="top-album" />
+            <MediaSection id="rotation" title="Rotation" items={profile.rotationAlbums} loading={loading} type="rotation" />
+            <MediaSection id="songs" title="Songs" items={profile.songs} loading={loading} type="song" />
             {error && <p className="profile-status" role="status">{error}</p>}
           </div>
         </section>

@@ -36,6 +36,14 @@ export async function signIn(username, password) {
   sessionStorage.setItem(TOKEN_TYPE_KEY, tokenData.token_type || 'Bearer')
 }
 
+export async function signUp(user, password) {
+  return apiRequest('/users', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ user, pwd: { password } }),
+  })
+}
+
 export function getStoredToken() {
   return sessionStorage.getItem(TOKEN_KEY)
 }
@@ -67,32 +75,161 @@ export function itemDetails(entry) {
   }
 }
 
+const MUSICBRAINZ_ROOT = 'https://musicbrainz.org/ws/2'
+const MUSICBRAINZ_CACHE_KEY = 'mayomix.musicbrainz-cache'
+let musicBrainzQueue = Promise.resolve()
+let lastMusicBrainzRequest = 0
+
+function cachedMusicBrainzData() {
+  try {
+    return JSON.parse(localStorage.getItem(MUSICBRAINZ_CACHE_KEY) || '{}')
+  } catch {
+    return {}
+  }
+}
+
+function requestMusicBrainz(path) {
+  const request = musicBrainzQueue.then(async () => {
+    const wait = Math.max(0, 1100 - (Date.now() - lastMusicBrainzRequest))
+    if (wait) await new Promise((resolve) => setTimeout(resolve, wait))
+    lastMusicBrainzRequest = Date.now()
+    const response = await fetch(`${MUSICBRAINZ_ROOT}/${path}`, {
+      headers: { Accept: 'application/json' },
+    })
+    if (!response.ok) throw new Error(`MusicBrainz request failed (${response.status})`)
+    return response.json()
+  })
+  musicBrainzQueue = request.catch(() => {})
+  return request
+}
+
+function artistCreditName(credits = []) {
+  return credits.map((credit) => `${credit.name || credit.artist?.name || ''}${credit.joinphrase || ''}`).join('').trim()
+}
+
+function cachedItem(key) {
+  return cachedMusicBrainzData()[key]
+}
+
+function saveCachedItem(key, value) {
+  const cache = cachedMusicBrainzData()
+  cache[key] = value
+  try {
+    localStorage.setItem(MUSICBRAINZ_CACHE_KEY, JSON.stringify(cache))
+  } catch {
+    // Storage can be unavailable or full; metadata can still render this session.
+  }
+}
+
+async function lookupAlbum(mbid) {
+  try {
+    const releaseGroup = await requestMusicBrainz(`release-group/${encodeURIComponent(mbid)}?inc=artist-credits&fmt=json`)
+    return {
+      title: releaseGroup.title,
+      artist: artistCreditName(releaseGroup['artist-credit']),
+      image: `https://coverartarchive.org/release-group/${encodeURIComponent(mbid)}/front-250`,
+    }
+  } catch {
+    const release = await requestMusicBrainz(`release/${encodeURIComponent(mbid)}?inc=artist-credits&fmt=json`)
+    const releaseGroupId = release['release-group']?.id
+    return {
+      title: release.title,
+      artist: artistCreditName(release['artist-credit']),
+      image: releaseGroupId
+        ? `https://coverartarchive.org/release-group/${releaseGroupId}/front-250`
+        : `https://coverartarchive.org/release/${encodeURIComponent(mbid)}/front-250`,
+    }
+  }
+}
+
+async function lookupSong(mbid) {
+  const recording = await requestMusicBrainz(`recording/${encodeURIComponent(mbid)}?inc=artist-credits+releases&fmt=json`)
+  const release = recording.releases?.find((entry) => entry['release-group']?.id) || recording.releases?.[0]
+  const releaseGroupId = release?.['release-group']?.id
+  return {
+    title: recording.title,
+    artist: artistCreditName(recording['artist-credit']),
+    album: release?.title || '',
+    image: releaseGroupId
+      ? `https://coverartarchive.org/release-group/${releaseGroupId}/front-250`
+      : release?.id
+        ? `https://coverartarchive.org/release/${release.id}/front-250`
+        : '',
+  }
+}
+
+async function lookupArtist(mbid) {
+  const artist = await requestMusicBrainz(`artist/${encodeURIComponent(mbid)}?fmt=json`)
+  return { title: artist.name }
+}
+
+async function serviceMetadata(item, kind, token) {
+  if (!token) return null
+  try {
+    if (kind === 'release-group') {
+      return await apiRequest(`/albums/${encodeURIComponent(item.mbid)}`, { token })
+    }
+    const category = kind === 'recording' ? 'songs' : 'artists'
+    const payload = await apiRequest(`/search/${category}?${new URLSearchParams({ query: item.mbid, limit: '1' })}`, { token })
+    const candidates = listFromPayload(payload).map(itemDetails)
+    return candidates.find((candidate) => candidate.mbid === item.mbid) || candidates[0] || null
+  } catch {
+    return null
+  }
+}
+
+async function enrichMusicItem(item, kind, token) {
+  if (!item.mbid) return item
+  const key = `${kind}:${item.mbid}`
+  const cached = cachedItem(key)
+  if (cached) return {
+    ...cached,
+    ...item,
+    title: cached.title || item.title,
+    artist: item.artist || cached.artist,
+    image: item.image || cached.image,
+    mbid: item.mbid,
+  }
+  try {
+    const serviceResult = await serviceMetadata(item, kind, token)
+    const serviceItem = serviceResult ? itemDetails(serviceResult) : null
+    let metadata
+    if (serviceItem && (serviceItem.title !== item.mbid || serviceItem.image)) {
+      metadata = serviceItem
+      if (!serviceItem.image && kind !== 'artist') {
+        try {
+          const musicBrainzData = kind === 'recording' ? await lookupSong(item.mbid) : await lookupAlbum(item.mbid)
+          metadata = { ...musicBrainzData, ...serviceItem, image: serviceItem.image || musicBrainzData.image }
+        } catch {
+          // Keep the app API metadata and let the artwork placeholder show.
+        }
+      }
+    } else {
+      metadata = kind === 'recording'
+        ? await lookupSong(item.mbid)
+        : kind === 'artist'
+          ? await lookupArtist(item.mbid)
+          : await lookupAlbum(item.mbid)
+    }
+    const enriched = { ...item, ...metadata, mbid: item.mbid }
+    saveCachedItem(key, enriched)
+    return enriched
+  } catch {
+    return item
+  }
+}
+
 export async function getTasteList(username, category, token) {
   const query = new URLSearchParams({ category })
   const payload = await apiRequest(`/users/${encodeURIComponent(username)}/taste?${query}`, { token })
   let items = listFromPayload(payload).map(itemDetails)
 
-  if (category === 'top_albums' || category === 'rotation_album' || category === 'rotation_song' || category === 'top_artists') {
-    items = await Promise.all(items.map(async (item) => {
-      if (!item.mbid || item.title !== item.mbid) return item
-      try {
-        const result = category === 'top_albums' || category === 'rotation_album'
-          ? await apiRequest(`/albums/${encodeURIComponent(item.mbid)}`, { token })
-          : await apiRequest(`/search/${category === 'top_artists' ? 'artists' : 'songs'}?${new URLSearchParams({ query: item.mbid, limit: '1' })}`, { token })
-        const found = category === 'top_albums' || category === 'rotation_album'
-          ? result
-          : listFromPayload(result).map(itemDetails).find((candidate) => candidate.mbid === item.mbid) || listFromPayload(result).map(itemDetails)[0]
-        if (!found) return item
-        return {
-          ...item,
-          ...found,
-          title: found.title || found.name || item.title,
-          image: found.image || found.image_url || found.cover_url || found.artwork_url || item.image,
-        }
-      } catch {
-        return item
-      }
-    }))
+  if (category === 'top_albums' || category === 'rotation_album') {
+    items = await Promise.all(items.map((item) => enrichMusicItem(item, 'release-group', token)))
+  } else if (category === 'rotation_song') {
+    items = await Promise.all(items.map((item) => enrichMusicItem(item, 'recording', token)))
+  } else if (category === 'top_artists') {
+    items = await Promise.all(items.map((item) => enrichMusicItem(item, 'artist', token)))
   }
 
   return items
