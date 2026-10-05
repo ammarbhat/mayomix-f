@@ -30,7 +30,7 @@ function Artwork({ item, className = '' }) {
   const details = itemDetails(item)
   return (
     <div className={`artwork ${className}`}>
-      {details.image && <img src={details.image} alt="" loading="lazy" onError={(event) => { event.currentTarget.remove() }} />}
+      {details.image && <img className="image-fade" src={details.image} alt={`${details.title || 'Music'} artwork`} loading="lazy" onLoad={(event) => event.currentTarget.classList.add('is-loaded')} onError={(event) => { event.currentTarget.remove() }} />}
     </div>
   )
 }
@@ -53,7 +53,7 @@ function RatingVinyls({ item }) {
 function MediaSection({ id, title, items, loading, type = 'artwork' }) {
   const className = `media-grid media-grid-${type}`
   return (
-    <section className={`music-section music-section-${type}`} id={id}>
+    <section className={`music-section music-section-${type}`} id={id} aria-busy={loading}>
       <h2>{title}</h2>
       <div className={className}>
         {items.slice(0, 3).map((entry, index) => {
@@ -142,17 +142,18 @@ function ProfilePage() {
       <AppHeader onSignOut={signOut} />
       <div className="profile-wrap">
         <section className="profile-board" aria-label="Your music profile">
-          <aside className="profile-sidebar">
+          <aside className="profile-sidebar" aria-busy={loading}>
             <section className="identity-panel">
-              <img className="identity-art" src={user.pfp_link || '/images/profile-vinyl.png'} alt="Profile" onError={(event) => { event.currentTarget.src = '/images/profile-vinyl.png' }} />
-              <h1>{user.name || (loading ? 'Loading…' : 'Your profile')}</h1>
-              <p className="identity-handle">@{handle}</p>
-              <p className="identity-bio">{bio}</p>
+              <img className="identity-art image-fade" src={user.pfp_link || '/images/profile-vinyl.png'} alt={`${user.name || handle}'s profile picture`} onLoad={(event) => event.currentTarget.classList.add('is-loaded')} onError={(event) => { if (!event.currentTarget.src.endsWith('/images/profile-vinyl.png')) event.currentTarget.src = '/images/profile-vinyl.png' }} />
+              <h1>{loading && !user.name ? <span className="text-skeleton name-skeleton" aria-label="Loading profile" /> : user.name || 'Your profile'}</h1>
+              <p className="identity-handle">{loading && !user.username ? <span className="text-skeleton handle-skeleton" aria-label="Loading username" /> : `@${handle}`}</p>
+              <p className="identity-bio">{loading && !bio ? <span className="text-skeleton bio-skeleton" aria-label="Loading bio" /> : bio}</p>
             </section>
             <section className="details-panel" aria-label="Your favorites">
               <div className="identity-section">
                 <h2>Top genres</h2>
                 <div className="identity-list genre-list">
+                  {loading && profile.genres.length === 0 && <span className="list-skeleton" aria-label="Loading genres" />}
                   {profile.genres.slice(0, 5).map((genre, index) => <span key={`${itemDetails(genre).title}-${index}`}>{itemDetails(genre).title}</span>)}
                   {!loading && profile.genres.length === 0 && <span className="muted-placeholder">No genres yet</span>}
                 </div>
@@ -160,6 +161,7 @@ function ProfilePage() {
               <div className="identity-section artist-section">
                 <h2>Top artists</h2>
                 <div className="identity-list artist-list">
+                  {loading && profile.artists.length === 0 && <span className="list-skeleton" aria-label="Loading artists" />}
                   {profile.artists.slice(0, 4).map((artist, index) => <span key={`${itemDetails(artist).mbid || itemDetails(artist).title}-${index}`}>{itemDetails(artist).title}</span>)}
                   {!loading && profile.artists.length === 0 && <span className="muted-placeholder">No artists yet</span>}
                 </div>
