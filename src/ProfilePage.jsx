@@ -10,7 +10,7 @@ function AppHeader({ onSignOut }) {
       <a className="profile-brand" href="/profile"><img src="/images/mayomix-logo.png" alt="" /><span>mayomix</span></a>
       <nav className="profile-actions" aria-label="Profile actions">
         <button className="profile-action back-action" type="button" onClick={onSignOut} aria-label="Sign out"><span>⌃</span></button>
-        <a className="profile-action search-action" href="#top-albums" aria-label="Jump to top albums"><img src="/images/search-interface-symbol.png" alt="" /></a>
+        <a className="profile-action search-action" href="/search" aria-label="Search"><img src="/images/search-interface-symbol.png" alt="" /></a>
         <a className="profile-action current-action" href="#profile" aria-label="Current profile"><span /></a>
       </nav>
     </header>

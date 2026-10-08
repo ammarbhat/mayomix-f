@@ -56,7 +56,7 @@ export function clearStoredToken() {
 function listFromPayload(payload) {
   if (Array.isArray(payload)) return payload
   if (!payload || typeof payload !== 'object') return []
-  for (const key of ['items', 'results', 'entries', 'data', 'taste']) {
+  for (const key of ['items', 'results', 'entries', 'data', 'taste', 'users', 'reviews', 'songs', 'liked_songs', 'liked', 'recordings', 'release-groups']) {
     if (Array.isArray(payload[key])) return payload[key]
   }
   if (payload.mbid || payload.title || payload.name || payload.id) return [payload]
@@ -65,7 +65,7 @@ function listFromPayload(payload) {
 
 export function itemDetails(entry) {
   if (!entry || typeof entry !== 'object') return { title: String(entry ?? '') }
-  const nested = entry.album || entry.song || entry.artist || entry.genre || entry.item || entry.recording || entry
+  const nested = entry.album || entry.song || entry.artist || entry.genre || entry.item || entry.recording || entry.meta || entry
   const item = nested && typeof nested === 'object' ? nested : entry
   return {
     ...entry,
@@ -233,6 +233,54 @@ export async function getTasteList(username, category, token) {
   }
 
   return items
+}
+
+export async function getLikedSongs(token) {
+  const payload = await apiRequest('/users/me/taste/liked', { token })
+  const items = listFromPayload(payload).map((entry) => {
+    const item = itemDetails(entry)
+    return { ...item, mbid: item.mbid || item.song_mbid || item.recording_mbid || entry?.song?.mbid || entry?.recording?.mbid || '' }
+  }).slice(0, 12)
+  return Promise.all(items.map((item) => enrichMusicItem(item, 'recording', token)))
+}
+
+export async function getUserReviews(username, token) {
+  const query = new URLSearchParams({ limit: '50', offset: '0' })
+  const payload = await apiRequest(`/users/${encodeURIComponent(username)}/reviews?${query}`, { token })
+  return listFromPayload(payload)
+}
+
+export async function getAlbumDetails(mbid, token) {
+  const payload = await apiRequest(`/albums/${encodeURIComponent(mbid)}`, { token })
+  return itemDetails(payload)
+}
+
+export async function searchUsers(username) {
+  const query = new URLSearchParams({ username })
+  const payload = await apiRequest(`/users/search?${query}`)
+  return listFromPayload(payload)
+}
+
+export async function searchAlbums(queryText, token, limit = 15) {
+  const query = new URLSearchParams({ query: queryText, limit: String(limit) })
+  const payload = await apiRequest(`/search/albums?${query}`, { token })
+  return listFromPayload(payload).map((entry) => {
+    const artistCredits = entry['artist-credit'] || entry.artist_credit || []
+    const artist = Array.isArray(artistCredits)
+      ? artistCredits.map((credit) => `${credit.name || credit.artist?.name || ''}${credit.joinphrase || ''}`).join('').trim()
+      : String(artistCredits || entry.artist || '')
+    const mbid = entry.mbid || entry.id || entry['release-group']?.id || ''
+    return {
+      ...entry,
+      mbid,
+      title: entry.title || entry.name || entry.album_title || '',
+      artist: entry.artist || artist,
+      year: entry.year || entry['first-release-date']?.slice(0, 4) || '',
+      image: entry.image || entry.image_url || entry.cover_url || (mbid
+        ? `https://coverartarchive.org/release-group/${encodeURIComponent(mbid)}/front-250`
+        : ''),
+    }
+  })
 }
 
 export { TOKEN_KEY }
