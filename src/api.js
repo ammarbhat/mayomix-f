@@ -250,6 +250,17 @@ export async function getUserReviews(username, token) {
   return listFromPayload(payload)
 }
 
+export async function getConnectionStatus(username, token) {
+  return apiRequest(`/connections/me/status/${encodeURIComponent(username)}`, { token })
+}
+
+export async function sendConnectionRequest(token, userId) {
+  if (userId === undefined || userId === null) {
+    throw new Error('The public profile response does not include a user ID, so a connection request cannot be sent yet.')
+  }
+  return apiRequest(`/connections/${encodeURIComponent(userId)}`, { method: 'POST', token })
+}
+
 export async function getAlbumDetails(mbid, token) {
   const payload = await apiRequest(`/albums/${encodeURIComponent(mbid)}`, { token })
   return itemDetails(payload)

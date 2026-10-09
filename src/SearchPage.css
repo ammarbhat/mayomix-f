@@ -90,16 +90,16 @@
 .search-tabs button.is-active::after { right: 12%; left: 12%; bottom: 4px; }
 .search-results { width: min(100%, 840px); display: grid; align-content: start; gap: 9px; margin: 0 auto; }
 .search-hint,.search-results .search-message { color: #626262; }
-.search-result-card { min-width: 0; min-height: 112px; display: flex; align-items: center; gap: 17px; padding: 10px; border-radius: 15px; background: #565656; color: #f4f4f4; }
+.search-result-card { min-width: 0; min-height: 112px; display: flex; align-items: center; gap: 17px; padding: 10px; border-radius: 15px; background: #565656; color: #f4f4f4; text-decoration: none; transition: background .16s ease; }
+.search-result-card:hover { background: #4e4e4e; }
 .search-result-card .search-artwork,.user-artwork { width: 88px; height: 88px; flex: 0 0 88px; border-radius: 11px; }
 .search-result-copy h3 { font-size: 21px; }
 .search-result-copy p { font-size: 16px; }
 .album-year { display: block; margin-top: 2px; color: #bebebe; font-size: 14px; }
 .user-artwork { overflow: hidden; border-radius: 50%; background: #282828; }
 .user-artwork img { width: 100%; height: 100%; display: block; object-fit: cover; }
-.user-state-icon { width: 58px; height: 58px; flex: 0 0 58px; display: grid; place-items: center; margin-right: 9px; border: 2px solid #161616; border-radius: 50%; color: #111; font-size: 45px; font-weight: 300; line-height: 1; }
-.user-state-icon.is-connected { border-color: #27c93f; background: #27c93f; }
-.user-state-icon svg { width: 34px; height: 34px; fill: none; stroke: #242424; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+.user-state-icon { width: 58px; height: 58px; flex: 0 0 58px; display: grid; place-items: center; margin-right: 9px; }
+.user-state-icon img { width: 100%; height: 100%; display: block; object-fit: contain; }
 
 @media (min-width: 1500px) {
   .search-workspace { padding-top: 20px; }
@@ -136,8 +136,7 @@
   .search-result-card .search-artwork,.user-artwork { width: 70px; height: 70px; flex-basis: 70px; }
   .search-result-copy h3 { font-size: 17px; }
   .search-result-copy p { font-size: 14px; }
-  .user-state-icon { width: 44px; height: 44px; flex-basis: 44px; margin-right: 3px; font-size: 36px; }
-  .user-state-icon svg { width: 27px; height: 27px; }
+  .user-state-icon { width: 44px; height: 44px; flex-basis: 44px; margin-right: 3px; }
 }
 
 @media (max-width: 380px) {

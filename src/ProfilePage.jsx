@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
-import { apiRequest, clearStoredToken, getStoredToken, getTasteList, itemDetails } from './api.js'
+import { apiRequest, clearStoredToken, getConnectionStatus, getStoredToken, getTasteList, itemDetails, sendConnectionRequest } from './api.js'
 import './ProfilePage.css'
 
-const emptyProfile = { user: null, topAlbums: [], songs: [], rotationAlbums: [], genres: [], artists: [] }
+const emptyProfile = { user: null, userId: null, topAlbums: [], songs: [], rotationAlbums: [], genres: [], artists: [] }
 
-function AppHeader({ onSignOut }) {
+export function AppHeader({ onSignOut }) {
   return (
     <header className="profile-header">
       <a className="profile-brand" href="/profile"><img src="/images/mayomix-logo.png" alt="" /><span>mayomix</span></a>
@@ -73,10 +73,14 @@ function MediaSection({ id, title, items, loading, type = 'artwork' }) {
   )
 }
 
-function ProfilePage() {
+function ProfilePage({ username: viewedUsername = '' }) {
+  const isPublicProfile = Boolean(viewedUsername)
   const [profile, setProfile] = useState(emptyProfile)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [connectionStatus, setConnectionStatus] = useState('')
+  const [connectionBusy, setConnectionBusy] = useState(false)
+  const [connectionError, setConnectionError] = useState('')
   const token = getStoredToken()
 
   useEffect(() => {
@@ -90,9 +94,18 @@ function ProfilePage() {
       setLoading(true)
       setError('')
       try {
-        const user = await apiRequest('/users/me', { token })
+        const currentUser = await apiRequest('/users/me', { token })
+        if (isPublicProfile && currentUser.username === viewedUsername) {
+          window.location.replace('/profile')
+          return
+        }
+        const user = isPublicProfile
+          ? await apiRequest(`/users/${encodeURIComponent(viewedUsername)}`)
+          : currentUser
         const categories = ['top_albums', 'rotation_song', 'rotation_album', 'top_artists', 'top_genres']
-        const results = await Promise.allSettled(categories.map((category) => getTasteList(user.username, category, token)))
+        const requests = categories.map((category) => getTasteList(user.username, category, token))
+        if (isPublicProfile) requests.push(getConnectionStatus(user.username, token))
+        const results = await Promise.allSettled(requests)
         if (cancelled) return
 
         const taste = Object.fromEntries(categories.map((category, index) => [
@@ -100,15 +113,24 @@ function ProfilePage() {
           results[index].status === 'fulfilled' ? results[index].value : [],
         ]))
         const savedGenres = Array.isArray(user.fav_genres) ? user.fav_genres.map(itemDetails).map((item) => item.title).filter(Boolean) : []
+        const tasteUserId = results.slice(0, categories.length)
+          .flatMap((result) => result.status === 'fulfilled' ? result.value : [])
+          .find((entry) => entry.user_id != null)?.user_id
         setProfile({
           user,
+          userId: user.id ?? tasteUserId ?? null,
           topAlbums: taste.top_albums,
           songs: taste.rotation_song,
           rotationAlbums: taste.rotation_album,
           artists: taste.top_artists,
           genres: savedGenres.length ? savedGenres : taste.top_genres,
         })
-        if (results.some((result) => result.status === 'rejected')) setError('Some taste lists could not be loaded.')
+        if (isPublicProfile) {
+          const connectionResult = results[categories.length]
+          setConnectionStatus(connectionResult.status === 'fulfilled' ? connectionResult.value : '')
+        }
+        const hasTasteLoadError = results.slice(0, categories.length).some((result) => result.status === 'rejected' && !/404|not found/i.test(result.reason?.message || ''))
+        if (hasTasteLoadError) setError('Some taste lists could not be loaded.')
       } catch (requestError) {
         if (cancelled) return
         if (/401|unauthorized|unauthenticated|not authenticated|credentials/i.test(requestError.message)) {
@@ -124,11 +146,32 @@ function ProfilePage() {
 
     loadProfile()
     return () => { cancelled = true }
-  }, [token])
+  }, [isPublicProfile, token, viewedUsername])
 
   function signOut() {
     clearStoredToken()
     window.location.assign('/login')
+  }
+
+  async function connect() {
+    setConnectionBusy(true)
+    setConnectionError('')
+    try {
+      await sendConnectionRequest(token, user.id ?? profile.userId)
+      setConnectionStatus('pending_sent')
+    } catch (requestError) {
+      if (/409|already exists/i.test(requestError.message)) {
+        try {
+          setConnectionStatus(await getConnectionStatus(user.username, token))
+          return
+        } catch {
+          // Keep the original request error visible when refreshing status also fails.
+        }
+      }
+      setConnectionError(requestError.message || 'Could not send the connection request.')
+    } finally {
+      setConnectionBusy(false)
+    }
   }
 
   if (!token) return null
@@ -138,18 +181,23 @@ function ProfilePage() {
   const bio = user.bio || user.biography || user.about || ''
 
   return (
-    <main className="profile-page" id="profile">
+    <main className={`profile-page${isPublicProfile ? ' public-profile-page' : ''}`} id="profile">
       <AppHeader onSignOut={signOut} />
       <div className="profile-wrap">
-        <section className="profile-board" aria-label="Your music profile">
+        <section className="profile-board" aria-label={isPublicProfile ? `${user.name || handle}'s music profile` : 'Your music profile'}>
           <aside className="profile-sidebar" aria-busy={loading}>
-            <section className="identity-panel">
+            <section className={`identity-panel${isPublicProfile ? ' public-identity-panel' : ''}`}>
               <img className="identity-art image-fade" src={user.pfp_link || '/images/profile-vinyl.png'} alt={`${user.name || handle}'s profile picture`} onLoad={(event) => event.currentTarget.classList.add('is-loaded')} onError={(event) => { if (!event.currentTarget.src.endsWith('/images/profile-vinyl.png')) event.currentTarget.src = '/images/profile-vinyl.png' }} />
               <h1>{loading && !user.name ? <span className="text-skeleton name-skeleton" aria-label="Loading profile" /> : user.name || 'Your profile'}</h1>
               <p className="identity-handle">{loading && !user.username ? <span className="text-skeleton handle-skeleton" aria-label="Loading username" /> : `@${handle}`}</p>
               <p className="identity-bio">{loading && !bio ? <span className="text-skeleton bio-skeleton" aria-label="Loading bio" /> : bio}</p>
+              {isPublicProfile && <>
+                <ConnectionButton status={connectionStatus} loading={connectionBusy || loading} onClick={connect} />
+                {connectionError && <p className="connection-error" role="alert">{connectionError}</p>}
+              </>}
             </section>
-            <section className="details-panel" aria-label="Your favorites">
+            {isPublicProfile && <a className="public-reviews-link" href={`/users/${encodeURIComponent(user.username || viewedUsername)}/reviews`}>Reviews</a>}
+            <section className="details-panel" aria-label={isPublicProfile ? `${handle}'s favorites` : 'Your favorites'}>
               <div className="identity-section">
                 <h2>Top genres</h2>
                 <div className="identity-list genre-list">
@@ -178,6 +226,23 @@ function ProfilePage() {
         </section>
       </div>
     </main>
+  )
+}
+
+function ConnectionButton({ status, loading, onClick }) {
+  const states = {
+    not_found: { label: 'Connect', asset: '/images/connection-plus.png', canConnect: true },
+    pending_sent: { label: 'Sent', asset: '/images/connection-pending.png' },
+    pending_received: { label: 'Pending', asset: '/images/connection-pending.png' },
+    pending_recieved: { label: 'Pending', asset: '/images/connection-pending.png' },
+    connected: { label: 'Connected', asset: '/images/connection-check.png' },
+  }
+  const current = states[status] || states.not_found
+  return (
+    <button className={`connection-button${current.canConnect ? ' can-connect' : ''}`} type="button" onClick={onClick} disabled={loading || !current.canConnect} aria-label={current.canConnect ? 'Send connection request' : current.label}>
+      <span>{loading ? 'Loading' : current.label}</span>
+      <img src={current.asset} alt="" />
+    </button>
   )
 }
 

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   apiRequest,
   clearStoredToken,
+  getConnectionStatus,
   getAlbumDetails,
   getLikedSongs,
   getStoredToken,
@@ -20,10 +21,6 @@ function SearchIcon() {
 
 function HeartIcon() {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 8.8c0 5-8.8 11-8.8 11s-8.8-6-8.8-11A4.8 4.8 0 0 1 12 6.2a4.8 4.8 0 0 1 8.8 2.6Z" /></svg>
-}
-
-function CheckIcon() {
-  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.4 4.3L19.5 6.8" /></svg>
 }
 
 function AppHeader() {
@@ -134,12 +131,28 @@ function AlbumResult({ album }) {
   )
 }
 
-function UserResult({ user }) {
+function UserResult({ user, token }) {
   const name = user.name || user.display_name || user.full_name || user.username || 'Mayo-Mix listener'
   const username = user.username || user.handle || ''
   const image = user.pfp_link || user.profile_image || user.avatar_url || user.avatar || ''
+  const [connectionStatus, setConnectionStatus] = useState(user.is_connected || user.connected ? 'connected' : 'not_found')
+
+  useEffect(() => {
+    if (!token || !username) return undefined
+    let cancelled = false
+    getConnectionStatus(username, token).then((status) => {
+      if (!cancelled) setConnectionStatus(status)
+    }).catch(() => {})
+    return () => { cancelled = true }
+  }, [token, username])
+
+  const stateImage = connectionStatus === 'connected'
+    ? '/images/connection-check.png'
+    : ['pending_sent', 'pending_received', 'pending_recieved'].includes(connectionStatus)
+      ? '/images/connection-pending.png'
+      : '/images/connection-plus.png'
   return (
-    <article className="search-result-card user-result-card">
+    <a className="search-result-card user-result-card" href={username ? `/users/${encodeURIComponent(username)}` : undefined}>
       <div className="user-artwork">
         <img src={image || '/images/profile-vinyl.png'} alt={`${name}'s profile`} onError={(event) => { event.currentTarget.src = '/images/profile-vinyl.png' }} />
       </div>
@@ -147,10 +160,8 @@ function UserResult({ user }) {
         <h3 title={name}>{name}</h3>
         {username && <p title={`@${username}`}>@{username}</p>}
       </div>
-      <span className={`user-state-icon ${user.is_connected || user.connected ? 'is-connected' : ''}`} aria-hidden="true">
-        {user.is_connected || user.connected ? <CheckIcon /> : '+'}
-      </span>
-    </article>
+      <span className="user-state-icon" aria-hidden="true"><img src={stateImage} alt="" /></span>
+    </a>
   )
 }
 
@@ -294,7 +305,7 @@ function SearchPage() {
               {searchError && !searchLoading && <p className="search-message is-error" role="alert">{searchError}</p>}
               {!searchLoading && !searchError && submittedQuery && results.length === 0 && <p className="search-message" role="status">No {activeSearchTab} found for “{submittedQuery}”.</p>}
               {!searchLoading && results.map((result, index) => activeSearchTab === 'users'
-                ? <UserResult key={result.id || result.user_id || result.username || index} user={result} />
+                ? <UserResult key={result.id || result.user_id || result.username || index} user={result} token={token} />
                 : <AlbumResult key={result.mbid || result.id || index} album={result} />)}
             </div>
           </section>
