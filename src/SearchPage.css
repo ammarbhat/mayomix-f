@@ -64,13 +64,13 @@
 .library-tabs button.is-active::after,.search-tabs button.is-active::after { position: absolute; right: 18%; bottom: 5px; left: 18%; height: 1px; background: currentColor; content: ''; }
 .library-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; gap: 16px 24px; }
 .liked-song-card,.album-review-card { min-width: 0; min-height: 116px; display: flex; align-items: center; gap: 16px; padding: 14px; border-radius: 14px; background: #1a1a1a; color: #eee; }
-.search-artwork { width: 84px; height: 84px; flex: 0 0 84px; display: grid; place-items: center; overflow: hidden; border-radius: 11px; background: #292929; color: #9e9e9e; font-size: 33px; }
-.search-artwork img { width: 100%; height: 100%; display: block; object-fit: cover; }
+.search-artwork { position: relative; width: 84px; height: 84px; flex: 0 0 84px; display: grid; place-items: center; overflow: hidden; border-radius: 11px; background: #292929; color: #9e9e9e; font-size: 33px; }
+.search-artwork img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; object-fit: cover; }
 .liked-song-copy,.review-copy,.search-result-copy { min-width: 0; flex: 1; }
 .liked-song-copy h3,.review-copy h3,.search-result-copy h3 { overflow: hidden; margin: 0; color: #f0f0f0; text-overflow: ellipsis; white-space: nowrap; font-size: 19px; font-weight: 500; line-height: 1.25; }
 .liked-song-copy p,.review-artist,.search-result-copy p { overflow: hidden; margin: 4px 0 0; color: #bebebe; text-overflow: ellipsis; white-space: nowrap; font-size: 15px; }
-.liked-heart,.result-heart { width: 38px; height: 38px; flex: 0 0 38px; color: #ed4045; }
-.liked-heart svg,.result-heart svg { width: 100%; height: 100%; fill: currentColor; stroke: currentColor; stroke-width: 1.5; }
+.liked-heart { width: 38px; height: 38px; flex: 0 0 38px; color: #ed4045; }
+.liked-heart svg { width: 100%; height: 100%; fill: currentColor; stroke: currentColor; stroke-width: 1.5; }
 .review-copy { align-self: stretch; display: flex; flex-direction: column; justify-content: center; }
 .review-copy .review-rating { margin-top: 5px; }
 .review-rating { display: inline-flex; align-items: center; gap: 4px; }
@@ -95,7 +95,6 @@
 .search-result-copy h3 { font-size: 21px; }
 .search-result-copy p { font-size: 16px; }
 .album-year { display: block; margin-top: 2px; color: #bebebe; font-size: 14px; }
-.result-heart { margin-right: 8px; }
 .user-artwork { overflow: hidden; border-radius: 50%; background: #282828; }
 .user-artwork img { width: 100%; height: 100%; display: block; object-fit: cover; }
 .user-state-icon { width: 58px; height: 58px; flex: 0 0 58px; display: grid; place-items: center; margin-right: 9px; border: 2px solid #161616; border-radius: 50%; color: #111; font-size: 45px; font-weight: 300; line-height: 1; }
@@ -130,7 +129,7 @@
   .search-artwork { width: 76px; height: 76px; flex-basis: 76px; border-radius: 9px; }
   .liked-song-copy h3,.review-copy h3 { font-size: 17px; }
   .liked-song-copy p,.review-artist { font-size: 14px; }
-  .liked-heart,.result-heart { width: 31px; height: 31px; flex-basis: 31px; }
+  .liked-heart { width: 31px; height: 31px; flex-basis: 31px; }
   .expanded-search-panel { min-height: calc(100vh - 150px); padding: 14px 12px 20px; }
   .search-tabs { min-height: 48px; margin-bottom: 16px; }
   .search-result-card { min-height: 88px; gap: 12px; padding: 8px; border-radius: 12px; }

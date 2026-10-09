@@ -270,15 +270,18 @@ export async function searchAlbums(queryText, token, limit = 15) {
       ? artistCredits.map((credit) => `${credit.name || credit.artist?.name || ''}${credit.joinphrase || ''}`).join('').trim()
       : String(artistCredits || entry.artist || '')
     const mbid = entry.mbid || entry.id || entry['release-group']?.id || ''
+    const coverCandidates = [
+      mbid && `https://coverartarchive.org/release-group/${encodeURIComponent(mbid)}/front-250`,
+      ...(Array.isArray(entry.releases) ? entry.releases.map((release) => release.id && `https://coverartarchive.org/release/${encodeURIComponent(release.id)}/front-250`) : []),
+    ].filter(Boolean)
     return {
       ...entry,
       mbid,
       title: entry.title || entry.name || entry.album_title || '',
       artist: entry.artist || artist,
       year: entry.year || entry['first-release-date']?.slice(0, 4) || '',
-      image: entry.image || entry.image_url || entry.cover_url || (mbid
-        ? `https://coverartarchive.org/release-group/${encodeURIComponent(mbid)}/front-250`
-        : ''),
+      image: entry.image || entry.image_url || entry.cover_url || coverCandidates[0] || '',
+      coverCandidates,
     }
   })
 }

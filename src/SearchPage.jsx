@@ -57,10 +57,23 @@ function imageFor(item) {
 
 function Artwork({ item, alt }) {
   const image = imageFor(item)
+  const images = [...new Set([image, ...(item?.coverCandidates || item?.cover_candidates || [])].filter(Boolean))]
   return (
     <div className="search-artwork">
-      {image && <img src={image} alt={alt} loading="lazy" onError={(event) => event.currentTarget.remove()} />}
-      {!image && <span aria-hidden="true">♪</span>}
+      <span aria-hidden="true">♪</span>
+      {images.length > 0 && <img
+        src={images[0]}
+        alt={alt}
+        loading="lazy"
+        onError={(event) => {
+          const imageElement = event.currentTarget
+          const nextIndex = Number(imageElement.dataset.fallbackIndex || 0) + 1
+          if (images[nextIndex]) {
+            imageElement.dataset.fallbackIndex = String(nextIndex)
+            imageElement.src = images[nextIndex]
+          } else imageElement.remove()
+        }}
+      />}
     </div>
   )
 }
@@ -117,7 +130,6 @@ function AlbumResult({ album }) {
         <p title={artist}>{artist}</p>
         {album.year && <span className="album-year">{album.year}</span>}
       </div>
-      <span className="result-heart" aria-hidden="true"><HeartIcon /></span>
     </article>
   )
 }
