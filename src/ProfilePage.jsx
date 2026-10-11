@@ -1,22 +1,10 @@
 import { useEffect, useState } from 'react'
 import { apiRequest, clearStoredToken, getConnectionStatus, getStoredToken, getTasteList, itemDetails, sendConnectionRequest } from './api.js'
 import RatingVinyls from './RatingVinyls.jsx'
+import AppHeader from './AppHeader.jsx'
 import './ProfilePage.css'
 
 const emptyProfile = { user: null, userId: null, topAlbums: [], songs: [], rotationAlbums: [], genres: [], artists: [] }
-
-export function AppHeader({ onSignOut }) {
-  return (
-    <header className="profile-header">
-      <a className="profile-brand" href="/profile"><img src="/images/mayomix-logo.png" alt="" /><span>mayomix</span></a>
-      <nav className="profile-actions" aria-label="Profile actions">
-        <button className="profile-action back-action" type="button" onClick={onSignOut} aria-label="Sign out"><span>⌃</span></button>
-        <a className="profile-action search-action" href="/search" aria-label="Search"><img src="/images/search-interface-symbol.png" alt="" /></a>
-        <a className="profile-action current-action" href="/profile" aria-label="Current profile"><span /></a>
-      </nav>
-    </header>
-  )
-}
 
 function PlaceholderCards({ count = 3, className = '' }) {
   return Array.from({ length: count }, (_, index) => (
@@ -142,11 +130,6 @@ function ProfilePage({ username: viewedUsername = '' }) {
     return () => { cancelled = true }
   }, [isPublicProfile, token, viewedUsername])
 
-  function signOut() {
-    clearStoredToken()
-    window.location.assign('/login')
-  }
-
   async function connect() {
     setConnectionBusy(true)
     setConnectionError('')
@@ -176,7 +159,7 @@ function ProfilePage({ username: viewedUsername = '' }) {
 
   return (
     <main className={`profile-page${isPublicProfile ? ' public-profile-page' : ''}`} id="profile">
-      <AppHeader onSignOut={signOut} />
+      <AppHeader />
       <div className="profile-wrap">
         <section className="profile-board" aria-label={isPublicProfile ? `${user.name || handle}'s music profile` : 'Your music profile'}>
           <aside className="profile-sidebar" aria-busy={loading}>

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { apiRequest, clearStoredToken, getAlbumDetails, getUserReviews } from './api.js'
-import { AppHeader } from './ProfilePage.jsx'
+import { apiRequest, getAlbumDetails, getUserReviews } from './api.js'
+import AppHeader from './AppHeader.jsx'
 import RatingVinyls from './RatingVinyls.jsx'
 import './UserReviewsPage.css'
 
@@ -72,11 +72,6 @@ function UserReviewsPage({ username }) {
   const [reviews, setReviews] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  function signOut() {
-    clearStoredToken()
-    window.location.assign('/login')
-  }
-
   useEffect(() => {
     let cancelled = false
     async function loadReviews() {
@@ -104,7 +99,7 @@ function UserReviewsPage({ username }) {
 
   return (
     <main className="user-reviews-page">
-      <AppHeader onSignOut={signOut} />
+      <AppHeader />
       <div className="user-reviews-wrap">
         <section className="user-reviews-board" aria-busy={loading} aria-label={`${username}'s reviews`}>
           <header className="user-reviews-heading"><h1>Reviews</h1></header>

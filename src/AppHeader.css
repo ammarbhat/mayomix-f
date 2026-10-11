@@ -1,0 +1,36 @@
+.app-header { z-index: 2; width: 100%; height: 88px; flex: 0 0 88px; display: flex; align-items: center; justify-content: space-between; padding: 0 clamp(24px, 3.8vw, 52px); background: #242424; box-shadow: 0 5px 14px #0004; }
+.app-brand { display: inline-flex; align-items: center; gap: 10px; color: #f2f2f2; text-decoration: none; transition: opacity .16s ease; }
+.app-brand img { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; }
+.app-brand span { font-family: 'Russo One', sans-serif; font-size: 29px; font-weight: 400; letter-spacing: .045em; }
+.app-header-actions { display: flex; align-items: center; gap: clamp(20px, 4vw, 46px); }
+.app-header-link,.app-header-profile { width: 34px; height: 34px; flex: 0 0 34px; display: grid; place-items: center; color: #080808; text-decoration: none; transition: opacity .16s ease, transform .16s ease; }
+.app-header-link img { width: 34px; height: 34px; display: block; object-fit: contain; }
+.activity-link img { transform: scale(1.2); }
+.app-header-profile { border-radius: 50%; background: #050505; }
+.app-header-profile span { width: 7px; height: 7px; border-radius: 50%; background: #fff; }
+.app-brand:hover,.app-header-link:hover,.app-header-profile:hover { opacity: .72; }
+.app-header-link:active,.app-header-profile:active { transform: scale(.94); }
+.app-header :focus-visible { outline: 2px solid #fff; outline-offset: 4px; }
+
+@media (max-width: 760px) {
+  .app-header { height: 70px; flex-basis: 70px; padding: 0 20px; }
+  .app-brand { gap: 8px; }
+  .app-brand img { width: 32px; height: 32px; }
+  .app-brand span { font-size: 23px; }
+  .app-header-actions { gap: 18px; }
+  .app-header-link,.app-header-profile,.app-header-link img { width: 29px; height: 29px; flex-basis: 29px; }
+  .app-header-profile span { width: 6px; height: 6px; }
+}
+
+@media (max-width: 380px) {
+  .app-header { height: 58px; flex-basis: 58px; padding: 0 14px; }
+  .app-brand { gap: 7px; }
+  .app-brand img { width: 29px; height: 29px; }
+  .app-brand span { font-size: 20px; }
+  .app-header-actions { gap: 12px; }
+  .app-header-link,.app-header-profile,.app-header-link img { width: 27px; height: 27px; flex-basis: 27px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-brand,.app-header-link,.app-header-profile { transition: none; }
+}

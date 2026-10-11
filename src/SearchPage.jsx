@@ -12,6 +12,7 @@ import {
   searchUsers,
 } from './api.js'
 import RatingVinyls from './RatingVinyls.jsx'
+import AppHeader from './AppHeader.jsx'
 import './SearchPage.css'
 
 const emptyLibrary = { likedSongs: [], reviews: [] }
@@ -22,22 +23,6 @@ function SearchIcon() {
 
 function HeartIcon() {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 8.8c0 5-8.8 11-8.8 11s-8.8-6-8.8-11A4.8 4.8 0 0 1 12 6.2a4.8 4.8 0 0 1 8.8 2.6Z" /></svg>
-}
-
-function AppHeader() {
-  return (
-    <header className="search-header">
-      <a className="search-brand" href="/profile" aria-label="Mayo-Mix home">
-        <img src="/images/mayomix-logo.png" alt="" />
-        <span>mayomix</span>
-      </a>
-      <nav className="search-header-actions" aria-label="Main navigation">
-        <a className="search-header-button header-activity" href="/profile" aria-label="Your profile"><span>⌃</span></a>
-        <a className="search-header-button header-search-active" href="/search" aria-label="Search"><SearchIcon /></a>
-        <a className="header-avatar" href="/profile" aria-label="Your profile"><span /></a>
-      </nav>
-    </header>
-  )
 }
 
 function displayArtist(item) {

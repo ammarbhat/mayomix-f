@@ -4,37 +4,7 @@
   background: #555;
 }
 
-.search-header {
-  height: 88px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 clamp(24px, 4vw, 52px);
-  background: #242424;
-  box-shadow: 0 5px 16px #0003;
-}
-
-.search-brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  color: #f2f2f2;
-  text-decoration: none;
-}
-
-.search-brand img { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; }
-.search-brand span { font-size: 29px; font-weight: 700; letter-spacing: .045em; }
-.search-header-actions { display: flex; align-items: center; gap: clamp(20px, 4vw, 46px); }
-.search-header-button { width: 34px; height: 34px; display: grid; place-items: center; color: #080808; text-decoration: none; }
-.header-activity { border: 2px solid currentColor; border-radius: 50%; }
-.header-activity span { margin-top: 5px; font-size: 26px; line-height: 1; }
-.search-header-button svg { width: 34px; height: 34px; fill: none; stroke: currentColor; stroke-width: 1.65; stroke-linecap: round; stroke-linejoin: round; }
-.header-avatar { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; background: #050505; }
-.header-avatar span { width: 7px; height: 7px; border-radius: 50%; background: #fff; }
-.search-header-button,.header-avatar,.search-brand { transition: opacity .16s ease, transform .16s ease; }
-.search-header-button:hover,.header-avatar:hover,.search-brand:hover { opacity: .75; }
-.search-header-button:active,.header-avatar:active { transform: scale(.94); }
-.search-header :focus-visible,.search-page button:focus-visible,.search-page input:focus-visible { outline: 2px solid #fff; outline-offset: 4px; }
+.search-page button:focus-visible,.search-page input:focus-visible { outline: 2px solid #fff; outline-offset: 4px; }
 
 .search-workspace { width: min(100% - 48px, 1360px); min-height: calc(100vh - 88px); margin: 0 auto; padding: 16px 0 22px; }
 .main-search-form {
@@ -108,13 +78,6 @@
 }
 
 @media (max-width: 760px) {
-  .search-header { height: 70px; padding: 0 20px; }
-  .search-brand img { width: 32px; height: 32px; }
-  .search-brand span { font-size: 23px; }
-  .search-header-actions { gap: 18px; }
-  .search-header-button,.header-avatar { width: 29px; height: 29px; }
-  .header-activity span { font-size: 22px; }
-  .search-header-button svg { width: 29px; height: 29px; }
   .search-workspace { width: min(100% - 28px, 620px); min-height: calc(100vh - 70px); padding-top: 13px; }
   .main-search-form { width: 100%; height: 54px; margin-bottom: 10px; }
   .main-search-form input { padding-left: 20px; font-size: 18px; }
@@ -137,10 +100,6 @@
 }
 
 @media (max-width: 380px) {
-  .search-header { padding: 0 14px; }
-  .search-brand { gap: 7px; }
-  .search-brand span { font-size: 20px; }
-  .search-header-actions { gap: 12px; }
   .search-workspace { width: calc(100% - 20px); }
   .library-board { padding-right: 9px; padding-left: 9px; }
   .search-artwork { width: 65px; height: 65px; flex-basis: 65px; }
@@ -150,18 +109,16 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .search-brand,.search-header-button,.header-avatar,.main-search-form,.library-tabs button,.search-tabs button { transition: none; }
+  .main-search-form,.library-tabs button,.search-tabs button { transition: none; }
 }
 
 /* The search frame stays in the viewport while results scroll inside their panels. */
 .search-page { height: 100vh; height: 100dvh; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
-.search-page > .search-header { flex: 0 0 88px; }
 .search-workspace { height: 0; min-height: 0; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 .library-board,.expanded-search-panel { min-height: 0; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 .library-tabs,.search-tabs { flex: 0 0 auto; }
 .library-grid,.search-results { min-height: 0; flex: 1; overflow-y: auto; overscroll-behavior: contain; }
 @media (max-width: 760px) {
-  .search-page > .search-header { flex-basis: 70px; }
   .search-workspace { height: 0; min-height: 0; padding-bottom: 10px; }
   .library-board { padding-bottom: 14px; }
   .expanded-search-panel { min-height: 0; }

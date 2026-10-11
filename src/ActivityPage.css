@@ -1,0 +1,94 @@
+.activity-page { height: 100vh; height: 100dvh; min-height: 0; display: flex; flex-direction: column; overflow: hidden; color: #252525; background: #5d5d5d; font-family: 'Moderustic', Arial, sans-serif; }
+.activity-workspace { width: 100%; min-height: 0; flex: 1; display: grid; grid-template-columns: minmax(330px, .43fr) minmax(0, .57fr); gap: clamp(20px, 3.3vw, 42px); padding: 18px 1.9% 14px; }
+.activity-connections-panel,.activity-feed-panel { min-width: 0; min-height: 0; overflow: hidden; border-radius: 16px; background: #d8d8d8; }
+.activity-connections-panel { display: flex; flex-direction: column; padding: 10px clamp(18px, 3vw, 40px) 18px; }
+.activity-connections-panel > h1 { flex: 0 0 44px; margin: 0 0 9px; border-bottom: 1px solid #343434; color: #5b5b5b; text-align: center; font-size: 24px; line-height: 38px; font-weight: 600; }
+.connection-group { min-height: 0; flex: 1; display: flex; flex-direction: column; }
+.connection-group h2 { flex: 0 0 42px; margin: 0; padding: 0 4px; color: #5b5b5b; font-size: 31px; line-height: 39px; font-weight: 600; }
+.connection-list { min-height: 105px; flex: 1; display: flex; flex-direction: column; gap: 19px; overflow-y: auto; overscroll-behavior: contain; padding: 17px 10px; border: 1px solid #111; border-radius: 18px; background: #303030; }
+.sent-group { margin-top: 10px; }
+.activity-connection-card { min-width: 0; min-height: 84px; display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 17px; background: #d8d8d8; }
+.activity-person { min-width: 0; flex: 1; display: flex; align-items: center; gap: 16px; color: inherit; text-decoration: none; }
+.activity-person > img { width: 52px; height: 52px; flex: 0 0 52px; border-radius: 50%; object-fit: cover; }
+.activity-person-copy { min-width: 0; display: flex; flex-direction: column; }
+.activity-person-copy strong,.activity-person-copy > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.activity-person-copy strong { font-size: 19px; line-height: 1.08; font-weight: 500; }
+.activity-person-copy > span { color: #666; font-size: 15px; line-height: 1.1; }
+.activity-connection-actions { flex: 0 0 auto; display: flex; align-items: center; gap: 12px; }
+.activity-connection-actions button { width: 38px; height: 38px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: transparent; cursor: pointer; transition: transform .14s ease, opacity .14s ease; }
+.activity-connection-actions button:hover { transform: scale(1.07); }
+.activity-connection-actions button:disabled { opacity: .45; cursor: wait; }
+.activity-connection-actions img { width: 100%; height: 100%; display: block; object-fit: contain; }
+.activity-feed-panel { display: flex; flex-direction: column; padding: 12px 18px 16px; }
+.activity-feed-panel > h1 { flex: 0 0 42px; margin: 0 0 0 20px; color: #5c5c5c; font-size: 31px; line-height: 40px; font-weight: 600; }
+.activity-feed { min-height: 0; flex: 1; display: flex; flex-direction: column; gap: 18px; overflow-y: auto; overscroll-behavior: contain; padding: 24px clamp(14px, 2vw, 26px); border: 1px solid #111; border-radius: 18px; background: #303030; }
+.activity-entry { min-width: 0; padding: 0 0 0; }
+.activity-entry-header { min-width: 0; min-height: 48px; display: flex; align-items: center; gap: 12px; padding: 0 12px 7px; color: #252525; }
+.activity-author { min-width: 0; display: flex; align-items: center; gap: 9px; color: inherit; text-decoration: none; }
+.activity-author img { width: 39px; height: 39px; flex: 0 0 39px; border: 2px solid #c1c1c1; border-radius: 50%; object-fit: cover; }
+.activity-author span { min-width: 0; display: flex; flex-direction: column; }
+.activity-author strong,.activity-author small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.activity-author strong { font-size: 18px; line-height: 1.05; font-weight: 500; }
+.activity-author small { color: #666; font-size: 14px; line-height: 1.05; }
+.activity-entry-header time { margin-left: auto; color: #666; font-size: 15px; white-space: nowrap; }
+.activity-review-card { margin-left: 18px; padding: 9px 10px 13px; border-radius: 17px; background: #dedede; color: #252525; box-shadow: 0 3px 5px #0004; }
+.activity-album-top { min-height: 84px; display: flex; align-items: center; gap: 20px; }
+.activity-album-art { width: 82px; height: 82px; flex: 0 0 82px; overflow: hidden; border-radius: 10px; background: #bdbdbd; }
+.activity-album-art img { width: 100%; height: 100%; display: block; object-fit: cover; }
+.activity-album-meta { min-width: 0; flex: 1; }
+.activity-album-meta h3 { overflow: hidden; margin: 0; color: #252525; text-overflow: ellipsis; white-space: nowrap; font-size: 24px; line-height: 1.13; font-weight: 500; }
+.activity-album-meta > p { overflow: hidden; margin: 2px 0 3px; color: #666; text-overflow: ellipsis; white-space: nowrap; font-size: 19px; line-height: 1.1; }
+.activity-rating { --rating-vinyl-size: 20px; --rating-vinyl-gap: 3px; display: flex; }
+.activity-review-divider { height: 1px; margin: 10px 18px; background: #555; }
+.activity-review-text { margin: 0 6px; color: #5e5e5e; font-size: 14px; line-height: 1.35; white-space: pre-wrap; overflow-wrap: anywhere; }
+.activity-empty { margin: auto; padding: 16px; color: #555; text-align: center; font-size: 15px; }
+.activity-feed > .activity-empty { color: #ddd; }
+.activity-empty.is-error,.activity-action-error { color: #a42525; }
+.activity-action-error { margin: 8px 3px 0; font-size: 13px; }
+.activity-page :focus-visible { outline: 2px solid #141414; outline-offset: 3px; }
+
+@media (min-width: 1500px) {
+  .activity-workspace { padding-top: 22px; padding-bottom: 18px; }
+  .activity-connection-card { min-height: 92px; }
+  .activity-person > img { width: 58px; height: 58px; flex-basis: 58px; }
+  .activity-connection-actions button { width: 42px; height: 42px; }
+  .activity-album-art { width: 92px; height: 92px; flex-basis: 92px; }
+}
+
+@media (max-width: 760px) {
+  .activity-workspace { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(250px, .88fr) minmax(260px, 1.12fr); gap: 12px; padding: 10px 12px; }
+  .activity-connections-panel { padding: 7px 13px 10px; }
+  .activity-connections-panel > h1 { flex-basis: 34px; margin-bottom: 4px; font-size: 20px; line-height: 31px; }
+  .connection-group h2 { flex-basis: 30px; font-size: 22px; line-height: 29px; }
+  .connection-list { min-height: 76px; gap: 9px; padding: 8px; border-radius: 13px; }
+  .sent-group { margin-top: 5px; }
+  .activity-connection-card { min-height: 60px; padding: 7px 9px; border-radius: 12px; }
+  .activity-person { gap: 9px; }
+  .activity-person > img { width: 39px; height: 39px; flex-basis: 39px; }
+  .activity-person-copy strong { font-size: 15px; }
+  .activity-person-copy > span { font-size: 12px; }
+  .activity-connection-actions { gap: 6px; }
+  .activity-connection-actions button { width: 29px; height: 29px; }
+  .activity-feed-panel { padding: 7px 9px 10px; }
+  .activity-feed-panel > h1 { flex-basis: 33px; margin-left: 10px; font-size: 23px; line-height: 32px; }
+  .activity-feed { gap: 12px; padding: 12px 9px; border-radius: 13px; }
+  .activity-entry-header { min-height: 39px; padding: 0 5px 5px; }
+  .activity-author { gap: 7px; }
+  .activity-author img { width: 32px; height: 32px; flex-basis: 32px; }
+  .activity-author strong { font-size: 15px; }
+  .activity-author small,.activity-entry-header time { font-size: 12px; }
+  .activity-review-card { margin-left: 7px; padding: 7px 8px 10px; border-radius: 13px; }
+  .activity-album-top { min-height: 66px; gap: 11px; }
+  .activity-album-art { width: 64px; height: 64px; flex-basis: 64px; border-radius: 8px; }
+  .activity-album-meta h3 { font-size: 18px; }
+  .activity-album-meta > p { font-size: 15px; }
+  .activity-rating { --rating-vinyl-size: 17px; --rating-vinyl-gap: 2px; }
+  .activity-review-divider { margin: 7px 8px; }
+  .activity-review-text { margin: 0 2px; font-size: 12px; }
+}
+
+@media (max-width: 380px) {
+  .activity-workspace { grid-template-rows: minmax(230px, .9fr) minmax(250px, 1.1fr); padding-right: 8px; padding-left: 8px; }
+  .activity-connections-panel { padding-right: 8px; padding-left: 8px; }
+  .activity-connection-actions button { width: 25px; height: 25px; }
+}

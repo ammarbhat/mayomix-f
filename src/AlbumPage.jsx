@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { AppHeader } from './ProfilePage.jsx'
+import AppHeader from './AppHeader.jsx'
 import { clearStoredToken, createAlbumReview, getAlbumDetails, getAlbumReviews, getAlbumTracklist, getStoredToken, itemDetails } from './api.js'
 import RatingVinyls from './RatingVinyls.jsx'
 import './AlbumPage.css'
@@ -82,7 +82,7 @@ function AlbumPage({ mbid }) {
   const tracks = album?.tracks || album?.tracklist || album?.media?.flatMap((medium) => medium.tracks || []) || []
 
   return <main className="album-page">
-    <AppHeader onSignOut={() => { clearStoredToken(); window.location.assign('/login') }} />
+      <AppHeader />
     <div className="album-page-wrap">
       <section className="album-board" aria-busy={loading}>
         {error && <p className="album-page-message is-error" role="alert">{error}</p>}

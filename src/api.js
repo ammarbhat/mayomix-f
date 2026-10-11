@@ -307,6 +307,41 @@ export async function getConnectionStatus(username, token) {
   return apiRequest(`/connections/me/status/${encodeURIComponent(username)}`, { token })
 }
 
+export async function getActivity(token) {
+  const query = new URLSearchParams({ limit: '50', offset: '0' })
+  try {
+    return listFromPayload(await apiRequest(`/activity?${query}`, { token }))
+  } catch (error) {
+    if (/404|not found/i.test(error.message)) return []
+    throw error
+  }
+}
+
+async function getConnectionList(path, token) {
+  try {
+    return listFromPayload(await apiRequest(path, { token }))
+  } catch (error) {
+    if (/404|not found/i.test(error.message)) return []
+    throw error
+  }
+}
+
+export function getPendingConnections(token) {
+  return getConnectionList('/connections/me/pending', token)
+}
+
+export function getSentConnections(token) {
+  return getConnectionList('/connections/me/sent', token)
+}
+
+export function acceptConnectionRequest(connectionId, token) {
+  return apiRequest(`/connections/${encodeURIComponent(connectionId)}/accept`, { method: 'PATCH', token })
+}
+
+export function deleteConnection(connectionId, token) {
+  return apiRequest(`/connections/${encodeURIComponent(connectionId)}`, { method: 'DELETE', token })
+}
+
 export async function sendConnectionRequest(token, userId) {
   if (userId === undefined || userId === null) {
     throw new Error('The public profile response does not include a user ID, so a connection request cannot be sent yet.')

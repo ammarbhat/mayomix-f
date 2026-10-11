@@ -41,7 +41,7 @@ function LoginPage() {
 
   return (
     <main className="login-page">
-      <section className="login-art" aria-label="MayoMix">
+      <section className="login-art" aria-label="mayomix">
         <img className="login-record" src="/images/vinyl-photo.jpg" alt="Vinyl record" />
         <div className="login-art-shade" />
         <a className="login-brand" href="/" aria-label="MayoMix home">
