@@ -120,14 +120,14 @@ function AlbumResult({ album }) {
   const title = album.title || album.name || 'Unknown album'
   const artist = displayArtist(album) || 'Unknown artist'
   return (
-    <article className="search-result-card album-result-card">
+    <a className="search-result-card album-result-card" href={album.mbid ? `/albums/${encodeURIComponent(album.mbid)}` : undefined}>
       <Artwork item={album} alt={`${title} cover`} />
       <div className="search-result-copy">
         <h3 title={title}>{title}</h3>
         <p title={artist}>{artist}</p>
         {album.year && <span className="album-year">{album.year}</span>}
       </div>
-    </article>
+    </a>
   )
 }
 

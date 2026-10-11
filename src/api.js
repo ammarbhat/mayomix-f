@@ -250,6 +250,26 @@ export async function getUserReviews(username, token) {
   return listFromPayload(payload)
 }
 
+export async function getAlbumReviews(mbid, token) {
+  const query = new URLSearchParams({ limit: '50', offset: '0' })
+  try {
+    const payload = await apiRequest(`/albums/${encodeURIComponent(mbid)}/reviews?${query}`, { token })
+    return listFromPayload(payload)
+  } catch (error) {
+    if (/404|not found/i.test(error.message)) return []
+    throw error
+  }
+}
+
+export async function createAlbumReview(mbid, reviewStr, rating, token) {
+  return apiRequest('/users/me/reviews', {
+    method: 'POST',
+    token,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ mbid, review_str: reviewStr, rating }),
+  })
+}
+
 export async function getConnectionStatus(username, token) {
   return apiRequest(`/connections/me/status/${encodeURIComponent(username)}`, { token })
 }
@@ -262,8 +282,30 @@ export async function sendConnectionRequest(token, userId) {
 }
 
 export async function getAlbumDetails(mbid, token) {
-  const payload = await apiRequest(`/albums/${encodeURIComponent(mbid)}`, { token })
-  return itemDetails(payload)
+  try {
+    const payload = await apiRequest(`/albums/${encodeURIComponent(mbid)}`, { token })
+    return itemDetails(payload)
+  } catch (error) {
+    // Album lookup is backed by an unreliable cache endpoint; keep the page usable
+    // by resolving the same MBID directly through the existing MusicBrainz client.
+    try {
+      return { ...await lookupAlbum(mbid), mbid }
+    } catch {
+      throw error
+    }
+  }
+}
+
+export async function getAlbumTracklist(mbid, album) {
+  const releases = album?.releases || album?.meta?.releases || []
+  let releaseId = releases.find((release) => release.id)?.id
+  if (!releaseId) {
+    const group = await requestMusicBrainz(`release-group/${encodeURIComponent(mbid)}?inc=releases&fmt=json`)
+    releaseId = group.releases?.find((release) => release.id)?.id
+  }
+  if (!releaseId) return []
+  const release = await requestMusicBrainz(`release/${encodeURIComponent(releaseId)}?inc=recordings&fmt=json`)
+  return (release.media || []).flatMap((medium) => medium.tracks || [])
 }
 
 export async function searchUsers(username) {

@@ -59,11 +59,11 @@ function MediaSection({ id, title, items, loading, type = 'artwork' }) {
         {items.slice(0, 3).map((entry, index) => {
           const item = itemDetails(entry)
           return (
-            <article className="media-card" key={item.mbid || `${item.title}-${index}`}>
+            <a className="media-card" key={item.mbid || `${item.title}-${index}`} href={type === 'top-album' && item.mbid ? `/albums/${encodeURIComponent(item.mbid)}` : undefined}>
               <Artwork item={item} />
               {type === 'top-album' ? <RatingVinyls item={entry} /> : null}
               {type === 'song' && <div className="media-copy"><h3 title={item.title}>{item.title || 'Unknown song'}</h3><p title={item.artist}>{item.artist || item.album || ''}</p></div>}
-            </article>
+            </a>
           )
         })}
         {!loading && items.length === 0 && <PlaceholderCards className={`${type}-placeholder`} />}

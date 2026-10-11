@@ -1,0 +1,61 @@
+.album-page { min-height: 100vh; color: #eee; background: #5e5e5e; }
+.album-page-wrap { min-height: calc(100vh - 88px); padding: 28px clamp(20px, 2.4vw, 32px) 34px; }
+.album-board { position: relative; width: min(100%, 1440px); min-height: calc(100vh - 134px); display: grid; grid-template-columns: minmax(360px, 1fr) minmax(0, 1fr); gap: clamp(32px, 4.7vw, 60px); margin: 0 auto; padding: clamp(28px, 4vw, 52px); border: 1px solid #101010; border-radius: 18px; background: #1a1a1a; }
+.album-left-column { position: relative; display: flex; min-width: 0; flex-direction: column; align-items: center; }
+.album-summary { width: 100%; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.album-cover { position: relative; width: min(200px, 45vw); aspect-ratio: 1; overflow: hidden; border: 5px solid #f3f3f3; border-radius: 14px; background: #d8d8d8; }
+.album-cover img { width: 100%; height: 100%; display: block; object-fit: cover; }
+.album-summary h1 { max-width: 100%; overflow: hidden; margin: 8px 0 0; color: #f5f5f5; text-overflow: ellipsis; white-space: nowrap; font-size: 24px; font-weight: 500; }
+.album-summary p { margin: 2px 0 0; color: #aaa; font-size: 18px; }
+.album-review-toggle { width: 110px; height: 48px; display: grid; place-items: center; margin: 18px 0 12px; border: 1px solid #aaa; border-radius: 17px; background: #ddd; color: #111; cursor: pointer; transition: width .2s ease, transform .2s ease; }
+.album-review-toggle span { font-size: 32px; font-weight: 300; line-height: 1; }
+.album-review-toggle:hover { transform: translateY(-1px); }
+.album-review-toggle.is-open { width: 100%; margin-bottom: -3px; border-radius: 16px 16px 0 0; }
+.album-track-heading { width: 100%; margin: 0 0 15px; color: #eee; font-size: 24px; }
+.album-track-panel { width: 100%; min-height: 340px; max-height: 460px; overflow: auto; padding: 10px 14px 34px 28px; border: 8px solid #aaa; border-radius: 18px; background: #d8d8d8; color: #222; scrollbar-color: #555 transparent; }
+.album-track-panel ol { margin: 0; padding-left: 20px; }
+.album-track-panel li { padding: 5px 0; border-bottom: 1px solid #333; font-size: 16px; }
+.album-no-tracks { margin: 12px 0; color: #555; }
+.album-down-mark { display: block; margin-top: 8px; text-align: center; color: #111; font-size: 30px; line-height: 18px; }
+.album-reviews-panel { min-height: 520px; max-height: calc(100vh - 220px); display: flex; flex-direction: column; align-items: stretch; gap: 14px; overflow: auto; padding: 24px; border-radius: 18px; background: #a5a5a5; scrollbar-color: #555 transparent; }
+.album-review-entry { min-height: 105px; padding: 12px 24px; border-radius: 18px; background: #dedede; color: #555; }
+.album-review-entry > span { display: block; margin-bottom: 3px; font-size: 18px; }
+.album-review-entry p { margin: 0; white-space: pre-wrap; font-size: 14px; line-height: 1.45; }
+.album-review-entry small { display: block; margin-top: 5px; color: #777; text-align: right; }
+.album-empty-reviews,.album-page-message { margin: auto; padding: 20px; color: #555; text-align: center; }
+.album-page-message { grid-column: 1 / -1; margin: 0; color: #ffd3d3; }
+.album-page-message.is-error { color: #ffd3d3; }
+.album-review-composer { position: absolute; z-index: 2; top: 320px; left: 0; width: 100%; padding: 10px 26px 14px; border: 1px solid #b5b5b5; border-radius: 17px; background: #dedede; box-shadow: 0 4px 9px #0005; color: #222; }
+.composer-close { position: absolute; top: 1px; right: 12px; border: 0; background: transparent; color: #333; font-size: 20px; cursor: pointer; }
+.album-review-composer textarea { width: 100%; height: 198px; resize: vertical; margin-top: 34px; padding: 14px; border: 1px solid #aaa; border-radius: 18px; background: #d9d9d9; color: #222; box-shadow: inset 0 1px 4px #0003; font-size: 14px; }
+.album-review-composer textarea:focus-visible { outline-color: #555; }
+.composer-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px; }
+.composer-rating { display: flex; align-items: center; gap: 5px; }
+.composer-rating button.vinyl-rating-button { position: relative; width: 32px; height: 32px; flex: 0 0 32px; padding: 0; overflow: hidden; border: 0; border-radius: 50%; background: transparent; cursor: pointer; }
+.vinyl-rating-button img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.vinyl-rating-button .vinyl-rating-empty { opacity: .23; }
+.vinyl-rating-button.is-full .vinyl-rating-empty,.vinyl-rating-button.is-half .vinyl-rating-empty { opacity: 0; }
+.vinyl-rating-button .vinyl-rating-fill { opacity: 1; }
+.vinyl-rating-button .vinyl-rating-fill.is-half { right: auto; width: 50%; object-fit: fill; }
+.composer-rating button.vinyl-rating-button:focus-visible { outline: 2px solid #111; outline-offset: 2px; }
+.composer-rating span { margin-left: 5px; font-size: 13px; }
+.composer-post { min-width: 110px; padding: 7px 22px; border: 0; border-radius: 20px; background: #aaa; color: #111; font-size: 17px; cursor: pointer; }
+.composer-post:disabled { opacity: .6; cursor: wait; }
+.composer-notice,.album-post-notice { margin: 7px 0 0; color: #555; font-size: 13px; }
+.album-post-notice { color: #ddd; }
+.profile-page .music-section-top-album .media-card { color: inherit; text-decoration: none; }
+.profile-page .music-section-top-album a.media-card:hover .artwork { box-shadow: 0 0 0 2px #ddd; }
+@media (max-width: 760px) {
+  .album-page-wrap { min-height: calc(100vh - 70px); padding: 16px 14px 22px; }
+  .album-board { min-height: calc(100vh - 108px); grid-template-columns: 1fr; gap: 18px; padding: 20px 16px; border-radius: 14px; }
+  .album-cover { width: min(175px, 50vw); }
+  .album-review-toggle { margin-top: 14px; }
+  .album-track-heading { margin-bottom: 10px; font-size: 21px; }
+  .album-track-panel { min-height: 220px; max-height: 300px; }
+  .album-reviews-panel { min-height: 280px; max-height: 55vh; padding: 14px; }
+  .album-review-entry { min-height: 90px; padding: 11px 14px; }
+  .album-review-composer { top: 250px; padding: 10px 14px 12px; }
+  .album-review-composer textarea { height: 150px; }
+  .composer-rating button.vinyl-rating-button { width: 27px; height: 27px; flex-basis: 27px; }
+  .composer-post { min-width: 84px; padding: 7px 13px; font-size: 15px; }
+}
