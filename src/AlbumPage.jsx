@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { AppHeader } from './ProfilePage.jsx'
 import { clearStoredToken, createAlbumReview, getAlbumDetails, getAlbumReviews, getAlbumTracklist, getStoredToken, itemDetails } from './api.js'
+import RatingVinyls from './RatingVinyls.jsx'
 import './AlbumPage.css'
 
 function AlbumPage({ mbid }) {
@@ -123,9 +124,9 @@ function AlbumPage({ mbid }) {
         <section className="album-reviews-panel" aria-label="Album reviews">
           {reviewsError && <p className="album-empty-reviews" role="status">Reviews are temporarily unavailable.</p>}
           {reviews.length ? reviews.map((review, index) => <article className="album-review-entry" key={review.id || review.review_id || index}>
-            <span>@{review.username || review.user?.username || (review.user_id === undefined ? 'listener' : `listener${review.user_id}`)}</span>
+            <span>@{review.username || review.user?.username || review.reviewer?.username || review.author?.username || 'listener'}</span>
             <p>{review.review_str || review.review_text || ''}</p>
-            <small>{Number(review.rating) || 0}/10</small>
+            <RatingVinyls className="album-review-rating" size="small" rating={review.rating} />
           </article>) : !loading && !error ? <p className="album-empty-reviews">No reviews yet. Start the conversation.</p> : null}
         </section>
       </section>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { apiRequest, clearStoredToken, getConnectionStatus, getStoredToken, getTasteList, itemDetails, sendConnectionRequest } from './api.js'
+import RatingVinyls from './RatingVinyls.jsx'
 import './ProfilePage.css'
 
 const emptyProfile = { user: null, userId: null, topAlbums: [], songs: [], rotationAlbums: [], genres: [], artists: [] }
@@ -11,7 +12,7 @@ export function AppHeader({ onSignOut }) {
       <nav className="profile-actions" aria-label="Profile actions">
         <button className="profile-action back-action" type="button" onClick={onSignOut} aria-label="Sign out"><span>⌃</span></button>
         <a className="profile-action search-action" href="/search" aria-label="Search"><img src="/images/search-interface-symbol.png" alt="" /></a>
-        <a className="profile-action current-action" href="#profile" aria-label="Current profile"><span /></a>
+        <a className="profile-action current-action" href="/profile" aria-label="Current profile"><span /></a>
       </nav>
     </header>
   )
@@ -31,21 +32,6 @@ function Artwork({ item, className = '' }) {
   return (
     <div className={`artwork ${className}`}>
       {details.image && <img className="image-fade" src={details.image} alt={`${details.title || 'Music'} artwork`} loading="lazy" onLoad={(event) => event.currentTarget.classList.add('is-loaded')} onError={(event) => { event.currentTarget.remove() }} />}
-    </div>
-  )
-}
-
-function RatingVinyls({ item }) {
-  const details = itemDetails(item)
-  const value = Number(details.rating ?? details.score ?? details.value ?? details.rating_value)
-  if (!Number.isFinite(value)) return null
-  const rating = Math.max(0, Math.min(10, value))
-  return (
-    <div className="rating-vinyls" role="img" aria-label={`Rated ${rating} out of 10`}>
-      {Array.from({ length: 5 }, (_, index) => <span className="vinyl-rating" key={index}>
-        <img src="/images/vinyl-half.png" alt="" style={{ opacity: rating > index * 2 ? 1 : 0.16 }} />
-        <img className="vinyl-half-right" src="/images/vinyl-half.png" alt="" style={{ opacity: rating > index * 2 + 1 ? 1 : 0.16 }} />
-      </span>)}
     </div>
   )
 }

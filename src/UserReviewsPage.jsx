@@ -1,20 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { apiRequest, clearStoredToken, getAlbumDetails, getUserReviews } from './api.js'
 import { AppHeader } from './ProfilePage.jsx'
+import RatingVinyls from './RatingVinyls.jsx'
 import './UserReviewsPage.css'
-
-function ReviewRating({ rating }) {
-  const score = Number(rating)
-  if (!Number.isFinite(score)) return null
-  return (
-    <div className="user-review-rating" role="img" aria-label={`Rated ${score} out of 10`}>
-      {Array.from({ length: 5 }, (_, index) => <span className="review-vinyl" key={index}>
-        <img src="/images/vinyl-half.png" alt="" style={{ opacity: score > index * 2 ? 1 : 0.18 }} />
-        <img className="review-vinyl-right" src="/images/vinyl-half.png" alt="" style={{ opacity: score > index * 2 + 1 ? 1 : 0.18 }} />
-      </span>)}
-    </div>
-  )
-}
 
 function UserReviewCard({ review }) {
   const cardRef = useRef(null)
@@ -71,7 +59,7 @@ function UserReviewCard({ review }) {
         <div className="user-review-meta">
           <h3 title={title}>{title}</h3>
           {artist && <p title={artist}>{artist}</p>}
-          <ReviewRating rating={review.rating} />
+          <RatingVinyls className="user-review-rating" rating={review.rating} />
         </div>
       </div>
       <div className="user-review-divider" />

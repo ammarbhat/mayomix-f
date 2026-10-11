@@ -73,9 +73,6 @@
 .liked-heart svg { width: 100%; height: 100%; fill: currentColor; stroke: currentColor; stroke-width: 1.5; }
 .review-copy { align-self: stretch; display: flex; flex-direction: column; justify-content: center; }
 .review-copy .review-rating { margin-top: 5px; }
-.review-rating { display: inline-flex; align-items: center; gap: 4px; }
-.review-rating i { width: 13px; height: 13px; display: block; border-radius: 50%; background: #666; box-shadow: inset 0 0 0 4px #1a1a1a; }
-.review-rating i.is-filled { background: #f1f1f1; }
 .review-copy .review-text { display: -webkit-box; overflow: hidden; margin: 8px 0 0; color: #c7c7c7; font-size: 13px; line-height: 1.45; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .search-message,.search-hint { grid-column: 1 / -1; margin: 0; padding: 24px 16px; color: #d0d0d0; text-align: center; font-size: 15px; }
 .search-message.is-error { color: #ffb7b7; }
@@ -154,4 +151,39 @@
 
 @media (prefers-reduced-motion: reduce) {
   .search-brand,.search-header-button,.header-avatar,.main-search-form,.library-tabs button,.search-tabs button { transition: none; }
+}
+
+/* The search frame stays in the viewport while results scroll inside their panels. */
+.search-page { height: 100vh; height: 100dvh; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+.search-page > .search-header { flex: 0 0 88px; }
+.search-workspace { height: 0; min-height: 0; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.library-board,.expanded-search-panel { min-height: 0; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.library-tabs,.search-tabs { flex: 0 0 auto; }
+.library-grid,.search-results { min-height: 0; flex: 1; overflow-y: auto; overscroll-behavior: contain; }
+@media (max-width: 760px) {
+  .search-page > .search-header { flex-basis: 70px; }
+  .search-workspace { height: 0; min-height: 0; padding-bottom: 10px; }
+  .library-board { padding-bottom: 14px; }
+  .expanded-search-panel { min-height: 0; }
+}
+
+.reviews-library-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 24px; }
+.album-review-card { min-height: 182px; display: grid; grid-template-columns: 88px minmax(0, 1fr); grid-template-rows: 94px 1px auto; align-items: center; gap: 10px 16px; padding: 14px; border-radius: 17px; background: #d8d8d8; color: #292929; }
+.album-review-card .search-artwork { width: 88px; height: 94px; flex: none; grid-column: 1; grid-row: 1; border: 5px solid #f7f7f7; border-radius: 13px; background: #c8c8c8; }
+.album-review-card .review-copy { min-width: 0; align-self: stretch; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; grid-column: 2; grid-row: 1; padding: 2px 4px; }
+.album-review-card .review-copy h3 { color: #252525; font-size: 23px; }
+.album-review-card .review-artist { margin: 5px 0 8px; color: #606060; font-size: 18px; }
+.album-review-card .review-rating { --rating-vinyl-size: 22px; --rating-vinyl-gap: 3px; margin-top: 0; }
+.album-review-card .review-divider { height: 1px; grid-column: 1 / -1; grid-row: 2; margin: 0 8px; background: #333; }
+.album-review-card .review-text { grid-column: 1 / -1; grid-row: 3; overflow-wrap: anywhere; margin: 0 4px; color: #626262; font-size: 13px; line-height: 1.4; }
+
+@media (max-width: 760px) {
+  .reviews-library-grid { grid-template-columns: 1fr; gap: 11px; }
+  .album-review-card { min-height: 150px; grid-template-columns: 76px minmax(0, 1fr); grid-template-rows: 82px 1px auto; gap: 8px 12px; padding: 11px; border-radius: 14px; }
+  .album-review-card .search-artwork { width: 76px; height: 82px; border-width: 4px; border-radius: 11px; }
+  .album-review-card .review-copy { padding: 0 3px; }
+  .album-review-card .review-copy h3 { font-size: 19px; }
+  .album-review-card .review-artist { margin: 4px 0 6px; font-size: 15px; }
+  .album-review-card .review-rating { --rating-vinyl-size: 19px; --rating-vinyl-gap: 3px; }
+  .album-review-card .review-text { margin: 0 3px; font-size: 12px; }
 }

@@ -11,10 +11,7 @@
 .user-review-meta { min-width: 0; flex: 1; }
 .user-review-meta h3 { overflow: hidden; margin: 0; color: #202020; text-overflow: ellipsis; white-space: nowrap; font-size: 21px; font-weight: 500; line-height: 1.25; }
 .user-review-meta > p { overflow: hidden; margin: 4px 0 3px; color: #616161; text-overflow: ellipsis; white-space: nowrap; font-size: 16px; }
-.user-review-rating { display: flex; align-items: center; gap: 3px; }
-.review-vinyl { width: 18px; height: 18px; display: inline-flex; overflow: hidden; }
-.review-vinyl img { width: 50%; height: 100%; object-fit: contain; }
-.review-vinyl-right { transform: scaleX(-1); }
+.user-review-rating { --rating-vinyl-size: 18px; --rating-vinyl-gap: 3px; display: flex; }
 .user-review-divider { height: 1px; margin: 10px 0 11px; background: #3e3e3e; }
 .user-review-text { margin: 0; color: #666; font-size: 13px; line-height: 1.45; }
 .user-reviews-message { margin: 0; padding: 24px; color: #626262; text-align: center; font-size: 15px; }
@@ -40,4 +37,21 @@
   .user-review-artwork { width: 72px; height: 72px; flex-basis: 72px; border-width: 4px; }
   .user-review-meta h3 { font-size: 18px; }
   .user-review-meta > p { font-size: 14px; }
+}
+
+.user-reviews-page { height: 100vh; height: 100dvh; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+.user-reviews-page > .profile-header { flex: 0 0 86px; }
+.user-reviews-wrap { height: 0; min-height: 0; flex: 1; padding-top: 14px; padding-bottom: 14px; }
+.user-reviews-board { height: 100%; min-height: 0; display: flex; flex-direction: column; overflow: hidden; padding-bottom: 20px; }
+.user-reviews-heading { flex: 0 0 auto; margin-bottom: clamp(16px, 4vh, 40px); }
+.user-reviews-grid { min-height: 0; flex: 1; align-content: start; overflow-y: auto; overscroll-behavior: contain; }
+@media (max-width: 760px) {
+  .user-reviews-page > .profile-header { flex-basis: 66px; }
+  .user-reviews-wrap { height: 0; min-height: 0; padding: 10px 14px; }
+  .user-reviews-board { height: 100%; min-height: 0; padding-bottom: 14px; }
+  .user-reviews-heading { margin-bottom: 18px; }
+}
+@media (max-width: 480px) {
+  .user-reviews-page > .profile-header { flex-basis: 58px; }
+  .user-reviews-wrap { padding: 8px 10px; }
 }

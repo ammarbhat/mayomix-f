@@ -43,10 +43,6 @@
 .media-copy h3,.media-copy p { overflow: hidden; margin: 0; text-overflow: ellipsis; white-space: nowrap; }
 .media-copy h3 { color: #272727; font-size: 11px; font-weight: 600; }
 .media-copy p { color: #777; font-size: 10px; }
-.rating-vinyls { display: flex; align-items: center; gap: 3px; }
-.vinyl-rating { width: 16px; height: 16px; display: inline-flex; flex: 0 0 16px; overflow: hidden; }
-.vinyl-rating img { width: 50%; height: 100%; display: block; object-fit: contain; }
-.vinyl-rating img.vinyl-half-right { transform: scaleX(-1); }
 .placeholder-square { background: #c8c8c8; }
 .placeholder-rating { width: 72px; height: 14px; border-radius: 8px; background: #e4e4e4; }
 .profile-status { position: fixed; right: 12px; bottom: 8px; margin: 0; padding: 5px 9px; border-radius: 4px; background: #242424; color: #eee; font-size: 11px; }
@@ -126,5 +122,24 @@
   .media-grid { gap: 10px; padding: 9px; }
   .artwork,.placeholder-square { border-radius: 6px; }
   .media-grid-song .artwork { width: 100%; }
-  .vinyl-rating { width: 14px; height: 14px; flex-basis: 14px; }
+}
+
+/* Keep the profile frame inside the viewport; its data panels scroll independently. */
+.profile-page { height: 100vh; height: 100dvh; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+.profile-page > .profile-header { flex: 0 0 86px; }
+.profile-wrap { height: 0; min-height: 0; flex: 1; padding-top: 14px; padding-bottom: 14px; }
+.profile-board { height: 100%; min-height: 0; }
+.profile-sidebar,.listening-panel { min-height: 0; }
+.public-profile-page .profile-sidebar { grid-template-rows: minmax(0,1.2fr) auto minmax(0,.9fr); }
+.identity-panel,.details-panel { min-height: 0; overflow: auto; }
+@media (max-width: 780px) {
+  .profile-page > .profile-header { flex-basis: 66px; }
+  .profile-wrap { height: 0; min-height: 0; padding: 10px 14px; }
+  .profile-board { height: 100%; min-height: 0; overflow-y: auto; overscroll-behavior: contain; align-content: start; }
+  .profile-sidebar,.listening-panel { min-height: max-content; }
+  .public-profile-page .profile-sidebar { grid-template-rows: auto auto auto; }
+}
+@media (max-width: 480px) {
+  .profile-page > .profile-header { flex-basis: 58px; }
+  .profile-wrap { padding: 8px 10px; }
 }

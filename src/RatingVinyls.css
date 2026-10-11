@@ -1,0 +1,10 @@
+.rating-vinyls { display: inline-flex; align-items: center; gap: var(--rating-vinyl-gap, 3px); vertical-align: middle; }
+.rating-vinyls-small { --rating-vinyl-size: 14px; --rating-vinyl-gap: 2px; }
+.rating-vinyls-medium { --rating-vinyl-size: 16px; --rating-vinyl-gap: 3px; }
+.rating-vinyls-large { --rating-vinyl-size: 20px; --rating-vinyl-gap: 4px; }
+.rating-vinyls .vinyl-rating { position: relative; width: var(--rating-vinyl-size, 16px); height: var(--rating-vinyl-size, 16px); flex: 0 0 var(--rating-vinyl-size, 16px); overflow: hidden; }
+.rating-vinyls .vinyl-rating img { position: absolute; top: 0; left: 0; display: block; height: 100%; object-fit: fill; }
+.rating-vinyls .vinyl-rating-base,.rating-vinyls .vinyl-rating-full { width: 100%; }
+.rating-vinyls .vinyl-rating-base { opacity: .17; }
+.rating-vinyls .is-full .vinyl-rating-base,.rating-vinyls .is-half .vinyl-rating-base { opacity: 0; }
+.rating-vinyls .vinyl-rating-half { width: 50%; }

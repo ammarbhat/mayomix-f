@@ -11,6 +11,7 @@ import {
   searchAlbums,
   searchUsers,
 } from './api.js'
+import RatingVinyls from './RatingVinyls.jsx'
 import './SearchPage.css'
 
 const emptyLibrary = { likedSongs: [], reviews: [] }
@@ -78,8 +79,7 @@ function Artwork({ item, alt }) {
 function Rating({ review }) {
   const rating = Number(review.rating ?? review.score ?? review.value)
   if (!Number.isFinite(rating)) return null
-  const amount = Math.max(0, Math.min(5, Math.round(rating / 2)))
-  return <span className="review-rating" aria-label={`Rated ${rating} out of 10`}>{Array.from({ length: 5 }, (_, index) => <i className={index < amount ? 'is-filled' : ''} key={index} />)}</span>
+  return <RatingVinyls className="review-rating" size="small" rating={rating} />
 }
 
 function LikedSongCard({ item }) {
@@ -102,7 +102,7 @@ function ReviewCard({ review }) {
   const album = review.album || review.album_info || review.metadata || {}
   const title = album.title || review.album_title || review.title || 'Album review'
   const artist = album.artist || review.artist || review.artist_name || ''
-  const text = review.review_text || review.text || review.review || review.body || ''
+  const text = review.review_str || review.review_text || review.text || review.review || review.body || ''
   return (
     <article className="album-review-card">
       <Artwork item={{ ...album, image: album.image || review.cover_url || review.image }} alt={`${title} cover`} />
@@ -110,8 +110,9 @@ function ReviewCard({ review }) {
         <h3 title={title}>{title}</h3>
         {artist && <p className="review-artist" title={artist}>{artist}</p>}
         <Rating review={review} />
-        {text && <p className="review-text">{text}</p>}
       </div>
+      <div className="review-divider" />
+      {text && <p className="review-text">{text}</p>}
     </article>
   )
 }
@@ -315,7 +316,7 @@ function SearchPage() {
               <button type="button" role="tab" aria-selected={activeLibraryTab === 'liked'} className={activeLibraryTab === 'liked' ? 'is-active' : ''} onClick={() => setActiveLibraryTab('liked')}>Liked songs</button>
               <button type="button" role="tab" aria-selected={activeLibraryTab === 'reviews'} className={activeLibraryTab === 'reviews' ? 'is-active' : ''} onClick={() => setActiveLibraryTab('reviews')}>Album reviews</button>
             </div>
-            <div className="library-grid" role="tabpanel">
+            <div className={`library-grid${activeLibraryTab === 'reviews' ? ' reviews-library-grid' : ''}`} role="tabpanel">
               {libraryLoading && <p className="search-message" role="status">Loading your music…</p>}
               {libraryError && !libraryLoading && <p className="search-message is-error" role="alert">{libraryError}</p>}
               {!libraryLoading && !libraryError && visibleLibraryItems.length === 0 && <p className="search-message empty-library">{activeLibraryTab === 'liked' ? 'Your liked songs will appear here.' : 'Your album reviews will appear here.'}</p>}
