@@ -1,8 +1,11 @@
 const API_ROOT = '/api'
 const TOKEN_KEY = 'mayomix.access_token'
 const TOKEN_TYPE_KEY = 'mayomix.token_type'
+const GET_CACHE_TTL = 10_000
+const getCache = new Map()
+const pendingGets = new Map()
 
-export async function apiRequest(path, { token, ...options } = {}) {
+async function performApiRequest(path, token, options) {
   const headers = new Headers(options.headers || {})
   if (token) {
     const tokenType = sessionStorage.getItem(TOKEN_TYPE_KEY) || 'Bearer'
@@ -21,6 +24,27 @@ export async function apiRequest(path, { token, ...options } = {}) {
   }
 
   return payload
+}
+
+export function apiRequest(path, { token, ...options } = {}) {
+  const method = (options.method || 'GET').toUpperCase()
+  const key = `${token || 'public'}:${path}`
+  if (method !== 'GET') {
+    getCache.clear()
+    pendingGets.clear()
+    return performApiRequest(path, token, options)
+  }
+
+  const cached = getCache.get(key)
+  if (cached && cached.expiresAt > Date.now()) return Promise.resolve(cached.value)
+  if (pendingGets.has(key)) return pendingGets.get(key)
+
+  const request = performApiRequest(path, token, options).then((value) => {
+    getCache.set(key, { value, expiresAt: Date.now() + GET_CACHE_TTL })
+    return value
+  }).finally(() => pendingGets.delete(key))
+  pendingGets.set(key, request)
+  return request
 }
 
 export async function signIn(username, password) {
@@ -219,29 +243,38 @@ async function enrichMusicItem(item, kind, token) {
   }
 }
 
-export async function getTasteList(username, category, token) {
+export async function getTasteList(username, category, token, onEnriched) {
   const query = new URLSearchParams({ category })
   const payload = await apiRequest(`/users/${encodeURIComponent(username)}/taste?${query}`, { token })
-  let items = listFromPayload(payload).map(itemDetails)
+  const items = listFromPayload(payload).map(itemDetails)
+  const kind = category === 'top_albums' || category === 'rotation_album'
+    ? 'release-group'
+    : category === 'rotation_song'
+      ? 'recording'
+      : category === 'top_artists'
+        ? 'artist'
+        : null
 
-  if (category === 'top_albums' || category === 'rotation_album') {
-    items = await Promise.all(items.map((item) => enrichMusicItem(item, 'release-group', token)))
-  } else if (category === 'rotation_song') {
-    items = await Promise.all(items.map((item) => enrichMusicItem(item, 'recording', token)))
-  } else if (category === 'top_artists') {
-    items = await Promise.all(items.map((item) => enrichMusicItem(item, 'artist', token)))
+  if (kind && onEnriched) {
+    Promise.all(items.map((item) => enrichMusicItem(item, kind, token)))
+      .then(onEnriched)
+      .catch(() => {})
   }
-
   return items
 }
 
-export async function getLikedSongs(token) {
+export async function getLikedSongs(token, onEnriched) {
   const payload = await apiRequest('/users/me/taste/liked', { token })
   const items = listFromPayload(payload).map((entry) => {
     const item = itemDetails(entry)
     return { ...item, mbid: item.mbid || item.song_mbid || item.recording_mbid || entry?.song?.mbid || entry?.recording?.mbid || '' }
   }).slice(0, 12)
-  return Promise.all(items.map((item) => enrichMusicItem(item, 'recording', token)))
+  if (onEnriched) {
+    Promise.all(items.map((item) => enrichMusicItem(item, 'recording', token)))
+      .then(onEnriched)
+      .catch(() => {})
+  }
+  return items
 }
 
 export async function getUserReviews(username, token) {

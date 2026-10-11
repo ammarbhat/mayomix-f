@@ -89,7 +89,15 @@ function ProfilePage({ username: viewedUsername = '' }) {
           ? await apiRequest(`/users/${encodeURIComponent(viewedUsername)}`)
           : currentUser
         const categories = ['top_albums', 'rotation_song', 'rotation_album', 'top_artists', 'top_genres']
-        const requests = categories.map((category) => getTasteList(user.username, category, token))
+        const enrichmentUpdates = {}
+        const profileKeyByCategory = { top_albums: 'topAlbums', rotation_song: 'songs', rotation_album: 'rotationAlbums', top_artists: 'artists' }
+        const requests = categories.map((category) => getTasteList(user.username, category, token, (items) => {
+          enrichmentUpdates[category] = items
+          if (cancelled) return
+          setProfile((current) => current.user
+            ? { ...current, [profileKeyByCategory[category] || category]: items }
+            : current)
+        }))
         if (isPublicProfile) requests.push(getConnectionStatus(user.username, token))
         const results = await Promise.allSettled(requests)
         if (cancelled) return
@@ -105,10 +113,10 @@ function ProfilePage({ username: viewedUsername = '' }) {
         setProfile({
           user,
           userId: user.id ?? tasteUserId ?? null,
-          topAlbums: taste.top_albums,
-          songs: taste.rotation_song,
-          rotationAlbums: taste.rotation_album,
-          artists: taste.top_artists,
+          topAlbums: enrichmentUpdates.top_albums || taste.top_albums,
+          songs: enrichmentUpdates.rotation_song || taste.rotation_song,
+          rotationAlbums: enrichmentUpdates.rotation_album || taste.rotation_album,
+          artists: enrichmentUpdates.top_artists || taste.top_artists,
           genres: savedGenres.length ? savedGenres : taste.top_genres,
         })
         if (isPublicProfile) {

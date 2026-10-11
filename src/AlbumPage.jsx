@@ -32,6 +32,7 @@ function AlbumPage({ mbid }) {
         const details = detailsResult.value
         if (cancelled) return
         setAlbum(details)
+        setLoading(false)
         if (reviewsResult.status === 'fulfilled') {
           setReviews(reviewsResult.value)
           setReviewsError('')

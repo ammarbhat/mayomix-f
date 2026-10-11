@@ -191,13 +191,18 @@ function SearchPage() {
     async function loadLibrary() {
       try {
         const me = await apiRequest('/users/me', { token })
+        let enrichedLikedSongs = null
         const [likedSongs, reviews] = await Promise.all([
-          getLikedSongs(token),
+          getLikedSongs(token, (items) => {
+            enrichedLikedSongs = items
+            if (!cancelled) setLibrary((current) => ({ ...current, likedSongs: items }))
+          }),
           getUserReviews(me.username, token),
         ])
         if (cancelled) return
         const reviewItems = reviews.slice(0, 12)
-        const enrichedReviews = await Promise.all(reviewItems.map(async (review) => {
+        setLibrary({ likedSongs: enrichedLikedSongs || likedSongs, reviews: reviewItems })
+        Promise.all(reviewItems.map(async (review) => {
           const album = review.album || review.album_info || review.metadata || {}
           const mbid = review.album_mbid || review.mbid || album.mbid || album.id
           const hasTitle = album.title || review.album_title || review.title
@@ -208,8 +213,9 @@ function SearchPage() {
           } catch {
             return review
           }
-        }))
-        if (!cancelled) setLibrary({ likedSongs, reviews: enrichedReviews })
+        })).then((enrichedReviews) => {
+          if (!cancelled) setLibrary((current) => ({ ...current, reviews: enrichedReviews }))
+        })
       } catch (error) {
         if (!cancelled) {
           if (/401|unauthorized|unauthenticated|not authenticated|credentials/i.test(error.message)) {
