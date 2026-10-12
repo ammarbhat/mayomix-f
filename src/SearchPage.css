@@ -63,7 +63,7 @@
 .search-result-copy h3 { font-size: 21px; }
 .search-result-copy p { font-size: 16px; }
 .album-year { display: block; margin-top: 2px; color: #bebebe; font-size: 14px; }
-.user-artwork { overflow: hidden; border-radius: 50%; background: #282828; }
+.user-artwork { overflow: hidden; border-radius: 50%; background: #dedede; }
 .user-artwork img { width: 100%; height: 100%; display: block; object-fit: cover; }
 .user-state-icon { width: 58px; height: 58px; flex: 0 0 58px; display: grid; place-items: center; margin-right: 9px; }
 .user-state-icon img { width: 100%; height: 100%; display: block; object-fit: contain; }

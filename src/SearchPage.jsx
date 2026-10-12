@@ -140,7 +140,7 @@ function UserResult({ user, token }) {
   return (
     <a className="search-result-card user-result-card" href={username ? `/users/${encodeURIComponent(username)}` : undefined}>
       <div className="user-artwork">
-        <img src={image || '/images/profile-vinyl.png'} alt={`${name}'s profile`} onError={(event) => { event.currentTarget.src = '/images/profile-vinyl.png' }} />
+        <img src={image || '/images/profile-default.png'} alt={`${name}'s profile`} onError={(event) => { event.currentTarget.src = '/images/profile-default.png' }} />
       </div>
       <div className="search-result-copy">
         <h3 title={name}>{name}</h3>

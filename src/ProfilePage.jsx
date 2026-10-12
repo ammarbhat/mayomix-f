@@ -164,7 +164,7 @@ function ProfilePage({ username: viewedUsername = '' }) {
         <section className="profile-board" aria-label={isPublicProfile ? `${user.name || handle}'s music profile` : 'Your music profile'}>
           <aside className="profile-sidebar" aria-busy={loading}>
             <section className={`identity-panel${isPublicProfile ? ' public-identity-panel' : ''}`}>
-              <img className="identity-art image-fade" src={user.pfp_link || '/images/profile-vinyl.png'} alt={`${user.name || handle}'s profile picture`} onLoad={(event) => event.currentTarget.classList.add('is-loaded')} onError={(event) => { if (!event.currentTarget.src.endsWith('/images/profile-vinyl.png')) event.currentTarget.src = '/images/profile-vinyl.png' }} />
+              <img className="identity-art image-fade" src={user.pfp_link || '/images/profile-default.png'} alt={`${user.name || handle}'s profile picture`} onLoad={(event) => event.currentTarget.classList.add('is-loaded')} onError={(event) => { if (!event.currentTarget.src.endsWith('/images/profile-default.png')) event.currentTarget.src = '/images/profile-default.png' }} />
               <h1>{loading && !user.name ? <span className="text-skeleton name-skeleton" aria-label="Loading profile" /> : user.name || 'Your profile'}</h1>
               <p className="identity-handle">{loading && !user.username ? <span className="text-skeleton handle-skeleton" aria-label="Loading username" /> : `@${handle}`}</p>
               <p className="identity-bio">{loading && !bio ? <span className="text-skeleton bio-skeleton" aria-label="Loading bio" /> : bio}</p>
