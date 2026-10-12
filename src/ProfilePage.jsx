@@ -164,16 +164,23 @@ function ProfilePage({ username: viewedUsername = '' }) {
         <section className="profile-board" aria-label={isPublicProfile ? `${user.name || handle}'s music profile` : 'Your music profile'}>
           <aside className="profile-sidebar" aria-busy={loading}>
             <section className={`identity-panel${isPublicProfile ? ' public-identity-panel' : ''}`}>
-              <img className="identity-art image-fade" src={user.pfp_link || '/images/profile-default.png'} alt={`${user.name || handle}'s profile picture`} onLoad={(event) => event.currentTarget.classList.add('is-loaded')} onError={(event) => { if (!event.currentTarget.src.endsWith('/images/profile-default.png')) event.currentTarget.src = '/images/profile-default.png' }} />
-              <h1>{loading && !user.name ? <span className="text-skeleton name-skeleton" aria-label="Loading profile" /> : user.name || 'Your profile'}</h1>
-              <p className="identity-handle">{loading && !user.username ? <span className="text-skeleton handle-skeleton" aria-label="Loading username" /> : `@${handle}`}</p>
+              <div className="identity-heading">
+                <div className="profile-turntable" aria-label="Profile photo on a record player">
+                  <img className="turntable-base" src="/images/turntable.jpg" alt="" />
+                  <img className="turntable-profile" src={user.pfp_link || '/images/profile-default.png'} alt={`${user.name || handle}'s profile picture`} onError={(event) => { if (!event.currentTarget.src.endsWith('/images/profile-default.png')) event.currentTarget.src = '/images/profile-default.png' }} />
+                </div>
+                <div className="identity-copy">
+                  <h1>{loading && !user.name ? <span className="text-skeleton name-skeleton" aria-label="Loading profile" /> : user.name || 'Your profile'}</h1>
+                  <p className="identity-handle">{loading && !user.username ? <span className="text-skeleton handle-skeleton" aria-label="Loading username" /> : `@${handle}`}</p>
+                  {!isPublicProfile && <div className="profile-edit-actions"><button type="button">Edit Profile</button><button type="button">Edit Display</button></div>}
+                </div>
+              </div>
               <p className="identity-bio">{loading && !bio ? <span className="text-skeleton bio-skeleton" aria-label="Loading bio" /> : bio}</p>
               {isPublicProfile && <>
                 <ConnectionButton status={connectionStatus} loading={connectionBusy || loading} onClick={connect} />
                 {connectionError && <p className="connection-error" role="alert">{connectionError}</p>}
               </>}
             </section>
-            {isPublicProfile && <a className="public-reviews-link" href={`/users/${encodeURIComponent(user.username || viewedUsername)}/reviews`}>Reviews</a>}
             <section className="details-panel" aria-label={isPublicProfile ? `${handle}'s favorites` : 'Your favorites'}>
               <div className="identity-section">
                 <h2>Top genres</h2>
@@ -192,6 +199,7 @@ function ProfilePage({ username: viewedUsername = '' }) {
                 </div>
               </div>
             </section>
+            <a className="public-reviews-link" href={`/users/${encodeURIComponent(user.username || viewedUsername || handle)}/reviews`}>Reviews</a>
           </aside>
 
           <div className="listening-panel">
