@@ -26,7 +26,7 @@ async function performApiRequest(path, token, options) {
   return payload
 }
 
-export function apiRequest(path, { token, ...options } = {}) {
+export function apiRequest(path, { token, cache = true, ...options } = {}) {
   const method = (options.method || 'GET').toUpperCase()
   const key = `${token || 'public'}:${path}`
   if (method !== 'GET') {
@@ -34,6 +34,7 @@ export function apiRequest(path, { token, ...options } = {}) {
     pendingGets.clear()
     return performApiRequest(path, token, options)
   }
+  if (!cache) return performApiRequest(path, token, options)
 
   const cached = getCache.get(key)
   if (cached && cached.expiresAt > Date.now()) return Promise.resolve(cached.value)
@@ -319,7 +320,7 @@ export async function getActivity(token) {
 
 async function getConnectionList(path, token) {
   try {
-    return listFromPayload(await apiRequest(path, { token }))
+    return listFromPayload(await apiRequest(path, { token, cache: false }))
   } catch (error) {
     if (/404|not found/i.test(error.message)) return []
     throw error

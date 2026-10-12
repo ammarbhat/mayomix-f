@@ -5,14 +5,29 @@ import RatingVinyls from './RatingVinyls.jsx'
 import './ActivityPage.css'
 
 function connectionPerson(connection, incoming) {
-  const person = connection.user || connection.profile || connection.requester || connection.sender || connection.recipient || connection[incoming ? 'user1' : 'user2'] || {}
-  const username = person.username || connection.username || connection.requester_username || connection.sender_username || connection.recipient_username || ''
-  const id = person.id ?? person.user_id ?? (incoming ? connection.user_id1 : connection.user_id2) ?? connection.user_id
+  const role = incoming ? 'requester' : 'recipient'
+  const userKey = incoming ? 'user1' : 'user2'
+  const person = connection.user || connection.profile || connection[role] || connection.sender || connection[userKey] || connection[`${userKey}_profile`] || {}
+  // The connection list routes return this user's details as top-level fields.
+  const username = connection.username
+    || person.username
+    || connection[`${role}_username`]
+    || connection[`${userKey}_username`]
+    || connection[`username${incoming ? '1' : '2'}`]
+    || ''
+  const id = connection.user_id ?? person.id ?? person.user_id ?? connection[`${role}_id`] ?? connection[userKey === 'user1' ? 'user_id1' : 'user_id2']
+  const name = connection.name
+    || person.name
+    || person.display_name
+    || connection[`${role}_name`]
+    || connection[`${userKey}_name`]
+    || connection[`name${incoming ? '1' : '2'}`]
+    || connection.display_name
   return {
     id,
     username: username || (id != null ? `user-${id}` : 'unknown-user'),
-    name: person.name || person.display_name || connection.name || connection.display_name || username || (id != null ? `User ${id}` : 'MayoMix listener'),
-    image: person.pfp_link || person.profile_image || person.avatar || connection.pfp_link || '',
+    name: name || username || (id != null ? `User ${id}` : 'MayoMix listener'),
+    image: connection.pfp_link || person.pfp_link || person.profile_image || person.avatar || connection[`${role}_pfp_link`] || connection[`${userKey}_pfp_link`] || '',
   }
 }
 
@@ -22,7 +37,7 @@ function ConnectionCard({ connection, incoming, onAccept, onDelete, busy }) {
   return (
     <article className="activity-connection-card">
       <a className="activity-person" href={person.username.startsWith('user-') ? undefined : `/users/${encodeURIComponent(person.username)}`}>
-        <img src={person.image || '/images/profile-vinyl.png'} alt="" onError={(event) => { event.currentTarget.src = '/images/profile-vinyl.png' }} />
+        <img src={person.image || '/images/profile-default.png'} alt="" onError={(event) => { event.currentTarget.src = '/images/profile-default.png' }} />
         <span className="activity-person-copy">
           <strong title={person.name}>{person.name}</strong>
           <span title={`@${person.username}`}>@{person.username}</span>
@@ -80,7 +95,7 @@ function ActivityReviewCard({ review, token }) {
     <article className="activity-entry" ref={cardRef}>
       <header className="activity-entry-header">
         <a className="activity-author" href={username ? `/users/${encodeURIComponent(username)}` : undefined}>
-          <img src={review.user?.pfp_link || review.reviewer?.pfp_link || review.pfp_link || '/images/profile-vinyl.png'} alt="" onError={(event) => { event.currentTarget.src = '/images/profile-vinyl.png' }} />
+          <img src={review.user?.pfp_link || review.reviewer?.pfp_link || review.pfp_link || '/images/profile-default.png'} alt="" onError={(event) => { event.currentTarget.src = '/images/profile-default.png' }} />
           <span><strong>{name}</strong>{username && <small>@{username}</small>}</span>
         </a>
         <time>{date}</time>
@@ -108,6 +123,8 @@ function ActivityPage() {
   const [pending, setPending] = useState([])
   const [sent, setSent] = useState([])
   const [activity, setActivity] = useState([])
+  const [pendingError, setPendingError] = useState('')
+  const [sentError, setSentError] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [actionError, setActionError] = useState('')
@@ -119,19 +136,23 @@ function ActivityPage() {
       return undefined
     }
     let cancelled = false
-    Promise.all([getPendingConnections(token), getSentConnections(token), getActivity(token)])
-      .then(([incoming, outgoing, feed]) => {
+    Promise.allSettled([getPendingConnections(token), getSentConnections(token), getActivity(token)])
+      .then(([incomingResult, outgoingResult, feedResult]) => {
         if (cancelled) return
-        setPending(incoming)
-        setSent(outgoing)
-        setActivity(feed)
-      })
-      .catch((requestError) => {
-        if (cancelled) return
-        if (/401|unauthorized|unauthenticated|not authenticated|credentials/i.test(requestError.message)) {
+        const results = [incomingResult, outgoingResult, feedResult]
+        const authFailure = results.find((result) => result.status === 'rejected'
+          && /401|unauthorized|unauthenticated|not authenticated|credentials/i.test(result.reason?.message || ''))
+        if (authFailure) {
           clearStoredToken()
           window.location.replace('/login')
-        } else setError(requestError.message || 'Activity could not be loaded.')
+          return
+        }
+        if (incomingResult.status === 'fulfilled') setPending(incomingResult.value)
+        else setPendingError(incomingResult.reason?.message || 'Requests could not be loaded.')
+        if (outgoingResult.status === 'fulfilled') setSent(outgoingResult.value)
+        else setSentError(outgoingResult.reason?.message || 'Sent requests could not be loaded.')
+        if (feedResult.status === 'fulfilled') setActivity(feedResult.value)
+        else setError(feedResult.reason?.message || 'Activity could not be loaded.')
       })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
@@ -162,7 +183,8 @@ function ActivityPage() {
             <h2>Requests</h2>
             <div className="connection-list" aria-busy={loading}>
               {loading && <p className="activity-empty">Loading requests…</p>}
-              {!loading && pending.length === 0 && <p className="activity-empty">No requests</p>}
+              {!loading && pendingError && <p className="activity-empty is-error" role="alert">{pendingError}</p>}
+              {!loading && !pendingError && pending.length === 0 && <p className="activity-empty">No requests</p>}
               {pending.map((connection, index) => {
                 const id = connection.con_id ?? connection.connection_id ?? connection.id ?? `pending-${index}`
                 return <ConnectionCard key={id} connection={connection} incoming onAccept={(connectionId) => updateConnection(connectionId, 'accept')} onDelete={(connectionId) => updateConnection(connectionId, 'delete')} busy={busyId === id} />
@@ -173,7 +195,8 @@ function ActivityPage() {
             <h2>Sent</h2>
             <div className="connection-list" aria-busy={loading}>
               {loading && <p className="activity-empty">Loading requests…</p>}
-              {!loading && sent.length === 0 && <p className="activity-empty">No sent requests</p>}
+              {!loading && sentError && <p className="activity-empty is-error" role="alert">{sentError}</p>}
+              {!loading && !sentError && sent.length === 0 && <p className="activity-empty">No sent requests</p>}
               {sent.map((connection, index) => {
                 const id = connection.con_id ?? connection.connection_id ?? connection.id ?? `sent-${index}`
                 return <ConnectionCard key={id} connection={connection} incoming={false} onDelete={(connectionId) => updateConnection(connectionId, 'delete')} busy={busyId === id} />

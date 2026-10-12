@@ -9,7 +9,7 @@
 .sent-group { margin-top: 10px; }
 .activity-connection-card { min-width: 0; min-height: 84px; display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 17px; background: #d8d8d8; }
 .activity-person { min-width: 0; flex: 1; display: flex; align-items: center; gap: 16px; color: inherit; text-decoration: none; }
-.activity-person > img { width: 52px; height: 52px; flex: 0 0 52px; border-radius: 50%; object-fit: cover; }
+.activity-person > img { width: 52px; height: 52px; flex: 0 0 52px; border-radius: 50%; object-fit: cover; background: #dedede; }
 .activity-person-copy { min-width: 0; display: flex; flex-direction: column; }
 .activity-person-copy strong,.activity-person-copy > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .activity-person-copy strong { font-size: 19px; line-height: 1.08; font-weight: 500; }
@@ -25,7 +25,7 @@
 .activity-entry { min-width: 0; padding: 0 0 0; }
 .activity-entry-header { min-width: 0; min-height: 48px; display: flex; align-items: center; gap: 12px; padding: 0 12px 7px; color: #252525; }
 .activity-author { min-width: 0; display: flex; align-items: center; gap: 9px; color: inherit; text-decoration: none; }
-.activity-author img { width: 39px; height: 39px; flex: 0 0 39px; border: 2px solid #c1c1c1; border-radius: 50%; object-fit: cover; }
+.activity-author img { width: 39px; height: 39px; flex: 0 0 39px; border: 2px solid #c1c1c1; border-radius: 50%; object-fit: cover; background: #dedede; }
 .activity-author span { min-width: 0; display: flex; flex-direction: column; }
 .activity-author strong,.activity-author small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .activity-author strong { font-size: 18px; line-height: 1.05; font-weight: 500; }
