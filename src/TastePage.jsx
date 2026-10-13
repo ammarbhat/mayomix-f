@@ -122,25 +122,65 @@ function SearchPanel({ token, draft, ratings, onAdd }) {
   )
 }
 
-function TasteSlot({ item, section, index, onRemove }) {
+function TasteSlot({ item, section, index, itemCount, onRemove, onMove, onDragStart, onDragOver, onDrop, dragging }) {
   const details = item ? itemDetails(item) : null
   const title = details?.title || (details?.mbid ? 'Loading title…' : 'Music item')
-  return <div className={`taste-slot${item ? ' is-filled' : ''}`}>
+  return <div
+    className={`taste-slot${item ? ' is-filled' : ''}${dragging ? ' is-dragging' : ''}`}
+    onDragOver={onDragOver ? (event) => onDragOver(event, index) : undefined}
+    onDrop={onDrop ? (event) => onDrop(event, index) : undefined}
+  >
     {item ? <>
-      <div className="taste-slot-art">
+      <div className="taste-slot-art" draggable onDragStart={(event) => onDragStart(event, index)} onDragEnd={() => onDragStart(null, null)}>
         {details.image && <img src={details.image} alt={`${title} cover`} loading="lazy" onError={(event) => event.currentTarget.remove()} />}
         <button type="button" className="taste-remove-button" aria-label={`Remove ${title} from ${section.title}`} onClick={() => onRemove(section.key, index)}><span aria-hidden="true">×</span></button>
       </div>
       <span className="taste-slot-title" title={title}>{title}</span>
+      <div className="taste-slot-order" aria-label={`Reorder ${title}`}>
+        <button type="button" aria-label={`Move ${title} earlier in ${section.title}`} disabled={index === 0} onClick={() => onMove(section.key, index, index - 1)}>↑</button>
+        <button type="button" aria-label={`Move ${title} later in ${section.title}`} disabled={index >= itemCount - 1} onClick={() => onMove(section.key, index, index + 1)}>↓</button>
+      </div>
     </> : <div className="taste-slot-empty" aria-label={`Empty ${section.title} slot ${index + 1}`} />}
   </div>
 }
 
-function TasteSection({ section, items, onRemove }) {
+function TasteSection({ section, items, onRemove, onReorder, onMove }) {
+  const [draggingIndex, setDraggingIndex] = useState(null)
+
+  function startDrag(event, index) {
+    if (index == null) {
+      setDraggingIndex(null)
+      return
+    }
+    setDraggingIndex(index)
+    event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.setData('text/plain', String(index))
+  }
+
+  function dropItem(event, toIndex) {
+    event.preventDefault()
+    const value = event.dataTransfer.getData('text/plain')
+    const fromIndex = Number(value)
+    setDraggingIndex(null)
+    if (value !== '' && Number.isInteger(fromIndex) && fromIndex !== toIndex) onReorder(section.key, fromIndex, toIndex)
+  }
+
   return <section className="taste-section" aria-labelledby={`taste-heading-${section.key}`}>
     <h2 id={`taste-heading-${section.key}`}>{section.title}</h2>
     <div className="taste-tray">
-      {Array.from({ length: section.max }, (_, index) => <TasteSlot key={`${section.key}-${index}`} item={items[index]} section={section} index={index} onRemove={onRemove} />)}
+      {Array.from({ length: section.max }, (_, index) => <TasteSlot
+        key={`${section.key}-${index}`}
+        item={items[index]}
+        section={section}
+        index={index}
+        itemCount={items.length}
+        onRemove={onRemove}
+        onMove={onMove}
+        onDragStart={startDrag}
+        onDragOver={(event) => event.preventDefault()}
+        onDrop={dropItem}
+        dragging={draggingIndex === index}
+      />)}
     </div>
     {items.length > section.max && <p className="taste-overflow-note">Showing 3 of {items.length} saved songs. Remove a visible song to bring the next one into view.</p>}
   </section>
@@ -213,6 +253,7 @@ function TastePage() {
   const [ratings, setRatings] = useState({})
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
+  const [loadFailures, setLoadFailures] = useState({})
   const [saveError, setSaveError] = useState('')
   const [notice, setNotice] = useState('')
   const [saving, setSaving] = useState(false)
@@ -220,6 +261,7 @@ function TastePage() {
   const [leaveOpen, setLeaveOpen] = useState(false)
   const [leaveDestination, setLeaveDestination] = useState('')
   const allowNavigationRef = useRef(false)
+  const clearAllRequestedRef = useRef(false)
   const dirty = !sameTaste(saved, draft)
 
   useEffect(() => {
@@ -244,13 +286,18 @@ function TastePage() {
       if (cancelled) return
       const next = emptyTaste()
       const errors = []
+      const failedCategories = {}
       results.forEach((result, index) => {
         if (result.status === 'fulfilled') next[sections[index].key] = result.value.map((item, itemIndex) => ({ ...itemDetails(item), mbid: item.mbid || item.recording_mbid, id: item.id, rank: Number(item.rank) || itemIndex + 1, liked: Boolean(item.liked) })).sort((a, b) => a.rank - b.rank).slice(0, sections[index].key === 'rotation_song' ? 6 : sections[index].max)
-        else errors.push(sections[index].title)
+        else {
+          failedCategories[sections[index].key] = result.reason?.message || 'request failed'
+          errors.push(`${sections[index].title}: ${failedCategories[sections[index].key]}`)
+        }
       })
       setSaved(next)
       setDraft(cloneTaste(next))
-      if (errors.length) setLoadError(`Could not load ${errors.join(', ')}. Retry by reloading the page.`)
+      setLoadFailures(failedCategories)
+      if (errors.length) setLoadError(`Could not load some lists. Save will retry each affected list before writing. ${errors.join(' · ')}`)
       } catch (error) {
         if (!cancelled && /401|unauthorized|unauthenticated|not authenticated|credentials/i.test(error.message || '')) {
           clearStoredToken()
@@ -338,16 +385,39 @@ function TastePage() {
     setNotice('')
   }
 
+  function reorderItem(category, fromIndex, toIndex) {
+    setDraft((current) => {
+      const items = [...current[category]]
+      if (fromIndex < 0 || fromIndex >= items.length || toIndex < 0 || toIndex >= sections.find(({ key }) => key === category).max) return current
+      const [item] = items.splice(fromIndex, 1)
+      items.splice(Math.min(toIndex, items.length), 0, item)
+      return { ...current, [category]: items.map((entry, index) => ({ ...entry, rank: index + 1 })) }
+    })
+    setNotice('')
+  }
+
   async function save() {
     if (!dirty || saving) return
     setSaving(true)
     setSaveError('')
     setNotice('')
     const failed = []
+    const remainingLoadFailures = { ...loadFailures }
     for (const section of sections) {
-      if (sameTaste({ [section.key]: saved[section.key] }, { [section.key]: draft[section.key] })) continue
+      let currentItems = saved[section.key]
+      let targetItems = draft[section.key]
       try {
-        await replaceSection(section, saved[section.key], draft[section.key], token)
+        if (loadFailures[section.key]) {
+          currentItems = await getMyTasteList(username, section.key, token)
+          targetItems = clearAllRequestedRef.current
+            ? draft[section.key]
+            : [...currentItems, ...draft[section.key].filter((item) => !currentItems.some((entry) => identity(entry) === identity(item)))]
+          setDraft((current) => ({ ...current, [section.key]: targetItems }))
+          setSaved((current) => ({ ...current, [section.key]: currentItems }))
+          delete remainingLoadFailures[section.key]
+        }
+        if (sameTaste({ [section.key]: currentItems }, { [section.key]: targetItems })) continue
+        await replaceSection(section, currentItems, targetItems, token)
         const fresh = await getMyTasteList(username, section.key, token)
         const normalized = fresh.map((item, index) => ({ ...itemDetails(item), mbid: item.mbid || item.recording_mbid, id: item.id, rank: Number(item.rank) || index + 1, liked: Boolean(item.liked) })).sort((a, b) => a.rank - b.rank)
         setSaved((current) => ({ ...current, [section.key]: normalized }))
@@ -357,11 +427,18 @@ function TastePage() {
           const fresh = await getMyTasteList(username, section.key, token)
           const normalized = fresh.map((item, index) => ({ ...itemDetails(item), mbid: item.mbid || item.recording_mbid, id: item.id, rank: Number(item.rank) || index + 1, liked: Boolean(item.liked) })).sort((a, b) => a.rank - b.rank)
           setSaved((current) => ({ ...current, [section.key]: normalized }))
+          delete remainingLoadFailures[section.key]
         } catch { /* keep the last known baseline when refresh is unavailable */ }
       }
     }
+    setLoadFailures(remainingLoadFailures)
     if (failed.length) setSaveError(`Some changes did not save. ${failed.join(' · ')}. Your draft is still here.`)
-    else setNotice('Taste saved.')
+    else {
+      setNotice('Taste saved.')
+      const unresolved = Object.entries(remainingLoadFailures).map(([key, message]) => `${sections.find((section) => section.key === key)?.title}: ${message}`)
+      setLoadError(unresolved.length ? `Could not load some lists. ${unresolved.join(' · ')}` : '')
+      clearAllRequestedRef.current = false
+    }
     setSaving(false)
   }
 
@@ -382,16 +459,16 @@ function TastePage() {
       <section className="taste-editor-panel" aria-label="Current taste">
         {loading && <p className="taste-loading" role="status">Loading your taste…</p>}
         {loadError && <p className="taste-inline-error" role="alert">{loadError}</p>}
-        {!loading && sections.map((section) => <TasteSection key={section.key} section={section} items={draft[section.key]} onRemove={removeItem} />)}
+        {!loading && sections.map((section) => <TasteSection key={section.key} section={section} items={draft[section.key]} onRemove={removeItem} onReorder={reorderItem} onMove={reorderItem} />)}
         <div className="taste-actions">
-          <button type="button" className="taste-clear-button" disabled={loading || saving || Boolean(loadError) || (!dirty && !sections.some(({ key }) => draft[key].length))} onClick={() => setClearOpen(true)}>Clear all</button>
-          <button type="button" className="taste-save-button" disabled={loading || saving || Boolean(loadError) || !dirty} onClick={save} aria-busy={saving}>{saving ? 'Saving…' : 'Save'}</button>
+          <button type="button" className="taste-clear-button" disabled={loading || saving || (!dirty && !sections.some(({ key }) => draft[key].length))} onClick={() => setClearOpen(true)}>Clear all</button>
+          <button type="button" className="taste-save-button" disabled={loading || saving || !dirty} onClick={save} aria-busy={saving}>{saving ? 'Saving…' : 'Save'}</button>
         </div>
         {saveError && <p className="taste-inline-error" role="alert">{saveError}</p>}
         {notice && <p className="taste-success" role="status">{notice}</p>}
       </section>
     </div>
-    {clearOpen && <ClearDialog onCancel={() => setClearOpen(false)} onConfirm={() => { setDraft(emptyTaste()); setClearOpen(false); setNotice(''); setSaveError('') }} />}
+    {clearOpen && <ClearDialog onCancel={() => setClearOpen(false)} onConfirm={() => { clearAllRequestedRef.current = true; setDraft(emptyTaste()); setClearOpen(false); setNotice(''); setSaveError('') }} />}
     {leaveOpen && <LeaveDialog onStay={() => setLeaveOpen(false)} onLeave={confirmLeave} />}
   </main>
 }

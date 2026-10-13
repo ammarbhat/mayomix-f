@@ -20,7 +20,9 @@ async function performApiRequest(path, token, options) {
     const message = typeof payload === 'object' && payload?.detail
       ? (Array.isArray(payload.detail) ? payload.detail.map((item) => item.msg).join(', ') : payload.detail)
       : `Request failed (${response.status})`
-    throw new Error(message)
+    const error = new Error(message)
+    error.status = response.status
+    throw error
   }
 
   return payload
@@ -236,7 +238,7 @@ async function enrichMusicItem(item, kind, token) {
           ? await lookupArtist(item.mbid)
           : await lookupAlbum(item.mbid)
     }
-    const enriched = { ...item, ...metadata, mbid: item.mbid }
+    const enriched = { ...item, ...metadata, id: item.id, rank: item.rank, liked: item.liked, mbid: item.mbid }
     saveCachedItem(key, enriched)
     return enriched
   } catch {
@@ -247,7 +249,16 @@ async function enrichMusicItem(item, kind, token) {
 export async function getTasteList(username, category, token, onEnriched) {
   const query = new URLSearchParams({ category })
   const payload = await apiRequest(`/users/${encodeURIComponent(username)}/taste?${query}`, { token })
-  const items = listFromPayload(payload).map(itemDetails)
+  const items = listFromPayload(payload).map((entry) => {
+    const item = itemDetails(entry)
+    return {
+      ...item,
+      id: entry.id ?? entry.entry_id ?? item.id,
+      mbid: item.mbid || entry.mbid || entry.album_mbid || entry.song_mbid || entry.recording_mbid || entry.album?.mbid || entry.song?.mbid || entry.recording?.mbid,
+      rank: entry.rank ?? item.rank,
+      liked: entry.liked ?? item.liked,
+    }
+  })
   const kind = category === 'top_albums' || category === 'rotation_album'
     ? 'release-group'
     : category === 'rotation_song'
@@ -268,7 +279,7 @@ export async function getMyTasteList(username, category, token, onEnriched) {
   try {
     return await getTasteList(username, category, token, onEnriched)
   } catch (error) {
-    if (/404|not found/i.test(error.message)) return []
+    if (error.status === 404 || /404|not found/i.test(error.message)) return []
     throw error
   }
 }
