@@ -10,7 +10,6 @@ function PlaceholderCards({ count = 3, className = '' }) {
   return Array.from({ length: count }, (_, index) => (
     <div className={`placeholder-card ${className}`} key={`placeholder-${index}`} aria-hidden="true">
       <div className="placeholder-square" />
-      {className === 'top-album-placeholder' && <div className="placeholder-rating" />}
     </div>
   ))
 }
@@ -35,13 +34,15 @@ function MediaSection({ id, title, items, loading, type = 'artwork' }) {
           return (
             <a className="media-card" key={item.mbid || `${item.title}-${index}`} href={type === 'top-album' && item.mbid ? `/albums/${encodeURIComponent(item.mbid)}` : undefined}>
               <Artwork item={item} />
-              {type === 'top-album' ? <RatingVinyls item={entry} /> : null}
-              {type === 'song' && <div className="media-copy"><h3 title={item.title}>{item.title || 'Unknown song'}</h3><p title={item.artist}>{item.artist || item.album || ''}</p></div>}
+              <div className="media-copy">
+                <h3 title={item.title || undefined}>{item.title || (item.mbid ? 'Loading title…' : type === 'song' ? 'Unknown song' : 'Untitled')}</h3>
+                {type === 'song' && <p title={item.artist}>{item.artist || item.album || ''}</p>}
+              </div>
+              {(type === 'top-album' || type === 'rotation') ? <RatingVinyls item={entry} size="large" /> : null}
             </a>
           )
         })}
-        {!loading && items.length === 0 && <PlaceholderCards className={`${type}-placeholder`} />}
-        {loading && items.length === 0 && <PlaceholderCards className={`${type}-placeholder`} />}
+        <PlaceholderCards count={Math.max(0, 3 - items.length)} className={`${type}-placeholder`} />
       </div>
     </section>
   )
@@ -166,7 +167,7 @@ function ProfilePage({ username: viewedUsername = '' }) {
             <section className={`identity-panel${isPublicProfile ? ' public-identity-panel' : ''}`}>
               <div className="identity-heading">
                 <div className="profile-turntable" aria-label="Profile photo on a record player">
-                  <img className="turntable-base" src="/images/turntable.jpg" alt="" />
+                  <img className="turntable-base" src="/images/turntable-white-platter.png" alt="" />
                   <img className="turntable-profile" src={user.pfp_link || '/images/profile-default.png'} alt={`${user.name || handle}'s profile picture`} onError={(event) => { if (!event.currentTarget.src.endsWith('/images/profile-default.png')) event.currentTarget.src = '/images/profile-default.png' }} />
                 </div>
                 <div className="identity-copy">
@@ -182,16 +183,16 @@ function ProfilePage({ username: viewedUsername = '' }) {
               </>}
             </section>
             <section className="details-panel" aria-label={isPublicProfile ? `${handle}'s favorites` : 'Your favorites'}>
-              <div className="identity-section">
-                <h2>Top genres</h2>
+              <div className="identity-section favorite-card genre-card">
+                <h2>Top Genres</h2>
                 <div className="identity-list genre-list">
                   {loading && profile.genres.length === 0 && <span className="list-skeleton" aria-label="Loading genres" />}
                   {profile.genres.slice(0, 5).map((genre, index) => <span key={`${itemDetails(genre).title}-${index}`}>{itemDetails(genre).title}</span>)}
                   {!loading && profile.genres.length === 0 && <span className="muted-placeholder">No genres yet</span>}
                 </div>
               </div>
-              <div className="identity-section artist-section">
-                <h2>Top artists</h2>
+              <div className="identity-section favorite-card artist-card">
+                <h2>Top Artists</h2>
                 <div className="identity-list artist-list">
                   {loading && profile.artists.length === 0 && <span className="list-skeleton" aria-label="Loading artists" />}
                   {profile.artists.slice(0, 4).map((artist, index) => <span key={`${itemDetails(artist).mbid || itemDetails(artist).title}-${index}`}>{itemDetails(artist).title}</span>)}
@@ -199,8 +200,9 @@ function ProfilePage({ username: viewedUsername = '' }) {
                 </div>
               </div>
             </section>
-            <a className="public-reviews-link" href={`/users/${encodeURIComponent(user.username || viewedUsername || handle)}/reviews`}>Reviews</a>
           </aside>
+
+          <a className="public-reviews-link" href={`/users/${encodeURIComponent(user.username || viewedUsername || handle)}/reviews`}>Reviews</a>
 
           <div className="listening-panel">
             <MediaSection id="top-albums" title="Top Albums" items={profile.topAlbums} loading={loading} type="top-album" />

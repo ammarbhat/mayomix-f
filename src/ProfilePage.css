@@ -123,7 +123,7 @@
 .identity-heading { display: flex; align-items: flex-start; gap: clamp(16px, 2vw, 28px); min-width: 0; }
 .profile-turntable { position: relative; width: clamp(146px, 15vw, 194px); flex: 0 0 clamp(146px, 15vw, 194px); aspect-ratio: 1; overflow: hidden; border-radius: 14px; background: #111; }
 .turntable-base { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.turntable-profile { position: absolute; top: 48.5%; left: 49.5%; width: 76%; height: 76%; transform: translate(-50%, -50%); border: 3px solid #d7d7d7; border-radius: 50%; object-fit: cover; box-shadow: 0 1px 10px #0009, inset 0 0 0 5px #0008; }
+.turntable-profile { position: absolute; top: 48.5%; left: 49.5%; width: 88%; height: 88%; transform: translate(-50%, -50%); border: 0; border-radius: 50%; object-fit: cover; box-shadow: 0 1px 10px #0009; }
 .identity-copy { min-width: 0; padding-top: 7px; }
 .identity-panel h1 { margin: 0; font-size: clamp(22px, 2.2vw, 31px); }
 .identity-handle { margin: 4px 0 0; font-size: 16px; }
@@ -146,12 +146,42 @@
 .artwork, .placeholder-square { max-width: min(100%, 180px); border-radius: 12px; }
 .media-grid-song .media-card { justify-content: center; }
 .media-grid-song .artwork { width: min(100%, 180px); }
+
+/* Updated profile layout: intro panels, compact Reviews link, then music shelves. */
+.profile-wrap { padding: 30px clamp(16px, 8.5vw, 110px) 42px; }
+.profile-board { width: min(100%, 1240px); margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: 0; }
+.profile-sidebar { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: auto; align-items: stretch; justify-items: stretch; gap: 14px; padding: 0; }
+.identity-panel { min-height: 0; justify-content: space-between; overflow: visible; }
+.details-panel { min-height: 0; overflow: visible; }
+.profile-board > .public-reviews-link { align-self: center; width: min(50%, 490px); min-height: 56px; flex: 0 0 auto; margin: 20px 0 0; }
+.listening-panel { width: min(100%, 755px); min-height: 0; align-self: center; margin: 28px auto 0; grid-template-rows: none; gap: 34px; }
+.music-section { min-height: 0; }
+.music-section > h2 { margin-left: 20px; }
+.media-grid { min-height: 220px; flex: 0 0 auto; grid-auto-rows: 1fr; }
+.media-card, .placeholder-card { justify-content: flex-start; }
+.media-grid .artwork, .media-grid .placeholder-square { align-self: center; }
+.public-profile-page .profile-sidebar { display: grid; grid-template-rows: auto; }
+@media (max-width: 780px) {
+  .profile-wrap { padding: 20px 14px 32px; }
+  .profile-board { width: 100%; }
+  .listening-panel { width: min(100%, 755px); margin-top: 22px; gap: 24px; }
+  .media-grid { min-height: 190px; }
+  .public-profile-page .profile-sidebar { grid-template-columns: 1fr 1fr; }
+  .public-profile-page .public-identity-panel { min-height: 0; }
+}
+@media (max-width: 560px) {
+  .profile-sidebar, .public-profile-page .profile-sidebar { grid-template-columns: 1fr; }
+  .profile-board > .public-reviews-link { width: 100%; }
+  .public-profile-page .profile-board > .public-reviews-link { width: 100%; }
+  .listening-panel { gap: 20px; }
+  .media-grid { min-height: 0; }
+}
+.public-profile-page .profile-board > .public-reviews-link { width: min(50%, 490px); }
 .media-copy h3 { color: #eee; font-size: 12px; font-weight: 400; }
 .media-copy p { color: #ddd; }
 .placeholder-card { padding: 7px; border-radius: 13px; background: #626262; }
 .placeholder-square { flex: 0 0 auto; }
 .placeholder-rating { background: #252525; }
-.public-profile-page .profile-sidebar { display: flex; flex-direction: column; }
 .public-identity-panel { min-height: 0; }
 .public-profile-page .identity-panel .identity-bio { margin-top: 0; }
 .connection-button { align-self: flex-start; margin: 0; }
@@ -187,4 +217,102 @@
   .listening-panel { min-height: 600px; }
   .media-grid { gap: 7px; padding: 7px; }
   .media-card, .placeholder-card { padding: 5px; }
+}
+
+/* Keep every music image square while leaving room for its title. */
+.media-grid .artwork,
+.media-grid .placeholder-square {
+  width: min(100%, 180px);
+  height: auto;
+  aspect-ratio: 1 / 1;
+  flex: 0 0 auto;
+}
+.media-grid .media-copy { flex: 0 0 auto; }
+.media-grid .media-copy h3 { min-height: 1.2em; }
+.media-grid .media-copy p { min-height: 1.2em; }
+.media-grid-song .artwork { width: min(100%, 180px); }
+.media-grid .placeholder-card {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  min-height: 0;
+  align-self: center;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 20px;
+  background: #ccc;
+}
+.media-grid .placeholder-square { display: none; }
+.media-grid .media-card,
+.media-grid .placeholder-card {
+  width: 100%;
+  min-height: 260px;
+  border-radius: 18px;
+}
+.media-grid .placeholder-card { aspect-ratio: auto; }
+@media (max-width: 560px) {
+  .media-grid .media-card,
+  .media-grid .placeholder-card {
+    min-height: 0;
+    aspect-ratio: .72;
+  }
+}
+
+/* Keep genres and artists as two distinct cards inside the favorites column. */
+.details-panel {
+  height: 100%;
+  align-self: stretch;
+  gap: 12px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.details-panel .favorite-card {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 14px 20px;
+  border: 1px solid #111;
+  border-radius: 14px;
+  background: #252525;
+}
+.details-panel .favorite-card h2 {
+  margin-bottom: 12px;
+  font-size: clamp(20px, 1.8vw, 24px);
+  line-height: 1.15;
+}
+.details-panel .identity-list > span { text-transform: capitalize; }
+@media (max-width: 560px) {
+  .details-panel { height: auto; }
+  .details-panel .favorite-card { flex: 0 0 auto; }
+}
+
+/* Match the reference shelves: tall cards, generous gutters, square cover art. */
+.media-grid {
+  gap: clamp(22px, 3.5vw, 44px);
+  padding: 12px 18px 20px;
+}
+.media-grid .media-card,
+.media-grid .placeholder-card {
+  min-height: 270px;
+  border-radius: 14px;
+}
+.media-grid .media-card { padding: 8px 10px 16px; }
+.media-grid .artwork { width: min(100%, 180px); max-width: 180px; }
+.media-grid-top-album .rating-vinyls { margin-top: 12px; }
+.media-grid-rotation .media-card { justify-content: flex-start; }
+.media-grid-rotation .rating-vinyls { margin-top: 12px; }
+.media-grid .media-copy h3 { font-size: 14px; }
+.media-grid .placeholder-card { aspect-ratio: auto; }
+@media (max-width: 560px) {
+  .media-grid { gap: 7px; padding: 7px; }
+  .media-grid .media-card,
+  .media-grid .placeholder-card {
+    min-height: 0;
+    aspect-ratio: .72;
+    border-radius: 12px;
+  }
+  .media-grid .media-card { padding: 6px 5px 10px; }
+  .media-grid .artwork { width: 100%; max-width: 180px; }
+  .media-grid-top-album .rating-vinyls { margin-top: 6px; }
 }
