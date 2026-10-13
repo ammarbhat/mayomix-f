@@ -130,6 +130,8 @@
 .profile-edit-actions { display: flex; flex-wrap: wrap; gap: 10px; margin: clamp(18px, 3.4vh, 32px) 0 0 -10px; }
 .profile-edit-actions button { min-height: 40px; padding: 7px 18px; border: 0; border-radius: 18px; background: #101010; color: #eee; font: inherit; font-size: 14px; }
 .profile-edit-actions button + button { background: #74490c; }
+.profile-edit-actions a { min-height: 40px; display: inline-flex; align-items: center; padding: 7px 18px; border-radius: 18px; background: #101010; color: #eee; font-size: 14px; text-decoration: none; }
+.profile-edit-actions a:hover { background: #303030; }
 .identity-panel .identity-bio { min-height: clamp(64px, 9vh, 88px); margin: 0; padding: 13px 17px; overflow-wrap: anywhere; border-radius: 15px; background: #fff; color: #222; font-size: 15px; }
 .details-panel { display: flex; flex-direction: column; gap: 18px; flex: 0 0 auto; padding: 15px 20px; border-color: #111; border-radius: 14px; background: #252525; color: #eee; }
 .identity-section h2 { margin-bottom: 10px; color: #ccc; font-size: 17px; }

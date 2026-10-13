@@ -264,6 +264,36 @@ export async function getTasteList(username, category, token, onEnriched) {
   return items
 }
 
+export async function getMyTasteList(username, category, token, onEnriched) {
+  try {
+    return await getTasteList(username, category, token, onEnriched)
+  } catch (error) {
+    if (/404|not found/i.test(error.message)) return []
+    throw error
+  }
+}
+
+export function addTasteItem(category, item, rank, token) {
+  const query = new URLSearchParams({ category })
+  return apiRequest(`/users/me/taste?${query}`, {
+    method: 'POST', token,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ mbid: item.mbid, rank, liked: Boolean(item.liked) }),
+  })
+}
+
+export function updateTasteItem(entryId, changes, token) {
+  return apiRequest(`/users/me/taste/${encodeURIComponent(entryId)}`, {
+    method: 'PATCH', token,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(changes),
+  })
+}
+
+export function removeTasteItem(entryId, token) {
+  return apiRequest(`/users/me/taste/${encodeURIComponent(entryId)}`, { method: 'DELETE', token })
+}
+
 export async function getLikedSongs(token, onEnriched) {
   const payload = await apiRequest('/users/me/taste/liked', { token })
   const items = listFromPayload(payload).map((entry) => {
@@ -404,6 +434,28 @@ export async function searchAlbums(queryText, token, limit = 15) {
       year: entry.year || entry['first-release-date']?.slice(0, 4) || '',
       image: entry.image || entry.image_url || entry.cover_url || coverCandidates[0] || '',
       coverCandidates,
+    }
+  })
+}
+
+export async function searchSongs(queryText, limit = 10) {
+  const query = new URLSearchParams({ query: queryText, limit: String(limit) })
+  const payload = await apiRequest(`/search/songs?${query}`)
+  return listFromPayload(payload).map((entry) => {
+    const artistCredits = entry['artist-credit'] || entry.artist_credit || []
+    const artist = Array.isArray(artistCredits)
+      ? artistCredits.map((credit) => `${credit.name || credit.artist?.name || ''}${credit.joinphrase || ''}`).join('').trim()
+      : String(artistCredits || entry.artist || '')
+    const mbid = entry.mbid || entry.id || entry.recording?.id || ''
+    const release = entry.releases?.[0]
+    const releaseGroupId = release?.['release-group']?.id
+    return {
+      ...entry,
+      mbid,
+      title: entry.title || entry.name || '',
+      artist: entry.artist || artist,
+      album: release?.title || '',
+      image: entry.image || entry.image_url || entry.cover_url || (releaseGroupId ? `https://coverartarchive.org/release-group/${releaseGroupId}/front-250` : ''),
     }
   })
 }
