@@ -123,16 +123,29 @@ function SearchPanel({ token, draft, ratings, onAdd }) {
 }
 
 function TasteSlot({ item, section, index, itemCount, onRemove, onMove, onDragStart, onDragOver, onDrop, dragging }) {
+  const [loadedImage, setLoadedImage] = useState('')
+  const [failedImage, setFailedImage] = useState('')
   const details = item ? itemDetails(item) : null
-  const title = details?.title || (details?.mbid ? 'Loading title…' : 'Music item')
+  const metadataLoading = Boolean(details?.metadataLoading)
+  const titleIsMbid = Boolean(details?.mbid && details.title === details.mbid)
+  const titleLoading = metadataLoading || (titleIsMbid && !details?.metadataLoaded)
+  const title = titleLoading
+    ? 'Loading…'
+    : titleIsMbid
+      ? `${section.kind === 'song' ? 'Song' : 'Album'} details unavailable`
+      : details?.title || 'Music item'
+  const imageLoading = Boolean(details?.image && loadedImage !== details.image && failedImage !== details.image)
+  const showBuffering = metadataLoading || imageLoading
   return <div
     className={`taste-slot${item ? ' is-filled' : ''}${dragging ? ' is-dragging' : ''}`}
     onDragOver={onDragOver ? (event) => onDragOver(event, index) : undefined}
     onDrop={onDrop ? (event) => onDrop(event, index) : undefined}
   >
     {item ? <>
-      <div className="taste-slot-art" draggable onDragStart={(event) => onDragStart(event, index)} onDragEnd={() => onDragStart(null, null)}>
-        {details.image && <img src={details.image} alt={`${title} cover`} loading="lazy" onError={(event) => event.currentTarget.remove()} />}
+      <div className="taste-slot-art" draggable onDragStart={(event) => onDragStart(event, index)} onDragEnd={() => onDragStart(null, null)} aria-busy={showBuffering}>
+        {details.image && <img className={imageLoading ? 'is-loading' : ''} src={details.image} alt={`${title} cover`} loading="lazy" onLoad={() => setLoadedImage(details.image)} onError={(event) => { setFailedImage(details.image); event.currentTarget.remove() }} />}
+        {showBuffering && <span className="taste-buffering" role="status" aria-label={`Loading ${section.kind} details`} />}
+        {!showBuffering && (!details.image || failedImage === details.image) && <span className="taste-art-fallback" aria-hidden="true">♫</span>}
         <button type="button" className="taste-remove-button" aria-label={`Remove ${title} from ${section.title}`} onClick={() => onRemove(section.key, index)}><span aria-hidden="true">×</span></button>
       </div>
       <span className="taste-slot-title" title={title}>{title}</span>
@@ -275,9 +288,11 @@ function TastePage() {
         const currentUser = await apiRequest('/users/me', { token })
         if (cancelled) return
         setUsername(currentUser.username)
+        const enrichmentUpdates = {}
         const results = await Promise.allSettled(sections.map((section) => getMyTasteList(currentUser.username, section.key, token, (items) => {
       const enriched = items.map((item) => ({ ...itemDetails(item), mbid: item.mbid, id: item.id, rank: item.rank, liked: item.liked }))
       if (cancelled) return
+      enrichmentUpdates[section.key] = enriched
       setSaved((current) => ({ ...current, [section.key]: enriched }))
       setDraft((current) => current[section.key].every((item) => items.some((entry) => identity(entry) === identity(item)))
         ? { ...current, [section.key]: current[section.key].map((item) => ({ ...item, ...(enriched.find((entry) => identity(entry) === identity(item)) || {}) })) }
@@ -288,7 +303,14 @@ function TastePage() {
       const errors = []
       const failedCategories = {}
       results.forEach((result, index) => {
-        if (result.status === 'fulfilled') next[sections[index].key] = result.value.map((item, itemIndex) => ({ ...itemDetails(item), mbid: item.mbid || item.recording_mbid, id: item.id, rank: Number(item.rank) || itemIndex + 1, liked: Boolean(item.liked) })).sort((a, b) => a.rank - b.rank).slice(0, sections[index].key === 'rotation_song' ? 6 : sections[index].max)
+        if (result.status === 'fulfilled') {
+          const key = sections[index].key
+          const initialItems = result.value.map((item, itemIndex) => ({ ...itemDetails(item), mbid: item.mbid || item.recording_mbid, id: item.id, rank: Number(item.rank) || itemIndex + 1, liked: Boolean(item.liked) }))
+          const enrichedItems = enrichmentUpdates[key] || []
+          next[key] = initialItems.map((item) => ({ ...item, ...(enrichedItems.find((enriched) => identity(enriched) === identity(item)) || {}) }))
+            .sort((a, b) => a.rank - b.rank)
+            .slice(0, key === 'rotation_song' ? 6 : sections[index].max)
+        }
         else {
           failedCategories[sections[index].key] = result.reason?.message || 'request failed'
           errors.push(`${sections[index].title}: ${failedCategories[sections[index].key]}`)

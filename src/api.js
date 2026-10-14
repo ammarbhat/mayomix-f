@@ -206,7 +206,7 @@ async function serviceMetadata(item, kind, token) {
 }
 
 async function enrichMusicItem(item, kind, token) {
-  if (!item.mbid) return item
+  if (!item.mbid) return { ...item, metadataLoading: false, metadataLoaded: true }
   const key = `${kind}:${item.mbid}`
   const cached = cachedItem(key)
   if (cached) return {
@@ -216,6 +216,8 @@ async function enrichMusicItem(item, kind, token) {
     artist: item.artist || cached.artist,
     image: item.image || cached.image,
     mbid: item.mbid,
+    metadataLoading: false,
+    metadataLoaded: true,
   }
   try {
     const serviceResult = await serviceMetadata(item, kind, token)
@@ -238,11 +240,11 @@ async function enrichMusicItem(item, kind, token) {
           ? await lookupArtist(item.mbid)
           : await lookupAlbum(item.mbid)
     }
-    const enriched = { ...item, ...metadata, id: item.id, rank: item.rank, liked: item.liked, mbid: item.mbid }
+    const enriched = { ...item, ...metadata, id: item.id, rank: item.rank, liked: item.liked, mbid: item.mbid, metadataLoading: false, metadataLoaded: true }
     saveCachedItem(key, enriched)
     return enriched
   } catch {
-    return item
+    return { ...item, metadataLoading: false, metadataLoaded: true }
   }
 }
 
@@ -257,6 +259,8 @@ export async function getTasteList(username, category, token, onEnriched) {
       mbid: item.mbid || entry.mbid || entry.album_mbid || entry.song_mbid || entry.recording_mbid || entry.album?.mbid || entry.song?.mbid || entry.recording?.mbid,
       rank: entry.rank ?? item.rank,
       liked: entry.liked ?? item.liked,
+      metadataLoading: Boolean(item.mbid && onEnriched),
+      metadataLoaded: !item.mbid || !onEnriched,
     }
   })
   const kind = category === 'top_albums' || category === 'rotation_album'
@@ -268,9 +272,28 @@ export async function getTasteList(username, category, token, onEnriched) {
         : null
 
   if (kind && onEnriched) {
-    Promise.all(items.map((item) => enrichMusicItem(item, kind, token)))
-      .then(onEnriched)
-      .catch(() => {})
+    const enrichedItems = [...items]
+    items.forEach((item, index) => {
+      let settled = false
+      const publish = (value) => {
+        enrichedItems[index] = value
+        try { onEnriched([...enrichedItems]) } catch { /* Rendering updates must not interrupt other lookups. */ }
+      }
+      const timeout = setTimeout(() => {
+        if (settled) return
+        settled = true
+        publish({ ...item, metadataLoading: false, metadataLoaded: true })
+      }, 10000)
+      enrichMusicItem(item, kind, token).then((enriched) => {
+        clearTimeout(timeout)
+        settled = true
+        publish(enriched)
+      }).catch(() => {
+        clearTimeout(timeout)
+        settled = true
+        publish({ ...item, metadataLoading: false, metadataLoaded: true })
+      })
+    })
   }
   return items
 }

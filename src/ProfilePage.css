@@ -20,7 +20,7 @@
 .media-grid { min-height: 0; flex: 1; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); align-items: stretch; gap: 16px; padding: 10px 13px; overflow: hidden; border-radius: 8px; background: #fff; }
 .media-card,.placeholder-card { min-width: 0; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }
 .artwork,.placeholder-square { width: 100%; max-width: 150px; aspect-ratio: 1; flex: 0 1 auto; overflow: hidden; border-radius: 8px; background: #aaa; }
-.artwork { box-shadow: 0 3px 8px rgba(0,0,0,.18), 0 1px 2px rgba(0,0,0,.12); transition: box-shadow .2s ease; }
+.artwork { position: relative; display: grid; place-items: center; box-shadow: 0 3px 8px rgba(0,0,0,.18), 0 1px 2px rgba(0,0,0,.12); transition: box-shadow .2s ease; }
 .artwork:hover { box-shadow: 0 5px 12px rgba(0,0,0,.22), 0 2px 4px rgba(0,0,0,.14); }
 .artwork img { width: 100%; height: 100%; display: block; object-fit: cover; }
 .media-grid-rotation .media-card { justify-content: center; }
@@ -54,6 +54,8 @@
 .identity-art:hover,.artwork:hover img { transform: scale(1.025); }
 .image-fade { opacity: 0; }
 .image-fade.is-loaded { opacity: 1; }
+.profile-art-buffering { position: absolute; z-index: 1; width: 34px; height: 34px; border: 3px solid rgba(255,255,255,.38); border-top-color: #fff; border-radius: 50%; animation: profile-art-spin .8s linear infinite; }
+.profile-art-fallback { color: #666; font-size: 36px; line-height: 1; }
 .placeholder-square,.placeholder-rating,.text-skeleton,.list-skeleton { animation: skeleton-pulse 1.5s ease-in-out infinite alternate; }
 .text-skeleton,.list-skeleton { display: block; border-radius: 4px; background: #555; }
 .name-skeleton { width: 116px; height: 17px; }
@@ -62,11 +64,13 @@
 .list-skeleton { width: 70%; height: 15px; margin: 2px 0; background: #e4e4e4; }
 .music-section[aria-busy="true"] .media-grid { cursor: progress; }
 @keyframes skeleton-pulse { from { opacity: .55; } to { opacity: 1; } }
+@keyframes profile-art-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .identity-art,.artwork img { transition: none; }
   .connection-button { transition: none; }
   .placeholder-square,.placeholder-rating,.text-skeleton,.list-skeleton { animation: none; }
+  .profile-art-buffering { animation-duration: 1.8s; }
 }
 
 @media (max-width: 780px) {
@@ -130,8 +134,8 @@
 .profile-edit-actions { display: flex; flex-wrap: wrap; gap: 10px; margin: clamp(18px, 3.4vh, 32px) 0 0 -10px; }
 .profile-edit-actions button { min-height: 40px; padding: 7px 18px; border: 0; border-radius: 18px; background: #101010; color: #eee; font: inherit; font-size: 14px; }
 .profile-edit-actions button + button { background: #74490c; }
-.profile-edit-actions a { min-height: 40px; display: inline-flex; align-items: center; padding: 7px 18px; border-radius: 18px; background: #101010; color: #eee; font-size: 14px; text-decoration: none; }
-.profile-edit-actions a:hover { background: #303030; }
+.profile-edit-actions a { min-height: 40px; display: inline-flex; align-items: center; padding: 7px 18px; border-radius: 18px; background: #74490c; color: #eee; font-size: 14px; text-decoration: none; }
+.profile-edit-actions a:hover { background: #5c390a; }
 .identity-panel .identity-bio { min-height: clamp(64px, 9vh, 88px); margin: 0; padding: 13px 17px; overflow-wrap: anywhere; border-radius: 15px; background: #fff; color: #222; font-size: 15px; }
 .details-panel { display: flex; flex-direction: column; gap: 18px; flex: 0 0 auto; padding: 15px 20px; border-color: #111; border-radius: 14px; background: #252525; color: #eee; }
 .identity-section h2 { margin-bottom: 10px; color: #ccc; font-size: 17px; }
@@ -188,6 +192,17 @@
 .public-profile-page .identity-panel .identity-bio { margin-top: 0; }
 .connection-button { align-self: flex-start; margin: 0; }
 .public-profile-page .public-reviews-link { width: 100%; min-height: 50px; }
+
+/* Keep each gray music card close to its artwork and label. */
+.media-grid { align-items: start; }
+.media-grid .media-card {
+  min-height: 0;
+  height: auto;
+  align-self: start;
+  justify-content: flex-start;
+  gap: 7px;
+  padding: 8px;
+}
 
 @media (max-width: 900px) {
   .profile-board, .public-profile-page .profile-board { grid-template-columns: minmax(300px, .9fr) minmax(0, 1.1fr); gap: 16px; }
@@ -317,4 +332,59 @@
   .media-grid .media-card { padding: 6px 5px 10px; }
   .media-grid .artwork { width: 100%; max-width: 180px; }
   .media-grid-top-album .rating-vinyls { margin-top: 6px; }
+}
+
+/* Let the gray card wrap its content, with the cover inset evenly. */
+.media-grid .media-card {
+  min-height: 0;
+  height: fit-content;
+  aspect-ratio: auto;
+  align-self: start;
+  gap: 6px;
+  padding: 6px;
+}
+.media-grid .media-card .artwork { align-self: center; }
+@media (max-width: 560px) {
+  .media-grid .media-card { min-height: 0; aspect-ratio: auto; padding: 6px; }
+}
+
+/* Match card width to its cover so the gray inset is even on every side. */
+.media-grid .media-card,
+.media-grid .placeholder-card {
+  box-sizing: border-box;
+  width: min(100%, 192px);
+  min-height: 0;
+  height: fit-content;
+  aspect-ratio: auto;
+  justify-self: center;
+  align-self: start;
+  padding: 6px;
+}
+.media-grid .media-card .artwork,
+.media-grid .placeholder-card .placeholder-square {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 180px;
+  flex: 0 0 auto;
+  aspect-ratio: 1;
+}
+.media-grid .placeholder-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  overflow: hidden;
+  background: #626262;
+}
+.media-grid .placeholder-square {
+  display: block;
+  border-radius: 8px;
+  background: #aaa;
+}
+.media-grid .placeholder-card::after {
+  width: 100%;
+  height: 1.2em;
+  flex: 0 0 1.2em;
+  content: '';
 }

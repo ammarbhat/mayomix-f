@@ -14,11 +14,21 @@ function PlaceholderCards({ count = 3, className = '' }) {
   ))
 }
 
-function Artwork({ item, className = '' }) {
+function Artwork({ item, className = '', kind = 'album' }) {
+  const [loadedImage, setLoadedImage] = useState('')
+  const [failedImage, setFailedImage] = useState('')
   const details = itemDetails(item)
+  const metadataPending = Boolean(details.metadataLoading)
+  const imagePending = Boolean(details.image && details.image !== loadedImage && details.image !== failedImage)
+  const isLoading = metadataPending || imagePending
   return (
-    <div className={`artwork ${className}`}>
-      {details.image && <img className="image-fade" src={details.image} alt={`${details.title || 'Music'} artwork`} loading="lazy" onLoad={(event) => event.currentTarget.classList.add('is-loaded')} onError={(event) => { event.currentTarget.remove() }} />}
+    <div className={`artwork ${className}`} aria-busy={isLoading}>
+      {details.image && <img className={`image-fade${loadedImage === details.image ? ' is-loaded' : ''}`} src={details.image} alt={`${details.title && details.title !== details.mbid ? details.title : kind} artwork`} loading="lazy" onLoad={() => setLoadedImage(details.image)} onError={() => setFailedImage(details.image)} />}
+      {isLoading
+        ? <span className="profile-art-buffering" role="status" aria-label={`Loading ${kind} artwork`} />
+        : !details.image || failedImage === details.image
+          ? <span className="profile-art-fallback" aria-hidden="true">♫</span>
+          : null}
     </div>
   )
 }
@@ -31,11 +41,18 @@ function MediaSection({ id, title, items, loading, type = 'artwork' }) {
       <div className={className}>
         {items.slice(0, 3).map((entry, index) => {
           const item = itemDetails(entry)
+          const titleIsMbid = Boolean(item.mbid && item.title === item.mbid)
+          const titlePending = Boolean(item.metadataLoading || (titleIsMbid && !item.metadataLoaded))
+          const displayTitle = titlePending
+            ? 'Loading…'
+            : titleIsMbid
+              ? `${type === 'song' ? 'Song' : 'Album'} details unavailable`
+              : item.title || (type === 'song' ? 'Unknown song' : 'Untitled')
           return (
             <a className="media-card" key={item.mbid || `${item.title}-${index}`} href={type === 'top-album' && item.mbid ? `/albums/${encodeURIComponent(item.mbid)}` : undefined}>
-              <Artwork item={item} />
+              <Artwork item={item} kind={type === 'song' ? 'song' : 'album'} />
               <div className="media-copy">
-                <h3 title={item.title || undefined}>{item.title || (item.mbid ? 'Loading title…' : type === 'song' ? 'Unknown song' : 'Untitled')}</h3>
+                <h3 title={titleIsMbid ? undefined : displayTitle}>{displayTitle}</h3>
                 {type === 'song' && <p title={item.artist}>{item.artist || item.album || ''}</p>}
               </div>
               {(type === 'top-album' || type === 'rotation') ? <RatingVinyls item={entry} size="large" /> : null}
@@ -173,7 +190,7 @@ function ProfilePage({ username: viewedUsername = '' }) {
                 <div className="identity-copy">
                   <h1>{loading && !user.name ? <span className="text-skeleton name-skeleton" aria-label="Loading profile" /> : user.name || 'Your profile'}</h1>
                   <p className="identity-handle">{loading && !user.username ? <span className="text-skeleton handle-skeleton" aria-label="Loading username" /> : `@${handle}`}</p>
-                  {!isPublicProfile && <div className="profile-edit-actions"><button type="button">Edit Profile</button><button type="button">Edit Display</button><a href="/taste">Edit taste</a></div>}
+                  {!isPublicProfile && <div className="profile-edit-actions"><button type="button">Edit Profile</button><a href="/taste">Edit Display</a></div>}
                 </div>
               </div>
               <p className="identity-bio">{loading && !bio ? <span className="text-skeleton bio-skeleton" aria-label="Loading bio" /> : bio}</p>
