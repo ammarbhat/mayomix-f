@@ -289,7 +289,9 @@
 }
 .details-panel .favorite-card {
   flex: 1 1 0;
+  width: min(100%, 560px);
   min-width: 0;
+  align-self: center;
   display: flex;
   flex-direction: column;
   padding: 14px 20px;
@@ -302,10 +304,15 @@
   font-size: clamp(20px, 1.8vw, 24px);
   line-height: 1.15;
 }
-.details-panel .identity-list > span { text-transform: capitalize; }
+.details-panel .identity-list > span {
+  padding: 9px 17px;
+  font-size: 18px;
+  text-transform: capitalize;
+}
 @media (max-width: 560px) {
   .details-panel { height: auto; }
   .details-panel .favorite-card { flex: 0 0 auto; }
+  .details-panel .identity-list > span { padding: 7px 13px; font-size: 16px; }
 }
 
 /* Match the reference shelves: tall cards, generous gutters, square cover art. */
