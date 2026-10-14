@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { acceptConnectionRequest, clearStoredToken, deleteConnection, getActivity, getAlbumDetails, getPendingConnections, getSentConnections, getStoredToken } from './api.js'
+import { acceptConnectionRequest, apiRequest, clearStoredToken, deleteConnection, getActivity, getAlbumDetails, getPendingConnections, getSentConnections, getStoredToken } from './api.js'
 import AppHeader from './AppHeader.jsx'
 import RatingVinyls from './RatingVinyls.jsx'
 import './ActivityPage.css'
@@ -61,14 +61,26 @@ function formatActivityDate(value) {
 function ActivityReviewCard({ review, token }) {
   const cardRef = useRef(null)
   const [album, setAlbum] = useState(review.album || review.album_info || null)
+  const owner = review.user || review.reviewer || review.owner || review.author || {}
   const mbid = review.album_mbid || review.mbid || album?.mbid || album?.id || ''
-  const username = review.username || review.user?.username || review.reviewer?.username || review.handle || ''
-  const name = review.user?.name || review.reviewer?.name || review.name || username || 'MayoMix listener'
+  const username = review.username || review.owner_username || review.reviewer_username || review.user_username || owner.username || review.handle || ''
+  const name = review.display_name || review.reviewer_name || review.user_name || owner.name || owner.display_name || review.name || ''
+  const authorLabel = name || (username ? `@${username}` : 'MayoMix listener')
+  const [authorProfile, setAuthorProfile] = useState(null)
   const date = formatActivityDate(review.create_date || review.created_at || review.review_date || review.date)
   const title = album?.title || review.album_title || review.title || 'Album review'
   const artist = album?.artist || review.artist || review.artist_name || ''
   const image = album?.image || album?.cover_url || review.cover_url || (mbid ? `https://coverartarchive.org/release-group/${encodeURIComponent(mbid)}/front-250` : '')
   const text = review.review_str || review.review_text || review.text || review.review || ''
+
+  useEffect(() => {
+    if (!username || (name && owner.pfp_link)) return undefined
+    let cancelled = false
+    apiRequest(`/users/${encodeURIComponent(username)}`).then((profile) => {
+      if (!cancelled) setAuthorProfile(profile)
+    }).catch(() => {})
+    return () => { cancelled = true }
+  }, [name, owner.pfp_link, username])
 
   useEffect(() => {
     if (!mbid || album?.title) return undefined
@@ -95,8 +107,8 @@ function ActivityReviewCard({ review, token }) {
     <article className="activity-entry" ref={cardRef}>
       <header className="activity-entry-header">
         <a className="activity-author" href={username ? `/users/${encodeURIComponent(username)}` : undefined}>
-          <img src={review.user?.pfp_link || review.reviewer?.pfp_link || review.pfp_link || '/images/profile-default.png'} alt="" onError={(event) => { event.currentTarget.src = '/images/profile-default.png' }} />
-          <span><strong>{name}</strong>{username && <small>@{username}</small>}</span>
+          <img src={owner.pfp_link || owner.profile_image || authorProfile?.pfp_link || review.pfp_link || '/images/profile-default.png'} alt="" onError={(event) => { event.currentTarget.src = '/images/profile-default.png' }} />
+          <span><strong>{name || authorProfile?.name || authorLabel}</strong>{username && <small>@{username}</small>}</span>
         </a>
         <time>{date}</time>
       </header>
