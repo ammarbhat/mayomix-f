@@ -83,7 +83,7 @@ export function clearStoredToken() {
 function listFromPayload(payload) {
   if (Array.isArray(payload)) return payload
   if (!payload || typeof payload !== 'object') return []
-  for (const key of ['items', 'results', 'entries', 'data', 'taste', 'users', 'reviews', 'songs', 'liked_songs', 'liked', 'recordings', 'release-groups']) {
+  for (const key of ['items', 'results', 'entries', 'data', 'taste', 'users', 'reviews', 'songs', 'artists', 'liked_songs', 'liked', 'recordings', 'release-groups']) {
     if (Array.isArray(payload[key])) return payload[key]
   }
   if (payload.mbid || payload.title || payload.name || payload.id) return [payload]
@@ -470,6 +470,16 @@ export async function searchAlbums(queryText, token, limit = 15) {
       coverCandidates,
     }
   })
+}
+
+export async function searchArtists(queryText, limit = 6) {
+  const query = new URLSearchParams({ query: queryText, limit: String(limit) })
+  const payload = await apiRequest(`/search/artists?${query}`)
+  return listFromPayload(payload).map((entry) => ({
+    ...entry,
+    mbid: entry.mbid || entry.id || entry.artist?.id || '',
+    title: entry.title || entry.name || entry.artist?.name || 'Unknown artist',
+  }))
 }
 
 export async function searchSongs(queryText, limit = 10) {
