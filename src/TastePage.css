@@ -98,3 +98,17 @@
   .taste-page * { scroll-behavior: auto !important; }
   .taste-buffering { animation-duration: 2.4s; }
 }
+
+@media (min-width: 821px) {
+  .taste-page { width: 100%; height: 100dvh; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+  .taste-workspace { width: min(100% - 48px, 1120px); height: calc(100dvh - 88px); min-height: 0; flex: 1 1 auto; box-sizing: border-box; padding: clamp(10px, 2vh, 20px) 0; }
+  .taste-search-panel,.taste-editor-panel { height: 100%; min-height: 0; box-sizing: border-box; }
+  .taste-search-panel { padding: clamp(12px, 1.8vh, 20px); }
+  .taste-editor-panel { gap: clamp(4px, 1vh, 9px); overflow: hidden; padding: clamp(10px, 1.6vh, 16px); }
+  .taste-section { min-height: 0; flex: 1 1 0; display: flex; flex-direction: column; }
+  .taste-section h2 { flex: 0 0 auto; margin-bottom: 3px; font-size: clamp(17px, 2.4vh, 21px); }
+  .taste-tray { min-height: 0; flex: 1 1 auto; align-items: center; gap: 6px; padding: 6px; }
+  .taste-slot { width: min(100%, 16vh); justify-self: center; }
+  .taste-slot-title { margin-top: 3px; }
+  .taste-actions { flex: 0 0 auto; margin-top: 0; padding-top: 4px; }
+}

@@ -122,7 +122,7 @@ function SearchPanel({ token, draft, ratings, onAdd }) {
   )
 }
 
-function TasteSlot({ item, section, index, itemCount, onRemove, onMove, onDragStart, onDragOver, onDrop, dragging }) {
+function TasteSlot({ item, section, index, onRemove, onDragStart, onDragOver, onDrop, dragging }) {
   const [loadedImage, setLoadedImage] = useState('')
   const [failedImage, setFailedImage] = useState('')
   const details = item ? itemDetails(item) : null
@@ -149,15 +149,11 @@ function TasteSlot({ item, section, index, itemCount, onRemove, onMove, onDragSt
         <button type="button" className="taste-remove-button" aria-label={`Remove ${title} from ${section.title}`} onClick={() => onRemove(section.key, index)}><span aria-hidden="true">×</span></button>
       </div>
       <span className="taste-slot-title" title={title}>{title}</span>
-      <div className="taste-slot-order" aria-label={`Reorder ${title}`}>
-        <button type="button" aria-label={`Move ${title} earlier in ${section.title}`} disabled={index === 0} onClick={() => onMove(section.key, index, index - 1)}>↑</button>
-        <button type="button" aria-label={`Move ${title} later in ${section.title}`} disabled={index >= itemCount - 1} onClick={() => onMove(section.key, index, index + 1)}>↓</button>
-      </div>
     </> : <div className="taste-slot-empty" aria-label={`Empty ${section.title} slot ${index + 1}`} />}
   </div>
 }
 
-function TasteSection({ section, items, onRemove, onReorder, onMove }) {
+function TasteSection({ section, items, onRemove, onReorder }) {
   const [draggingIndex, setDraggingIndex] = useState(null)
 
   function startDrag(event, index) {
@@ -188,7 +184,6 @@ function TasteSection({ section, items, onRemove, onReorder, onMove }) {
         index={index}
         itemCount={items.length}
         onRemove={onRemove}
-        onMove={onMove}
         onDragStart={startDrag}
         onDragOver={(event) => event.preventDefault()}
         onDrop={dropItem}
@@ -481,7 +476,7 @@ function TastePage() {
       <section className="taste-editor-panel" aria-label="Current taste">
         {loading && <p className="taste-loading" role="status">Loading your taste…</p>}
         {loadError && <p className="taste-inline-error" role="alert">{loadError}</p>}
-        {!loading && sections.map((section) => <TasteSection key={section.key} section={section} items={draft[section.key]} onRemove={removeItem} onReorder={reorderItem} onMove={reorderItem} />)}
+        {!loading && sections.map((section) => <TasteSection key={section.key} section={section} items={draft[section.key]} onRemove={removeItem} onReorder={reorderItem} />)}
         <div className="taste-actions">
           <button type="button" className="taste-clear-button" disabled={loading || saving || (!dirty && !sections.some(({ key }) => draft[key].length))} onClick={() => setClearOpen(true)}>Clear all</button>
           <button type="button" className="taste-save-button" disabled={loading || saving || !dirty} onClick={save} aria-busy={saving}>{saving ? 'Saving…' : 'Save'}</button>
