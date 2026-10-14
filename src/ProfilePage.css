@@ -380,7 +380,8 @@
 .media-grid .placeholder-square {
   display: block;
   border-radius: 8px;
-  background: #aaa;
+  background: #c8c8c8;
+  animation: none;
 }
 .media-grid .placeholder-card::after {
   width: 100%;
