@@ -174,6 +174,7 @@ function ProfilePage({ username: viewedUsername = '' }) {
   const user = profile.user || {}
   const handle = user.username || user.handle || user.name || 'listener'
   const bio = user.bio || user.biography || user.about || ''
+  const usesAlbumArtwork = /coverartarchive\.org/i.test(user.pfp_link || '')
 
   return (
     <main className={`profile-page${isPublicProfile ? ' public-profile-page' : ''}`} id="profile">
@@ -183,10 +184,12 @@ function ProfilePage({ username: viewedUsername = '' }) {
           <aside className="profile-sidebar" aria-busy={loading}>
             <section className={`identity-panel${isPublicProfile ? ' public-identity-panel' : ''}`}>
               <div className="identity-heading">
-                <div className="profile-turntable" aria-label="Profile photo on a record player">
-                  <img className="turntable-base" src="/images/turntable-white-platter.png" alt="" />
-                  <img className="turntable-profile" src={user.pfp_link || '/images/profile-default.png'} alt={`${user.name || handle}'s profile picture`} onError={(event) => { if (!event.currentTarget.src.endsWith('/images/profile-default.png')) event.currentTarget.src = '/images/profile-default.png' }} />
-                </div>
+                {usesAlbumArtwork
+                  ? <img className="identity-album-art" src={user.pfp_link} alt={`${user.name || handle}'s selected album artwork`} onError={(event) => { event.currentTarget.src = '/images/profile-default.png' }} />
+                  : <div className="profile-turntable" aria-label="Profile photo on a record player">
+                    <img className="turntable-base" src="/images/turntable-white-platter.png" alt="" />
+                    <img className="turntable-profile" src={user.pfp_link || '/images/profile-default.png'} alt={`${user.name || handle}'s profile picture`} onError={(event) => { if (!event.currentTarget.src.endsWith('/images/profile-default.png')) event.currentTarget.src = '/images/profile-default.png' }} />
+                  </div>}
                 <div className="identity-copy">
                   <h1>{loading && !user.name ? <span className="text-skeleton name-skeleton" aria-label="Loading profile" /> : user.name || 'Your profile'}</h1>
                   <p className="identity-handle">{loading && !user.username ? <span className="text-skeleton handle-skeleton" aria-label="Loading username" /> : `@${handle}`}</p>

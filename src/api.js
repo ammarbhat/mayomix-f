@@ -475,11 +475,15 @@ export async function searchAlbums(queryText, token, limit = 15) {
 export async function searchArtists(queryText, limit = 6) {
   const query = new URLSearchParams({ query: queryText, limit: String(limit) })
   const payload = await apiRequest(`/search/artists?${query}`)
-  return listFromPayload(payload).map((entry) => ({
-    ...entry,
-    mbid: entry.mbid || entry.id || entry.artist?.id || '',
-    title: entry.title || entry.name || entry.artist?.name || 'Unknown artist',
-  }))
+  const artists = Array.isArray(payload?.artists) ? payload.artists : listFromPayload(payload)
+  return artists.filter((entry) => entry && typeof entry === 'object').map((entry) => {
+    const artist = entry.artist || entry
+    return {
+      ...entry,
+      mbid: entry.mbid || entry.id || artist.id || '',
+      title: entry.title || entry.name || artist.name || 'Unknown artist',
+    }
+  }).filter((artist) => artist.mbid && artist.title)
 }
 
 export async function searchSongs(queryText, limit = 10) {

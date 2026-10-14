@@ -43,8 +43,9 @@
 .edit-genre-menu { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
 .edit-genre-menu button, .edit-artist-results button { min-height: 38px; padding: 7px 10px; border: 0; border-radius: 8px; background: #555; color: #fff; text-align: left; cursor: pointer; }
 .edit-genre-menu button:disabled, .edit-artist-results button:disabled { opacity: .5; cursor: default; }
-.edit-artist-search { width: min(86%, 430px); margin: 28px auto 0; }
-.edit-artist-results { display: flex; flex-direction: column; gap: 5px; }
+.edit-artist-search-wrap { position: relative; width: min(86%, 430px); margin: 28px auto 0; }
+.edit-artist-search { width: 100%; }
+.edit-artist-results { top: calc(100% + 8px); left: 0; display: flex; flex-direction: column; gap: 5px; }
 .edit-artist-results p { margin: 10px; color: #444; }
 .edit-profile-actions { display: flex; justify-content: flex-end; align-items: center; gap: 18px; padding-top: 30px; }
 .edit-profile-actions span { color: #d7d7d7; }
@@ -79,3 +80,5 @@
   .edit-profile-actions { flex-direction: column; align-items: stretch; }
   .edit-profile-actions button { width: 100%; }
 }
+
+.edit-artist-search-wrap { z-index: 4; }

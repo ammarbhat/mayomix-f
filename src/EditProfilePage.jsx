@@ -42,6 +42,7 @@ function EditProfilePage() {
   const [artistResults, setArtistResults] = useState([])
   const [artistSearching, setArtistSearching] = useState(false)
   const [artistError, setArtistError] = useState('')
+  const [artistSearched, setArtistSearched] = useState(false)
   const request = useRef(0)
   const artistRequest = useRef(0)
   const initialGenres = useRef([])
@@ -95,7 +96,7 @@ function EditProfilePage() {
     event?.preventDefault()
     if (!artistQuery.trim()) return
     const id = ++artistRequest.current
-    setArtistSearching(true); setArtistError('')
+    setArtistSearching(true); setArtistError(''); setArtistSearched(true)
     try {
       const found = await searchArtists(artistQuery.trim(), 6)
       if (id === artistRequest.current) setArtistResults(found)
@@ -175,8 +176,10 @@ function EditProfilePage() {
         {genreMenu && <div className="edit-genre-menu" role="group" aria-label="Available genres">{GENRES.filter((genre) => !genres.some((entry) => entry.title === genre)).map((genre) => <button type="button" key={genre} disabled={genres.length >= 3} onClick={() => addGenre(genre)}>{genre}</button>)}</div>}
       </div></section>
       <section className="edit-ranked-section"><h2>Top Artists</h2><div className="edit-ranked-controls"><RankedList title="Top artists" items={artists} onRemove={(index) => setArtists((items) => items.filter((_, i) => i !== index))} onReorder={(from, to) => reorder(setArtists, artists, from, to)} />
-        <div className="edit-artist-search"><input aria-label="Search artists" value={artistQuery} onChange={(event) => setArtistQuery(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') searchForArtist(event) }} placeholder="Search Artists" /><button type="button" aria-label="Search artists" disabled={!artistQuery.trim()} onClick={() => searchForArtist(null)}><SearchIcon /></button></div>
-        {(artistResults.length > 0 || artistSearching || artistError) && <div className="edit-artist-results" aria-live="polite" aria-busy={artistSearching}>{artistSearching && <p>Searching…</p>}{artistError && <p role="alert">{artistError}</p>}{artistResults.map((item) => <button type="button" key={idOf(item)} disabled={artists.length >= 3 || artists.some((entry) => idOf(entry) === idOf(item))} onClick={() => addArtist(item)}>{item.title}</button>)}</div>}
+        <div className="edit-artist-search-wrap">
+          <div className="edit-artist-search"><input aria-label="Search artists" value={artistQuery} onChange={(event) => { artistRequest.current += 1; setArtistSearching(false); setArtistQuery(event.target.value); setArtistSearched(false); setArtistResults([]) }} onKeyDown={(event) => { if (event.key === 'Enter') searchForArtist(event) }} placeholder="Search Artists" /><button type="button" aria-label="Search artists" disabled={!artistQuery.trim() || artistSearching} onClick={() => searchForArtist(null)}><SearchIcon /></button></div>
+          {artistSearched && <div className="edit-artist-results" aria-live="polite" aria-busy={artistSearching}>{artistSearching && <p>Searching…</p>}{artistError && <p role="alert">{artistError}</p>}{!artistSearching && !artistError && !artistResults.length && <p>No artists found.</p>}{artistResults.map((item) => <button type="button" key={idOf(item)} disabled={artists.length >= 3 || artists.some((entry) => idOf(entry) === idOf(item))} onClick={() => { addArtist(item); setArtistSearched(false) }}>{item.title}</button>)}</div>}
+        </div>
       </div></section>
       <div className="edit-profile-actions"><span role={notice ? 'status' : undefined}>{notice}</span><button type="submit" disabled={!loaded || saving || Boolean(loadError)}>{saving ? 'Saving…' : 'Save changes'}</button></div>
       {loadError && <p className="edit-error" role="alert">{loadError}</p>}{saveError && <p className="edit-error" role="alert">{saveError}</p>}
