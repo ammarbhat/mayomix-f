@@ -1,17 +1,36 @@
 .search-page {
-  min-height: 100vh;
+  --search-mobile-nav-space: calc(82px + env(safe-area-inset-bottom));
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   color: #f4f4f4;
   background: #555;
 }
 
-.search-page button:focus-visible,.search-page input:focus-visible { outline: 2px solid #fff; outline-offset: 4px; }
+.search-page button:focus-visible,
+.search-page input:focus-visible { outline: 2px solid #fff; outline-offset: 4px; }
 
-.search-workspace { width: min(100% - 48px, 1360px); min-height: calc(100vh - 88px); margin: 0 auto; padding: 16px 0 22px; }
+.search-workspace {
+  width: min(100% - 48px, 1360px);
+  height: 0;
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  margin: 0 auto;
+  padding: 16px 0 22px;
+}
+
 .main-search-form {
   position: relative;
   z-index: 2;
   width: min(100% - 84px, 1120px);
   height: 58px;
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   margin: 0 auto 12px;
@@ -20,6 +39,7 @@
   color: #171717;
   transition: width .2s ease, border-radius .2s ease, box-shadow .2s ease;
 }
+
 .main-search-form:focus-within { box-shadow: 0 0 0 3px #fff4; }
 .main-search-form input { width: 100%; height: 100%; min-width: 0; padding: 0 56px 0 30px; border: 0; outline: 0; border-radius: inherit; background: transparent; color: #171717; font-size: 21px; }
 .main-search-form input::placeholder { color: #626262; opacity: 1; }
@@ -27,39 +47,70 @@
 .submit-search { position: absolute; top: 0; right: 12px; width: 46px; height: 100%; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: transparent; color: #101010; cursor: pointer; }
 .submit-search svg { width: 31px; height: 31px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 
-.library-board { min-height: calc(100vh - 176px); padding: 22px clamp(20px, 3vw, 38px) 32px; border-radius: 15px; background: #414141; }
-.library-tabs { width: min(100%, 920px); min-height: 58px; display: grid; grid-template-columns: 1fr 1fr; align-items: stretch; margin: 0 auto 26px; padding: 4px; border-radius: 13px; background: #292929; }
-.library-tabs button,.search-tabs button { position: relative; display: flex; align-items: center; justify-content: center; padding: 8px 18px; border: 0; border-radius: 10px; background: transparent; color: #d1d1d1; font-size: 21px; cursor: pointer; transition: color .16s ease, background .16s ease; }
-.library-tabs button.is-active { color: #fff; }
-.library-tabs button.is-active::after,.search-tabs button.is-active::after { position: absolute; right: 18%; bottom: 5px; left: 18%; height: 1px; background: currentColor; content: ''; }
-.library-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; gap: 16px 24px; }
-.liked-song-card,.album-review-card { min-width: 0; min-height: 116px; display: flex; align-items: center; gap: 16px; padding: 14px; border-radius: 14px; background: #1a1a1a; color: #eee; }
+.library-board,
+.expanded-search-panel {
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.library-board { padding: 22px clamp(20px, 3vw, 38px) 32px; border-radius: 15px; background: #414141; }
+.library-tabs,
+.search-tabs { flex: 0 0 auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; }
+.library-tabs { width: min(100%, 920px); min-height: 58px; margin: 0 auto 26px; padding: 4px; border-radius: 13px; background: #292929; }
+.library-tabs button,
+.search-tabs button { position: relative; display: flex; align-items: center; justify-content: center; padding: 8px 18px; border: 0; border-radius: 10px; background: transparent; color: #d1d1d1; font-size: 21px; cursor: pointer; transition: color .16s ease, background .16s ease; }
+.library-tabs button.is-active,
+.search-tabs button.is-active { color: #fff; }
+.library-tabs button.is-active::after,
+.search-tabs button.is-active::after { position: absolute; right: 18%; bottom: 5px; left: 18%; height: 1px; background: currentColor; content: ''; }
+.library-grid,
+.search-results { min-height: 0; flex: 1; display: grid; align-content: start; overflow-y: auto; overscroll-behavior: contain; }
+.library-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 24px; }
+.liked-song-card { min-width: 0; min-height: 116px; display: flex; align-items: center; gap: 16px; padding: 14px; border-radius: 14px; background: #1a1a1a; color: #eee; }
 .search-artwork { position: relative; width: 84px; height: 84px; flex: 0 0 84px; display: grid; place-items: center; overflow: hidden; border-radius: 11px; background: #292929; color: #9e9e9e; font-size: 33px; }
 .search-artwork img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; object-fit: cover; }
-.liked-song-copy,.review-copy,.search-result-copy { min-width: 0; flex: 1; }
-.liked-song-copy h3,.review-copy h3,.search-result-copy h3 { overflow: hidden; margin: 0; color: #f0f0f0; text-overflow: ellipsis; white-space: nowrap; font-size: 19px; font-weight: 500; line-height: 1.25; }
-.liked-song-copy p,.review-artist,.search-result-copy p { overflow: hidden; margin: 4px 0 0; color: #bebebe; text-overflow: ellipsis; white-space: nowrap; font-size: 15px; }
+.liked-song-copy,
+.review-copy,
+.search-result-copy { min-width: 0; flex: 1; }
+.liked-song-copy h3,
+.review-copy h3,
+.search-result-copy h3 { overflow: hidden; margin: 0; color: #f0f0f0; text-overflow: ellipsis; white-space: nowrap; font-size: 19px; font-weight: 500; line-height: 1.25; }
+.liked-song-copy p,
+.review-artist,
+.search-result-copy p { overflow: hidden; margin: 4px 0 0; color: #bebebe; text-overflow: ellipsis; white-space: nowrap; font-size: 15px; }
 .liked-heart { width: 38px; height: 38px; flex: 0 0 38px; color: #ed4045; }
 .liked-heart svg { width: 100%; height: 100%; fill: currentColor; stroke: currentColor; stroke-width: 1.5; }
-.review-copy { align-self: stretch; display: flex; flex-direction: column; justify-content: center; }
-.review-copy .review-rating { margin-top: 5px; }
-.review-copy .review-text { display: -webkit-box; overflow: hidden; margin: 8px 0 0; color: #c7c7c7; font-size: 13px; line-height: 1.45; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
-.search-message,.search-hint { grid-column: 1 / -1; margin: 0; padding: 24px 16px; color: #d0d0d0; text-align: center; font-size: 15px; }
+.search-message,
+.search-hint { grid-column: 1 / -1; margin: 0; padding: 24px 16px; color: #d0d0d0; text-align: center; font-size: 15px; }
 .search-message.is-error { color: #ffb7b7; }
 .empty-library { padding-top: 64px; }
 
-.expanded-search-panel { min-height: min(650px, calc(100vh - 190px)); padding: 20px clamp(18px, 4vw, 44px) 28px; border-radius: 15px; background: #e1e1e1; color: #202020; }
+.album-review-card { min-width: 0; min-height: 182px; display: grid; grid-template-columns: 88px minmax(0, 1fr); grid-template-rows: 94px 1px auto 24px; align-items: center; gap: 10px 16px; padding: 14px; border-radius: 17px; background: #d8d8d8; color: #292929; }
+.album-review-card .search-artwork { width: 88px; height: 94px; flex: none; grid-column: 1; grid-row: 1; border-radius: 13px; background: #c8c8c8; }
+.album-review-card .review-copy { min-width: 0; align-self: stretch; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; grid-column: 2; grid-row: 1; padding: 2px 4px; }
+.album-review-card .review-copy h3 { color: #252525; font-size: 23px; }
+.album-review-card .review-artist { margin: 5px 0 8px; color: #606060; font-size: 18px; }
+.album-review-card .review-divider { height: 1px; grid-column: 1 / -1; grid-row: 2; margin: 0 8px; background: #333; }
+.album-review-card .review-text { grid-column: 1 / -1; grid-row: 3; overflow-wrap: anywhere; margin: 0 4px; color: #626262; font-size: 13px; line-height: 1.4; }
+.album-review-card .review-rating { grid-column: 1 / -1; grid-row: 4; margin: 0 4px; --rating-vinyl-size: 22px; --rating-vinyl-gap: 3px; }
+.reviews-library-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 24px; }
+
+.expanded-search-panel { min-height: 0; padding: 20px clamp(18px, 4vw, 44px) 28px; border-radius: 15px; background: #e1e1e1; color: #202020; }
 .is-expanded .main-search-form { margin-bottom: 12px; border-radius: 15px 15px 4px 4px; }
 .is-expanded .main-search-form input { text-align: center; }
-.search-tabs { width: min(100%, 900px); min-height: 52px; display: grid; grid-template-columns: 1fr 1fr; margin: 0 auto 22px; padding: 3px; border-radius: 12px; background: #a0a0a0; }
+.search-tabs { width: min(100%, 900px); min-height: 52px; margin: 0 auto 22px; padding: 3px; border-radius: 12px; background: #a0a0a0; }
 .search-tabs button { color: #f4f4f4; }
-.search-tabs button.is-active { color: #fff; }
-.search-tabs button.is-active::after { right: 12%; left: 12%; bottom: 4px; }
-.search-results { width: min(100%, 840px); display: grid; align-content: start; gap: 9px; margin: 0 auto; }
-.search-hint,.search-results .search-message { color: #626262; }
+.search-tabs button.is-active::after { right: 12%; bottom: 4px; left: 12%; }
+.search-results { width: min(100%, 840px); gap: 9px; margin: 0 auto; }
+.search-hint,
+.search-results .search-message { color: #626262; }
 .search-result-card { min-width: 0; min-height: 112px; display: flex; align-items: center; gap: 17px; padding: 10px; border-radius: 15px; background: #565656; color: #f4f4f4; text-decoration: none; transition: background .16s ease; }
 .search-result-card:hover { background: #4e4e4e; }
-.search-result-card .search-artwork,.user-artwork { width: 88px; height: 88px; flex: 0 0 88px; border-radius: 11px; }
+.search-result-card .search-artwork,
+.user-artwork { width: 88px; height: 88px; flex: 0 0 88px; border-radius: 11px; }
 .search-result-copy h3 { font-size: 21px; }
 .search-result-copy p { font-size: 16px; }
 .album-year { display: block; margin-top: 2px; color: #bebebe; font-size: 14px; }
@@ -71,133 +122,32 @@
 @media (min-width: 1500px) {
   .search-workspace { padding-top: 20px; }
   .main-search-form { height: 64px; }
-  .library-board { min-height: calc(100vh - 198px); }
-  .library-grid { gap: 20px 28px; }
-  .liked-song-card,.album-review-card { min-height: 132px; padding: 16px; gap: 19px; }
+  .library-grid,
+  .reviews-library-grid { gap: 20px 28px; }
+  .liked-song-card { min-height: 132px; padding: 16px; gap: 19px; }
   .search-artwork { width: 96px; height: 96px; flex-basis: 96px; }
 }
 
 @media (max-width: 760px) {
-  .search-workspace { width: min(100% - 28px, 620px); min-height: calc(100vh - 70px); padding-top: 13px; }
-  .main-search-form { width: 100%; height: 54px; margin-bottom: 10px; }
-  .main-search-form input { padding-left: 20px; font-size: 18px; }
-  .library-board { min-height: calc(100vh - 152px); padding: 16px 14px 24px; }
-  .library-tabs { min-height: 52px; margin-bottom: 18px; }
-  .library-tabs button,.search-tabs button { padding-right: 9px; padding-left: 9px; font-size: 17px; }
-  .library-grid { grid-template-columns: 1fr; gap: 11px; }
-  .liked-song-card,.album-review-card { min-height: 98px; gap: 12px; padding: 10px; border-radius: 12px; }
-  .search-artwork { width: 76px; height: 76px; flex-basis: 76px; border-radius: 9px; }
-  .liked-song-copy h3,.review-copy h3 { font-size: 17px; }
-  .liked-song-copy p,.review-artist { font-size: 14px; }
-  .liked-heart { width: 31px; height: 31px; flex-basis: 31px; }
-  .expanded-search-panel { min-height: calc(100vh - 150px); padding: 14px 12px 20px; }
-  .search-tabs { min-height: 48px; margin-bottom: 16px; }
-  .search-result-card { min-height: 88px; gap: 12px; padding: 8px; border-radius: 12px; }
-  .search-result-card .search-artwork,.user-artwork { width: 70px; height: 70px; flex-basis: 70px; }
-  .search-result-copy h3 { font-size: 17px; }
-  .search-result-copy p { font-size: 14px; }
-  .user-state-icon { width: 44px; height: 44px; flex-basis: 44px; margin-right: 3px; }
-}
-
-/* Mobile search layouts follow the compact references: controls at the top,
-   content scrolling behind the shared bottom navigation. */
-@media (max-width: 760px) {
   .search-page { position: relative; background: #606060; }
-  .search-workspace { position: relative; z-index: 1; width: 100%; padding: 20px 9px 82px; }
-  .search-workspace::before { position: fixed; z-index: -1; top: 0; right: 0; left: 0; height: 119px; background: #292929; content: ''; }
-  .main-search-form { height: 41px; margin: 0 0 8px; border-radius: 10px; }
+  .search-workspace { position: relative; z-index: 1; width: 100%; padding: 20px 9px var(--search-mobile-nav-space); }
+  .search-workspace:not(.is-expanded)::before { position: fixed; z-index: -1; top: 0; right: 0; left: 0; height: 119px; background: #292929; content: ''; }
+  .main-search-form { width: 100%; height: 41px; margin: 0 0 8px; border-radius: 10px; }
   .main-search-form input { padding: 0 45px; text-align: center; font-size: 16px; }
   .submit-search { right: 5px; width: 34px; }
   .submit-search svg { width: 25px; height: 25px; }
-  .library-board { flex: 1; padding: 0; overflow: hidden; border-radius: 0; background: transparent; }
+  .library-board { padding: 0; border-radius: 0; background: transparent; }
   .library-tabs { min-height: 40px; margin: 0 0 12px; padding: 0; border-radius: 10px; background: #181818; }
-  .library-tabs button,.search-tabs button { padding: 5px 7px; border-radius: 9px; font-size: 16px; }
+  .library-tabs button,
+  .search-tabs button { padding: 5px 7px; border-radius: 9px; font-size: 16px; }
   .library-tabs button.is-active::after { right: 10%; bottom: 5px; left: 10%; }
-  .library-grid { gap: 3px; padding: 0 3px; }
+  .library-grid { grid-template-columns: 1fr; gap: 3px; padding: 0 3px; }
   .liked-song-card { min-height: 56px; height: 56px; gap: 10px; padding: 5px 7px; border-radius: 13px; }
   .liked-song-card .search-artwork { width: 44px; height: 44px; flex-basis: 44px; border-radius: 8px; }
   .liked-song-copy h3 { font-size: 12px; line-height: 1.2; }
   .liked-song-copy p { margin-top: 2px; font-size: 10px; }
   .liked-heart { width: 30px; height: 30px; flex-basis: 30px; margin-right: 5px; }
-  .reviews-library-grid { gap: 5px; padding: 0 8px; }
-  .album-review-card { min-height: 0; grid-template-columns: 44px minmax(0, 1fr); grid-template-rows: 43px 1px auto 20px; align-items: center; gap: 5px 12px; padding: 8px 10px 9px; border-radius: 12px; }
-  .album-review-card .search-artwork { width: 44px; height: 46px; grid-column: 1; grid-row: 1; border-radius: 6px; }
-  .album-review-card .review-copy { grid-column: 2; grid-row: 1; padding: 0 3px; }
-  .album-review-card .review-copy h3 { font-size: 16px; line-height: 1.2; }
-  .album-review-card .review-artist { margin: 2px 0 0; font-size: 12px; }
-  .album-review-card .review-divider { grid-column: 1 / -1; grid-row: 2; margin: 0; }
-  .album-review-card .review-text { grid-column: 1 / -1; grid-row: 3; align-self: start; margin: 0 4px; font-size: 12px; line-height: 1.25; }
-  .album-review-card .review-rating { grid-column: 1 / -1; grid-row: 4; margin: 0 3px; --rating-vinyl-size: 21px; --rating-vinyl-gap: 3px; }
-  .is-expanded .main-search-form { height: 39px; margin-bottom: 8px; border-radius: 10px; }
-  .is-expanded .main-search-form input { text-align: left; }
-  .expanded-search-panel { flex: 1; min-height: 0; margin: 0 -9px; padding: 0 15px 82px; border-radius: 10px 10px 0 0; background: #dedede; }
-  .search-tabs { min-height: 35px; margin: -8px 0 15px; padding: 0; border-radius: 9px; background: #7d7d7d; }
-  .search-tabs button { font-size: 13px; }
-  .search-tabs button.is-active::after { bottom: 4px; }
-  .search-results { width: 100%; gap: 5px; padding: 0 0 10px; }
-  .search-result-card { min-height: 71px; height: 71px; gap: 10px; padding: 6px; border-radius: 12px; }
-  .search-result-card .search-artwork,.user-artwork { width: 58px; height: 58px; flex-basis: 58px; border-radius: 8px; }
-  .search-result-copy h3 { font-size: 14px; }
-  .search-result-copy p,.album-year { margin-top: 2px; font-size: 11px; }
-  .user-result-card { height: 76px; min-height: 76px; padding: 7px 10px; }
-  .user-result-card .user-artwork { width: 58px; height: 58px; flex-basis: 58px; border-radius: 50%; }
-  .user-result-card .search-result-copy h3 { font-size: 16px; }
-  .user-result-card .search-result-copy p { font-size: 12px; }
-  .user-state-icon { width: 38px; height: 38px; flex-basis: 38px; margin: 0 3px 0 0; }
-  .search-hint,.search-results .search-message { padding: 15px 10px; }
-  .search-page:has(.expanded-search-panel) { background: #dedede; }
-  .search-page:has(.expanded-search-panel) .search-workspace::before { display: none; }
-}
-
-@media (max-width: 380px) {
-  .search-workspace { width: calc(100% - 20px); }
-  .library-board { padding-right: 9px; padding-left: 9px; }
-  .search-artwork { width: 65px; height: 65px; flex-basis: 65px; }
-  .liked-song-card,.album-review-card { gap: 9px; }
-  .search-result-card .search-artwork,.user-artwork { width: 60px; height: 60px; flex-basis: 60px; }
-  .user-state-icon { width: 38px; height: 38px; flex-basis: 38px; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .main-search-form,.library-tabs button,.search-tabs button { transition: none; }
-}
-
-/* The search frame stays in the viewport while results scroll inside their panels. */
-.search-page { height: 100vh; height: 100dvh; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
-.search-workspace { height: 0; min-height: 0; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-.library-board,.expanded-search-panel { min-height: 0; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-.library-tabs,.search-tabs { flex: 0 0 auto; }
-.library-grid,.search-results { min-height: 0; flex: 1; overflow-y: auto; overscroll-behavior: contain; }
-@media (max-width: 760px) {
-  .search-workspace { height: 0; min-height: 0; padding-bottom: 10px; }
-  .library-board { padding-bottom: 14px; }
-  .expanded-search-panel { min-height: 0; }
-}
-
-.reviews-library-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 24px; }
-.album-review-card { min-height: 182px; display: grid; grid-template-columns: 88px minmax(0, 1fr); grid-template-rows: 94px 1px auto 24px; align-items: center; gap: 10px 16px; padding: 14px; border-radius: 17px; background: #d8d8d8; color: #292929; }
-.album-review-card .search-artwork { width: 88px; height: 94px; flex: none; grid-column: 1; grid-row: 1; border-radius: 13px; background: #c8c8c8; }
-.album-review-card .review-copy { min-width: 0; align-self: stretch; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; grid-column: 2; grid-row: 1; padding: 2px 4px; }
-.album-review-card .review-copy h3 { color: #252525; font-size: 23px; }
-.album-review-card .review-artist { margin: 5px 0 8px; color: #606060; font-size: 18px; }
-.album-review-card .review-rating { --rating-vinyl-size: 22px; --rating-vinyl-gap: 3px; margin-top: 0; }
-.album-review-card .review-divider { height: 1px; grid-column: 1 / -1; grid-row: 2; margin: 0 8px; background: #333; }
-.album-review-card .review-text { grid-column: 1 / -1; grid-row: 3; overflow-wrap: anywhere; margin: 0 4px; color: #626262; font-size: 13px; line-height: 1.4; }
-.album-review-card .review-rating { grid-column: 1 / -1; grid-row: 4; margin: 0 4px; }
-
-@media (max-width: 760px) {
-  .reviews-library-grid { grid-template-columns: 1fr; gap: 11px; }
-  .album-review-card { min-height: 150px; grid-template-columns: 76px minmax(0, 1fr); grid-template-rows: 82px 1px auto; gap: 8px 12px; padding: 11px; border-radius: 14px; }
-  .album-review-card .search-artwork { width: 76px; height: 82px; border-radius: 11px; }
-  .album-review-card .review-copy { padding: 0 3px; }
-  .album-review-card .review-copy h3 { font-size: 19px; }
-  .album-review-card .review-artist { margin: 4px 0 6px; font-size: 15px; }
-  .album-review-card .review-rating { --rating-vinyl-size: 19px; --rating-vinyl-gap: 3px; }
-  .album-review-card .review-text { margin: 0 3px; font-size: 12px; }
-}
-
-@media (max-width: 760px) {
-  .reviews-library-grid { gap: 5px; padding: 0 8px; }
+  .reviews-library-grid { grid-template-columns: 1fr; gap: 5px; padding: 0 8px; }
   .album-review-card { min-height: 0; grid-template-columns: 44px minmax(0, 1fr); grid-template-rows: 43px 1px auto 20px; gap: 5px 12px; padding: 8px 10px 9px; border-radius: 12px; }
   .album-review-card .search-artwork { width: 44px; height: 46px; grid-column: 1; grid-row: 1; border-radius: 6px; }
   .album-review-card .review-copy { grid-column: 2; grid-row: 1; padding: 0 3px; }
@@ -206,4 +156,40 @@
   .album-review-card .review-divider { grid-column: 1 / -1; grid-row: 2; margin: 0; }
   .album-review-card .review-text { grid-column: 1 / -1; grid-row: 3; align-self: start; margin: 0 4px; font-size: 12px; line-height: 1.25; }
   .album-review-card .review-rating { grid-column: 1 / -1; grid-row: 4; margin: 0 3px; --rating-vinyl-size: 21px; --rating-vinyl-gap: 3px; }
+  .expanded-search-panel { margin: 0 -9px; padding: 0 15px var(--search-mobile-nav-space); border-radius: 10px 10px 0 0; background: #dedede; }
+  .is-expanded .main-search-form { height: 39px; margin-bottom: 8px; border-radius: 10px; }
+  .is-expanded .main-search-form input { text-align: left; }
+  .search-tabs { min-height: 35px; margin: -8px 0 15px; padding: 0; border-radius: 9px; background: #7d7d7d; }
+  .search-tabs button { font-size: 13px; }
+  .search-tabs button.is-active::after { bottom: 4px; }
+  .search-results { width: 100%; gap: 5px; padding: 0 0 10px; }
+  .search-result-card { min-height: 71px; height: 71px; gap: 10px; padding: 6px; border-radius: 12px; }
+  .search-result-card .search-artwork,
+  .user-artwork { width: 58px; height: 58px; flex-basis: 58px; border-radius: 8px; }
+  .search-result-copy h3 { font-size: 14px; }
+  .search-result-copy p,
+  .album-year { margin-top: 2px; font-size: 11px; }
+  .user-result-card { height: 76px; min-height: 76px; padding: 7px 10px; }
+  .user-result-card .user-artwork { border-radius: 50%; }
+  .user-result-card .search-result-copy h3 { font-size: 16px; }
+  .user-result-card .search-result-copy p { font-size: 12px; }
+  .user-state-icon { width: 38px; height: 38px; flex-basis: 38px; margin: 0 3px 0 0; }
+  .search-hint,
+  .search-results .search-message { padding: 15px 10px; }
+}
+
+@media (max-width: 380px) {
+  .search-workspace { padding-right: 7px; padding-left: 7px; }
+  .search-artwork { width: 65px; height: 65px; flex-basis: 65px; }
+  .liked-song-card { gap: 8px; }
+  .search-result-card .search-artwork,
+  .user-artwork { width: 54px; height: 54px; flex-basis: 54px; }
+  .user-state-icon { width: 34px; height: 34px; flex-basis: 34px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .main-search-form,
+  .library-tabs button,
+  .search-tabs button,
+  .search-result-card { transition: none; }
 }

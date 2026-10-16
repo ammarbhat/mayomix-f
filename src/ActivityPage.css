@@ -47,52 +47,6 @@
 .activity-action-error { margin: 8px 3px 0; font-size: 13px; }
 .activity-page :focus-visible { outline: 2px solid #141414; outline-offset: 3px; }
 
-@media (min-width: 1500px) {
-  .activity-workspace { padding-top: 22px; padding-bottom: 18px; }
-  .activity-connection-card { min-height: 92px; }
-  .activity-person > img { width: 58px; height: 58px; flex-basis: 58px; }
-  .activity-connection-actions button { width: 42px; height: 42px; }
-  .activity-album-art { width: 92px; height: 92px; flex-basis: 92px; }
-}
-
-@media (max-width: 760px) {
-  .activity-workspace { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(250px, .88fr) minmax(260px, 1.12fr); gap: 12px; padding: 10px 12px; }
-  .activity-connections-panel { padding: 7px 13px 10px; }
-  .activity-connections-panel > h1 { flex-basis: 34px; margin-bottom: 4px; font-size: 20px; line-height: 31px; }
-  .connection-group h2 { flex-basis: 30px; font-size: 22px; line-height: 29px; }
-  .connection-list { min-height: 76px; gap: 9px; padding: 8px; border-radius: 13px; }
-  .sent-group { margin-top: 5px; }
-  .activity-connection-card { min-height: 60px; padding: 7px 9px; border-radius: 12px; }
-  .activity-person { gap: 9px; }
-  .activity-person > img { width: 39px; height: 39px; flex-basis: 39px; }
-  .activity-person-copy strong { font-size: 15px; }
-  .activity-person-copy > span { font-size: 12px; }
-  .activity-connection-actions { gap: 6px; }
-  .activity-connection-actions button { width: 29px; height: 29px; }
-  .activity-feed-panel { padding: 7px 9px 10px; }
-  .activity-feed-panel > h1 { flex-basis: 33px; margin-left: 10px; font-size: 23px; line-height: 32px; }
-  .activity-feed { gap: 12px; padding: 12px 9px; border-radius: 13px; }
-  .activity-entry-header { min-height: 39px; padding: 0 5px 5px; }
-  .activity-author { gap: 7px; }
-  .activity-author img { width: 32px; height: 32px; flex-basis: 32px; }
-  .activity-author strong { font-size: 15px; }
-  .activity-author small,.activity-entry-header time { font-size: 12px; }
-  .activity-review-card { margin-left: 7px; padding: 7px 8px 10px; border-radius: 13px; }
-  .activity-album-top { min-height: 66px; gap: 11px; }
-  .activity-album-art { width: 64px; height: 64px; flex-basis: 64px; border-radius: 8px; }
-  .activity-album-meta h3 { font-size: 18px; }
-  .activity-album-meta > p { font-size: 15px; }
-  .activity-rating { --rating-vinyl-size: 17px; --rating-vinyl-gap: 2px; }
-  .activity-review-divider { margin: 7px 8px; }
-  .activity-review-text { margin: 0 2px; font-size: 12px; }
-}
-
-@media (max-width: 380px) {
-  .activity-workspace { grid-template-rows: minmax(230px, .9fr) minmax(250px, 1.1fr); padding-right: 8px; padding-left: 8px; }
-  .activity-connections-panel { padding-right: 8px; padding-left: 8px; }
-  .activity-connection-actions button { width: 25px; height: 25px; }
-}
-
 /* Screenshot-matched Activity layout: fixed side-by-side panels with their own scroll areas. */
 @media (min-width: 761px) {
   .activity-page .app-header {
@@ -166,21 +120,46 @@
   .activity-review-divider { margin: 4px 18px 19px; }
 }
 
-@media (max-height: 820px) and (min-width: 761px) {
-  .activity-page { min-height: 760px; height: auto; overflow: auto; }
-  .activity-workspace { min-height: 640px; }
-}
 
 @media (max-width: 760px) {
-  .activity-page .app-header { height: 70px; flex-basis: 70px; }
-  .activity-page .app-brand img { width: 32px; height: 32px; }
-  .activity-page .app-brand span { font-size: 23px; }
-  .activity-page .app-header-link,
-  .activity-page .app-header-profile,
-  .activity-page .app-header-link img { width: 29px; height: 29px; flex-basis: 29px; }
-  .activity-page .app-header-profile span { width: 6px; height: 6px; }
+  .activity-page { height: auto; min-height: 100vh; min-height: 100dvh; overflow: visible; }
+  .activity-workspace { display: flex; flex-direction: column; gap: 12px; padding: 12px 12px calc(92px + env(safe-area-inset-bottom)); }
+  .activity-connections-panel { min-height: 380px; max-height: 58dvh; padding: 7px 13px 10px; }
+  .activity-connections-panel > h1 { flex-basis: 34px; margin-bottom: 4px; font-size: 20px; line-height: 31px; }
+  .connection-group h2 { flex-basis: 30px; font-size: 22px; line-height: 29px; }
+  .connection-list { min-height: 76px; gap: 9px; padding: 8px; border-radius: 13px; }
+  .sent-group { margin-top: 5px; }
+  .activity-connection-card { min-height: 60px; padding: 7px 9px; border-radius: 12px; }
+  .activity-person { gap: 9px; }
+  .activity-person > img { width: 39px; height: 39px; flex-basis: 39px; }
+  .activity-person-copy strong { font-size: 15px; }
+  .activity-person-copy > span { font-size: 12px; }
+  .activity-connection-actions { gap: 6px; }
+  .activity-connection-actions button { width: 29px; height: 29px; }
+  .activity-feed-panel { height: 62dvh; min-height: 400px; padding: 7px 9px 10px; }
+  .activity-feed-panel > h1 { flex-basis: 33px; margin-left: 10px; font-size: 23px; line-height: 32px; }
+  .activity-feed { gap: 12px; padding: 12px 9px; border-radius: 13px; }
+  .activity-entry-header { min-height: 39px; padding: 0 5px 5px; }
+  .activity-author { gap: 7px; }
+  .activity-author img { width: 32px; height: 32px; flex-basis: 32px; }
+  .activity-author strong { font-size: 15px; }
+  .activity-author small,
+  .activity-entry-header time { font-size: 12px; }
+  .activity-review-card { margin-left: 7px; padding: 7px 8px 10px; border-radius: 13px; }
+  .activity-album-top { min-height: 66px; gap: 11px; }
+  .activity-album-art { width: 64px; height: 64px; flex-basis: 64px; border-radius: 8px; }
+  .activity-album-meta h3 { font-size: 18px; }
+  .activity-album-meta > p { font-size: 15px; }
+  .activity-rating { --rating-vinyl-size: 17px; --rating-vinyl-gap: 2px; }
+  .activity-review-divider { margin: 7px 8px; }
+  .activity-review-text { margin: 0 2px; font-size: 12px; }
 }
 
+@media (max-width: 380px) {
+  .activity-workspace { padding-right: 8px; padding-left: 8px; }
+  .activity-connections-panel { padding-right: 8px; padding-left: 8px; }
+  .activity-connection-actions button { width: 25px; height: 25px; }
+}
 @media (prefers-reduced-motion: reduce) {
   .activity-page *, .activity-page *::before, .activity-page *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
 }

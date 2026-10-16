@@ -12,6 +12,6 @@ const apiProxy = {
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  server: { proxy: apiProxy },
+  server: { host: '0.0.0.0', proxy: apiProxy },
   preview: { proxy: apiProxy },
 })
