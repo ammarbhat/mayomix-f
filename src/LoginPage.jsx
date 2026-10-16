@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { signIn, signUp } from './api.js'
+import { GENRES } from './genreOptions.js'
 import './LoginPage.css'
 
 function LoginPage() {
@@ -7,6 +8,8 @@ function LoginPage() {
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [isSigningUp, setIsSigningUp] = useState(false)
+  const [genres, setGenres] = useState([])
+  const [genreMenu, setGenreMenu] = useState(false)
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -18,10 +21,6 @@ function LoginPage() {
     try {
       if (isSigningUp) {
         if (password !== form.get('confirm-password')) throw new Error('Passwords do not match.')
-        const genres = String(form.get('genres') || '')
-          .split(',')
-          .map((genre) => genre.trim())
-          .filter(Boolean)
         if (genres.length === 0) throw new Error('Add at least one favorite genre.')
         await signUp({
           name: String(form.get('name')).trim(),
@@ -39,6 +38,12 @@ function LoginPage() {
     }
   }
 
+  function addGenre(genre) {
+    if (genres.length >= 3 || genres.includes(genre)) return
+    setGenres((current) => [...current, genre])
+    setGenreMenu(false)
+  }
+
   return (
     <main className="login-page">
       <section className="login-art" aria-label="mayomix">
@@ -46,7 +51,7 @@ function LoginPage() {
         <div className="login-art-shade" />
         <a className="login-brand" href="/" aria-label="MayoMix home">
           <img src="/images/mayomix-logo.png" alt="" />
-          <span>MayoMix</span>
+          <span>mayomix</span>
         </a>
       </section>
 
@@ -63,9 +68,18 @@ function LoginPage() {
             {isSigningUp && <>
               <label className="password-title" htmlFor="login-email">Email</label>
               <input id="login-email" name="email" type="email" autoComplete="email" placeholder="you@example.com" required />
-              <label className="password-title" htmlFor="login-genres">Favorite genres</label>
-              <input id="login-genres" name="genres" placeholder="Indie, pop, jazz" aria-describedby="genres-hint" required />
-              <span className="login-hint" id="genres-hint">Separate genres with commas.</span>
+              <span className="password-title login-genres-label" id="login-genres-label">Favorite genres</span>
+              <div className="login-genre-picker">
+                <div className="login-selected-genres" role="list" aria-label="Selected favorite genres">
+                  {genres.map((genre) => <span className="login-selected-genre" role="listitem" key={genre}>{genre}<button type="button" onClick={() => setGenres((current) => current.filter((item) => item !== genre))} aria-label={`Remove ${genre}`}>×</button></span>)}
+                  {!genres.length && <span className="login-genre-empty">Choose up to three genres</span>}
+                </div>
+                <div className="login-genre-trigger-wrap">
+                  <button className="login-genre-trigger" type="button" aria-labelledby="login-genres-label" aria-describedby="genres-hint" aria-expanded={genreMenu} onClick={() => setGenreMenu((open) => !open)}>Select Genres</button>
+                  {genreMenu && <div className="login-genre-menu" role="group" aria-label="Available genres">{GENRES.filter((genre) => !genres.includes(genre)).map((genre) => <button type="button" key={genre} disabled={genres.length >= 3} onClick={() => addGenre(genre)}>{genre}</button>)}</div>}
+                </div>
+                <span className="login-hint" id="genres-hint">Select at least one genre.</span>
+              </div>
             </>}
             <label className="password-title" htmlFor="login-password">Password</label>
             <div className="password-field">
@@ -81,7 +95,7 @@ function LoginPage() {
           </form>
           <p className="login-switch">
             {isSigningUp ? 'Already have an account?' : 'New to MayoMix?'}{' '}
-            <button type="button" onClick={() => { setIsSigningUp((current) => !current); setError('') }}>
+            <button type="button" onClick={() => { setIsSigningUp((current) => !current); setError(''); setGenres([]); setGenreMenu(false) }}>
               {isSigningUp ? 'Sign in' : 'Create an account'}
             </button>
           </p>

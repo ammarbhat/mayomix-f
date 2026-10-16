@@ -1,0 +1,1 @@
+export const GENRES = ['Pop', 'Rock', 'Hip-Hop / Rap', 'Dance / Electronic', 'Latin', 'R&B', 'Classical', 'Country', 'Soundtracks', 'Reggae', 'Jazz', 'Metal', 'Indie', 'Folk', 'Soul', 'Blues', 'Gospel', 'Afrobeats', 'K-Pop', 'Punk']

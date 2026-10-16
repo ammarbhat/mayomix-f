@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import AppHeader from './AppHeader.jsx'
 import { apiRequest, clearStoredToken, getMyTasteList, getStoredToken, searchAlbums, searchArtists } from './api.js'
+import { GENRES } from './genreOptions.js'
 import './EditProfilePage.css'
 
-const GENRES = ['Pop', 'Rock', 'Hip-Hop / Rap', 'Dance / Electronic', 'Latin', 'R&B', 'Classical', 'Country', 'Soundtracks', 'Reggae', 'Jazz', 'Metal', 'Indie', 'Folk', 'Soul', 'Blues', 'Gospel', 'Afrobeats', 'K-Pop', 'Punk']
 const blank = { name: '', username: '', bio: '', pfp_link: '' }
 const idOf = (item) => item.mbid || item.id
 
