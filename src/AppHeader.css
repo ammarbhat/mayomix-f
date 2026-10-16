@@ -11,9 +11,18 @@
 .app-brand:hover,.app-header-link:hover,.app-header-profile:hover { opacity: .72; }
 .app-header-link:active,.app-header-profile:active { transform: scale(.94); }
 .app-header :focus-visible { outline: 2px solid #fff; outline-offset: 4px; }
+.mobile-bottom-nav { display: none; }
 
 @media (max-width: 760px) {
-  .app-header { height: 70px; flex-basis: 70px; padding: 0 20px; }
+  .app-header { display: none; }
+  .mobile-bottom-nav { position: fixed; z-index: 20; right: 0; bottom: max(17px, env(safe-area-inset-bottom)); left: 0; width: min(80%, 290px); height: 54px; display: grid; grid-template-columns: repeat(3, 1fr); align-items: center; margin: 0 auto; padding: 3px 9px; border: 1px solid #111; border-radius: 24px; background: #dedede; box-shadow: 0 2px 6px #0002; }
+  .mobile-bottom-nav a { width: 58px; height: 44px; justify-self: center; display: grid; place-items: center; border: 1px solid transparent; border-radius: 22px; text-decoration: none; }
+  .mobile-bottom-nav a.is-active { border-color: #111; }
+  .mobile-bottom-nav img { width: 30px; height: 30px; display: block; object-fit: contain; }
+  .mobile-bottom-nav a:first-child img { transform: scale(1.15); }
+  .mobile-bottom-nav a:last-child span { width: 30px; height: 30px; display: block; border-radius: 50%; background: #050505; position: relative; }
+  .mobile-bottom-nav a:last-child span::after { position: absolute; top: 50%; left: 50%; width: 6px; height: 6px; border-radius: 50%; background: #fff; content: ''; transform: translate(-50%, -50%); }
+  .mobile-bottom-nav a:focus-visible { outline: 2px solid #111; outline-offset: 2px; }
   .app-brand { gap: 8px; }
   .app-brand img { width: 32px; height: 32px; }
   .app-brand span { font-size: 23px; }
@@ -23,12 +32,7 @@
 }
 
 @media (max-width: 380px) {
-  .app-header { height: 58px; flex-basis: 58px; padding: 0 14px; }
-  .app-brand { gap: 7px; }
-  .app-brand img { width: 29px; height: 29px; }
-  .app-brand span { font-size: 20px; }
-  .app-header-actions { gap: 12px; }
-  .app-header-link,.app-header-profile,.app-header-link img { width: 27px; height: 27px; flex-basis: 27px; }
+  .mobile-bottom-nav { width: min(80%, 290px); }
 }
 
 @media (prefers-reduced-motion: reduce) {

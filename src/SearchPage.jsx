@@ -94,10 +94,10 @@ function ReviewCard({ review }) {
       <div className="review-copy">
         <h3 title={title}>{title}</h3>
         {artist && <p className="review-artist" title={artist}>{artist}</p>}
-        <Rating review={review} />
       </div>
       <div className="review-divider" />
       {text && <p className="review-text">{text}</p>}
+      <Rating review={review} />
     </article>
   )
 }
