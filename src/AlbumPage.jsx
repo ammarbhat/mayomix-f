@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import AppHeader from './AppHeader.jsx'
-import { clearStoredToken, createAlbumReview, getAlbumDetails, getAlbumReviews, getAlbumTracklist, getStoredToken, itemDetails } from './api.js'
+import { apiRequest, clearStoredToken, createAlbumReview, getAlbumDetails, getAlbumReviews, getStoredToken, getUserReviews, getAlbumTracklist, itemDetails } from './api.js'
 import RatingVinyls from './RatingVinyls.jsx'
 import './AlbumPage.css'
 
@@ -12,6 +12,7 @@ function AlbumPage({ mbid }) {
   const [error, setError] = useState('')
   const [reviewsError, setReviewsError] = useState('')
   const [composerOpen, setComposerOpen] = useState(false)
+  const [reviewCheck, setReviewCheck] = useState('checking')
   const [reviewText, setReviewText] = useState('')
   const [rating, setRating] = useState(0)
   const [posting, setPosting] = useState(false)
@@ -23,10 +24,13 @@ function AlbumPage({ mbid }) {
     async function load() {
       setLoading(true)
       setError('')
+      setReviewCheck('checking')
+      setComposerOpen(false)
       try {
-        const [detailsResult, reviewsResult] = await Promise.allSettled([
+        const [detailsResult, reviewsResult, profileResult] = await Promise.allSettled([
           getAlbumDetails(mbid, token),
           getAlbumReviews(mbid, token),
+          apiRequest('/users/me', { token }),
         ])
         if (detailsResult.status === 'rejected') throw detailsResult.reason
         const details = detailsResult.value
@@ -39,6 +43,29 @@ function AlbumPage({ mbid }) {
         } else {
           setReviews([])
           setReviewsError(reviewsResult.reason?.message || 'Reviews could not be loaded.')
+        }
+        if (profileResult.status === 'fulfilled') {
+          try {
+            let hasReviewed = false
+            let offset = 0
+            const pageSize = 50
+            while (!hasReviewed) {
+              const ownReviews = await getUserReviews(profileResult.value.username, token, pageSize, offset).catch((reviewError) => {
+                if (reviewError.status === 404 || /404|not found/i.test(reviewError.message)) return []
+                throw reviewError
+              })
+              if (cancelled) return
+              hasReviewed = ownReviews.some((review) => String(review.mbid || review.album_mbid || review.album?.mbid || '') === String(mbid))
+              if (ownReviews.length < pageSize) break
+              offset += pageSize
+            }
+            setReviewCheck(hasReviewed ? 'reviewed' : 'available')
+            if (!hasReviewed && window.matchMedia('(max-width: 760px)').matches) setComposerOpen(true)
+          } catch {
+            if (!cancelled) setReviewCheck('error')
+          }
+        } else {
+          setReviewCheck('error')
         }
         const tracklist = await getAlbumTracklist(mbid, details).catch(() => [])
         if (cancelled) return
@@ -66,6 +93,7 @@ function AlbumPage({ mbid }) {
       await createAlbumReview(mbid, reviewText.trim(), rating, token)
       const updated = await getAlbumReviews(mbid, token)
       setReviews(updated)
+      setReviewCheck('reviewed')
       setReviewText('')
       setComposerOpen(false)
       setNotice('Your review was posted.')
@@ -79,6 +107,7 @@ function AlbumPage({ mbid }) {
   const artistCredits = album?.['artist-credit'] || []
   const artist = details.artist || (Array.isArray(artistCredits) ? artistCredits.map((credit) => `${credit.name || credit.artist?.name || ''}${credit.joinphrase || ''}`).join('').trim() : '')
   const year = album?.['first-release-date']?.slice(0, 4) || album?.year || ''
+  const genre = album?.genres?.[0]?.name || 'Pop'
   const tracks = album?.tracks || album?.tracklist || album?.media?.flatMap((medium) => medium.tracks || []) || []
 
   return <main className="album-page">
@@ -90,15 +119,17 @@ function AlbumPage({ mbid }) {
           <div className="album-summary">
             <div className="album-cover">{(album?.cover_url || details.image) && <img src={album.cover_url || details.image} alt={`${title} cover`} onError={(event) => event.currentTarget.remove()} />}</div>
             <h1>{loading ? 'Loading album…' : title}</h1>
-            <p>{artist}{year ? ` · ${year}` : ''}</p>
+            <p>{artist}<span>{year ? `${genre} | ${year}` : ''}</span></p>
+            {reviewCheck === 'available' && <button className="album-review-toggle album-review-toggle-desktop" type="button" aria-label={composerOpen ? 'Close review composer' : 'Write an album review'} aria-expanded={composerOpen} onClick={() => { setComposerOpen((open) => !open); setNotice('') }}><span>{composerOpen ? '×' : '+'}</span></button>}
           </div>
-          <button className={`album-review-toggle${composerOpen ? ' is-open' : ''}`} type="button" aria-label={composerOpen ? 'Close review composer' : 'Write an album review'} aria-expanded={composerOpen} onClick={() => { setComposerOpen((open) => !open); setNotice('') }}><span>{composerOpen ? '×' : '+'}</span></button>
           <div className="album-track-heading">Tracklist</div>
           <div className="album-track-panel">
             {tracks.length ? <ol>{tracks.map((track, index) => <li key={track.id || `${track.title}-${index}`}>{track.title || track.recording?.title || `Track ${index + 1}`}</li>)}</ol> : <p className="album-no-tracks">Tracklist unavailable.</p>}
             <span className="album-down-mark" aria-hidden="true">⌄</span>
           </div>
-          {composerOpen && <form className="album-review-composer" onSubmit={submitReview}>
+          {reviewCheck === 'available' && <button className="album-review-toggle album-review-toggle-mobile" type="button" aria-label={composerOpen ? 'Close review composer' : 'Write an album review'} aria-expanded={composerOpen} onClick={() => { setComposerOpen((open) => !open); setNotice('') }}>Reviews</button>}
+        </section>
+        {reviewCheck === 'available' && composerOpen && <form className="album-review-composer" onSubmit={submitReview}>
             <button className="composer-close" type="button" aria-label="Close review composer" onClick={() => setComposerOpen(false)}>×</button>
             <textarea maxLength={400} value={reviewText} onChange={(event) => setReviewText(event.target.value)} placeholder="What do you think of this album?" aria-label="Your album review" />
             <div className="composer-footer">
@@ -119,9 +150,8 @@ function AlbumPage({ mbid }) {
               <button className="composer-post" type="submit" disabled={posting}>{posting ? 'POSTING…' : 'POST'}</button>
             </div>
             {notice && <p className="composer-notice" role="status">{notice}</p>}
-          </form>}
-          {notice && !composerOpen && <p className="album-post-notice" role="status">{notice}</p>}
-        </section>
+        </form>}
+        {notice && !composerOpen && <p className="album-post-notice" role="status">{notice}</p>}
         <section className="album-reviews-panel" aria-label="Album reviews">
           {reviewsError && <p className="album-empty-reviews" role="status">Reviews are temporarily unavailable.</p>}
           {reviews.length ? reviews.map((review, index) => <article className="album-review-entry" key={review.id || review.review_id || index}>

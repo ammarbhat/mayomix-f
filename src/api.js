@@ -342,8 +342,8 @@ export async function getLikedSongs(token, onEnriched) {
   return items
 }
 
-export async function getUserReviews(username, token) {
-  const query = new URLSearchParams({ limit: '50', offset: '0' })
+export async function getUserReviews(username, token, limit = 50, offset = 0) {
+  const query = new URLSearchParams({ limit: String(limit), offset: String(offset) })
   const payload = await apiRequest(`/users/${encodeURIComponent(username)}/reviews?${query}`, { token })
   return listFromPayload(payload)
 }
