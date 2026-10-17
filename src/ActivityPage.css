@@ -49,20 +49,6 @@
 
 /* Screenshot-matched Activity layout: fixed side-by-side panels with their own scroll areas. */
 @media (min-width: 761px) {
-  .activity-page .app-header {
-    height: 132px;
-    flex-basis: 132px;
-    padding: 0 3.5%;
-  }
-  .activity-page .app-brand { gap: 15px; }
-  .activity-page .app-brand img { width: 52px; height: 52px; }
-  .activity-page .app-brand span { font-size: 38px; }
-  .activity-page .app-header-actions { gap: clamp(35px, 4.2vw, 58px); }
-  .activity-page .app-header-link,
-  .activity-page .app-header-profile,
-  .activity-page .app-header-link img { width: 48px; height: 48px; flex-basis: 48px; }
-  .activity-page .app-header-profile span { width: 12px; height: 12px; }
-
   .activity-workspace {
     grid-template-columns: minmax(400px, .42fr) minmax(0, .58fr);
     gap: 42px;

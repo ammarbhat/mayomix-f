@@ -11,15 +11,15 @@ function AppHeader() {
         <span>mayomix</span>
       </a>
       <nav className="app-header-actions" aria-label="Main navigation">
-        <a className="app-header-link activity-link" href="/activity" aria-label="Activity"><img src="/images/arrow.png" alt="" /></a>
-        <a className="app-header-link search-link" href="/search" aria-label="Search"><img src="/images/search-interface-symbol.png" alt="" /></a>
-        <a className="app-header-profile" href="/profile" aria-label="Your profile"><span /></a>
+        <a className={`app-header-link activity-link${active === 'activity' ? ' is-active' : ''}`} href="/activity" aria-label="Activity" aria-current={active === 'activity' ? 'page' : undefined}><img src="/images/arrow.png" alt="" /></a>
+        <a className={`app-header-link search-link${active === 'search' ? ' is-active' : ''}`} href="/search" aria-label="Search" aria-current={active === 'search' ? 'page' : undefined}><img src="/images/search-interface-symbol.png" alt="" /></a>
+        <a className={`app-header-profile${active === 'profile' ? ' is-active' : ''}`} href="/profile" aria-label="Your profile" aria-current={active === 'profile' ? 'page' : undefined}><span /></a>
       </nav>
     </header>
     <nav className="mobile-bottom-nav" aria-label="Main navigation">
-      <a className={active === 'activity' ? 'is-active' : ''} href="/activity" aria-label="Activity"><img src="/images/arrow.png" alt="" /></a>
-      <a className={active === 'search' ? 'is-active' : ''} href="/search" aria-label="Search"><img src="/images/search-interface-symbol.png" alt="" /></a>
-      <a className={active === 'profile' ? 'is-active' : ''} href="/profile" aria-label="Your profile"><span /></a>
+      <a className={active === 'activity' ? 'is-active' : ''} href="/activity" aria-label="Activity" aria-current={active === 'activity' ? 'page' : undefined}><img src="/images/arrow.png" alt="" /></a>
+      <a className={active === 'search' ? 'is-active' : ''} href="/search" aria-label="Search" aria-current={active === 'search' ? 'page' : undefined}><img src="/images/search-interface-symbol.png" alt="" /></a>
+      <a className={active === 'profile' ? 'is-active' : ''} href="/profile" aria-label="Your profile" aria-current={active === 'profile' ? 'page' : undefined}><span /></a>
     </nav>
     </>
   )
