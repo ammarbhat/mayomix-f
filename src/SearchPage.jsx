@@ -134,7 +134,7 @@ function UserResult({ user, token }) {
 
   const stateImage = connectionStatus === 'connected'
     ? '/images/connection-check.png'
-    : ['pending_sent', 'pending_received', 'pending_recieved'].includes(connectionStatus)
+    : ['pending_sent', 'pending_received'].includes(connectionStatus)
       ? '/images/connection-pending.png'
       : '/images/connection-plus.png'
   return (

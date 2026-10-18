@@ -369,7 +369,8 @@ export async function createAlbumReview(mbid, reviewStr, rating, token) {
 }
 
 export async function getConnectionStatus(username, token) {
-  return apiRequest(`/connections/me/status/${encodeURIComponent(username)}`, { token })
+  const payload = await apiRequest(`/connections/me/status/${encodeURIComponent(username)}`, { token })
+  return typeof payload === 'string' ? payload : payload?.status || ''
 }
 
 export async function getActivity(token) {

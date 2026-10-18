@@ -241,7 +241,6 @@ function ConnectionButton({ status, loading, onClick }) {
     not_found: { label: 'Connect', asset: '/images/connection-plus.png', canConnect: true },
     pending_sent: { label: 'Sent', asset: '/images/connection-pending.png' },
     pending_received: { label: 'Pending', asset: '/images/connection-pending.png' },
-    pending_recieved: { label: 'Pending', asset: '/images/connection-pending.png' },
     connected: { label: 'Connected', asset: '/images/connection-check.png' },
   }
   const current = states[status] || states.not_found
