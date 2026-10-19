@@ -342,14 +342,14 @@ export async function getLikedSongs(token, onEnriched) {
   return items
 }
 
-export async function getUserReviews(username, token, limit = 50, offset = 0) {
+export async function getUserReviews(username, token, limit = 29, offset = 0) {
   const query = new URLSearchParams({ limit: String(limit), offset: String(offset) })
   const payload = await apiRequest(`/users/${encodeURIComponent(username)}/reviews?${query}`, { token })
   return listFromPayload(payload)
 }
 
 export async function getAlbumReviews(mbid, token) {
-  const query = new URLSearchParams({ limit: '50', offset: '0' })
+  const query = new URLSearchParams({ limit: '29', offset: '0' })
   try {
     const payload = await apiRequest(`/albums/${encodeURIComponent(mbid)}/reviews?${query}`, { token })
     return listFromPayload(payload)
@@ -374,7 +374,7 @@ export async function getConnectionStatus(username, token) {
 }
 
 export async function getActivity(token) {
-  const query = new URLSearchParams({ limit: '50', offset: '0' })
+  const query = new URLSearchParams({ limit: '29', offset: '0' })
   try {
     return listFromPayload(await apiRequest(`/activity?${query}`, { token }))
   } catch (error) {

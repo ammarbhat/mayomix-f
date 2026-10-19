@@ -48,7 +48,7 @@ function AlbumPage({ mbid }) {
           try {
             let hasReviewed = false
             let offset = 0
-            const pageSize = 50
+            const pageSize = 29
             while (!hasReviewed) {
               const ownReviews = await getUserReviews(profileResult.value.username, token, pageSize, offset).catch((reviewError) => {
                 if (reviewError.status === 404 || /404|not found/i.test(reviewError.message)) return []
