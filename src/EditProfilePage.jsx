@@ -47,6 +47,21 @@ function EditProfilePage() {
   const artistRequest = useRef(0)
   const initialGenres = useRef([])
   const initialArtists = useRef([])
+  const artistMetadata = useRef(new Map())
+
+  function applyArtistMetadata(enrichedItems) {
+    for (const item of enrichedItems) {
+      const mbid = idOf(item)
+      const title = item.title || item.name || item.artist
+      if (mbid && title && title !== mbid) artistMetadata.current.set(mbid, title)
+    }
+    const withNames = (items) => items.map((item) => ({
+      ...item,
+      title: artistMetadata.current.get(idOf(item)) || item.title || item.name || item.artist || item.mbid,
+    }))
+    initialArtists.current = withNames(initialArtists.current)
+    setArtists((current) => withNames(current))
+  }
 
   useEffect(() => {
     if (!token) { window.location.replace('/login'); return undefined }
@@ -56,14 +71,19 @@ function EditProfilePage() {
         const user = await apiRequest('/users/me', { token })
         const [genreResult, artistResult] = await Promise.allSettled([
           getMyTasteList(user.username, 'top_genres', token),
-          getMyTasteList(user.username, 'top_artists', token),
+          getMyTasteList(user.username, 'top_artists', token, (items) => {
+            if (!cancelled) applyArtistMetadata(items)
+          }),
         ])
         if (cancelled) return
         if (genreResult.status === 'rejected' || artistResult.status === 'rejected') throw new Error('Your ranked genres or artists could not be loaded. Reload the page before saving.')
         setProfile({ name: user.name || '', username: user.username || '', bio: user.bio || '', pfp_link: user.pfp_link || '' })
         const rankedGenres = genreResult.value.sort((a, b) => Number(a.rank) - Number(b.rank)).map((item) => ({ ...item, title: item.title || item.name || item.genre || item.mbid }))
         const initialGenreList = rankedGenres.length ? rankedGenres : (user.fav_genres || []).slice(0, 3).map((genre) => ({ title: genre, mbid: genre, category: 'top_genres' }))
-        const initialArtistList = artistResult.value.sort((a, b) => Number(a.rank) - Number(b.rank)).map((item) => ({ ...item, title: item.title || item.name || item.artist || item.mbid }))
+        const initialArtistList = artistResult.value.sort((a, b) => Number(a.rank) - Number(b.rank)).map((item) => ({
+          ...item,
+          title: artistMetadata.current.get(idOf(item)) || item.title || item.name || item.artist || item.mbid,
+        }))
         initialGenres.current = initialGenreList.map((item) => ({ ...item }))
         initialArtists.current = initialArtistList.map((item) => ({ ...item }))
         setGenres(initialGenreList)
@@ -136,10 +156,13 @@ function EditProfilePage() {
       await replaceRanked('top_artists', initialArtists.current, artists)
       const [freshGenres, freshArtists] = await Promise.all([
         getMyTasteList(profile.username, 'top_genres', token),
-        getMyTasteList(profile.username, 'top_artists', token),
+        getMyTasteList(profile.username, 'top_artists', token, applyArtistMetadata),
       ])
       const normalizedGenres = freshGenres.sort((a, b) => Number(a.rank) - Number(b.rank)).map((item) => ({ ...item, title: item.title || item.name || item.genre || item.mbid }))
-      const normalizedArtists = freshArtists.sort((a, b) => Number(a.rank) - Number(b.rank)).map((item) => ({ ...item, title: item.title || item.name || item.artist || item.mbid }))
+      const normalizedArtists = freshArtists.sort((a, b) => Number(a.rank) - Number(b.rank)).map((item) => ({
+        ...item,
+        title: artistMetadata.current.get(idOf(item)) || item.title || item.name || item.artist || item.mbid,
+      }))
       setGenres(normalizedGenres); setArtists(normalizedArtists)
       initialGenres.current = normalizedGenres.map((item) => ({ ...item }))
       initialArtists.current = normalizedArtists.map((item) => ({ ...item }))
