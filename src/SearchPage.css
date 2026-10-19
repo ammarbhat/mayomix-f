@@ -99,6 +99,19 @@
 .album-review-card .review-rating { grid-column: 1 / -1; grid-row: 4; margin: 0 4px; --rating-vinyl-size: 22px; --rating-vinyl-gap: 3px; }
 .reviews-library-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 24px; }
 
+@media (min-width: 761px) {
+  .library-board { padding: 20px clamp(20px, 2.5vw, 34px) 24px; }
+  .library-tabs { margin-bottom: 20px; }
+  .reviews-library-grid { gap: 18px 24px; padding: 0 8px 12px; }
+  .album-review-card {
+    min-height: 204px;
+    grid-template-rows: 94px 1px minmax(0, auto) 30px;
+    gap: 9px 16px;
+    padding: 16px 18px 16px;
+  }
+  .album-review-card .review-rating { align-self: center; }
+}
+
 .expanded-search-panel { min-height: 0; padding: 20px clamp(18px, 4vw, 44px) 28px; border-radius: 15px; background: #e1e1e1; color: #202020; }
 .is-expanded .main-search-form { margin-bottom: 12px; border-radius: 15px 15px 4px 4px; }
 .is-expanded .main-search-form input { text-align: center; }
