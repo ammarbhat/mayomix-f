@@ -1,10 +1,15 @@
 import { useEffect, useState } from 'react'
 import { apiRequest, clearStoredToken, getConnectionStatus, getStoredToken, getTasteList, itemDetails, sendConnectionRequest } from './api.js'
 import RatingVinyls from './RatingVinyls.jsx'
+import MetadataBuffering from './MetadataBuffering.jsx'
 import AppHeader from './AppHeader.jsx'
 import './ProfilePage.css'
 
 const emptyProfile = { user: null, userId: null, topAlbums: [], songs: [], rotationAlbums: [], genres: [], artists: [] }
+const itemNeedsMetadata = (entry) => {
+  const item = itemDetails(entry)
+  return Boolean(item.metadataLoading || (item.mbid && item.title === item.mbid && !item.metadataLoaded))
+}
 
 function PlaceholderCards({ count = 3, className = '' }) {
   return Array.from({ length: count }, (_, index) => (
@@ -44,7 +49,7 @@ function MediaSection({ id, title, items, loading, type = 'artwork' }) {
           const titleIsMbid = Boolean(item.mbid && item.title === item.mbid)
           const titlePending = Boolean(item.metadataLoading || (titleIsMbid && !item.metadataLoaded))
           const displayTitle = titlePending
-            ? 'Loading…'
+            ? ''
             : titleIsMbid
               ? `${type === 'song' ? 'Song' : 'Album'} details unavailable`
               : item.title || (type === 'song' ? 'Unknown song' : 'Untitled')
@@ -175,6 +180,8 @@ function ProfilePage({ username: viewedUsername = '' }) {
   const handle = user.username || user.handle || user.name || 'listener'
   const bio = user.bio || user.biography || user.about || ''
   const usesAlbumArtwork = /coverartarchive\.org/i.test(user.pfp_link || '')
+  const artistMetadataPending = profile.artists.some(itemNeedsMetadata)
+  const mediaMetadataPending = [profile.topAlbums, profile.songs, profile.rotationAlbums, profile.artists].some((items) => items.some(itemNeedsMetadata))
 
   return (
     <main className={`profile-page${isPublicProfile ? ' public-profile-page' : ''}`} id="profile">
@@ -215,7 +222,10 @@ function ProfilePage({ username: viewedUsername = '' }) {
                 <h2>Top Artists</h2>
                 <div className="identity-list artist-list">
                   {loading && profile.artists.length === 0 && <span className="list-skeleton" aria-label="Loading artists" />}
-                  {profile.artists.slice(0, 4).map((artist, index) => <span key={`${itemDetails(artist).mbid || itemDetails(artist).title}-${index}`}>{itemDetails(artist).title}</span>)}
+                  {!artistMetadataPending && profile.artists.slice(0, 4).map((artist, index) => {
+                    const details = itemDetails(artist)
+                    return <span key={`${details.mbid || details.title}-${index}`}>{details.title}</span>
+                  })}
                   {!loading && profile.artists.length === 0 && <span className="muted-placeholder">No artists yet</span>}
                 </div>
               </div>
@@ -225,9 +235,11 @@ function ProfilePage({ username: viewedUsername = '' }) {
           <a className="public-reviews-link" href={`/users/${encodeURIComponent(user.username || viewedUsername || handle)}/reviews`}>Reviews</a>
 
           <div className="listening-panel">
-            <MediaSection id="top-albums" title="Top Albums" items={profile.topAlbums} loading={loading} type="top-album" />
-            <MediaSection id="rotation" title="Rotation" items={profile.rotationAlbums} loading={loading} type="rotation" />
-            <MediaSection id="songs" title="Songs" items={profile.songs} loading={loading} type="song" />
+            {(loading || mediaMetadataPending) ? <div className="profile-metadata-loading"><MetadataBuffering label="Loading profile music details" /></div> : <>
+              <MediaSection id="top-albums" title="Top Albums" items={profile.topAlbums} loading={loading} type="top-album" />
+              <MediaSection id="rotation" title="Rotation" items={profile.rotationAlbums} loading={loading} type="rotation" />
+              <MediaSection id="songs" title="Songs" items={profile.songs} loading={loading} type="song" />
+            </>}
             {error && <p className="profile-status" role="status">{error}</p>}
           </div>
         </section>

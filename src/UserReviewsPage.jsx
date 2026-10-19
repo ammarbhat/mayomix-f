@@ -1,48 +1,17 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { apiRequest, getAlbumDetails, getUserReviews } from './api.js'
 import AppHeader from './AppHeader.jsx'
 import RatingVinyls from './RatingVinyls.jsx'
+import MetadataBuffering from './MetadataBuffering.jsx'
 import './UserReviewsPage.css'
 
 function UserReviewCard({ review }) {
-  const cardRef = useRef(null)
-  const [album, setAlbum] = useState(review.album || null)
+  const album = review.album || null
   const [imageError, setImageError] = useState(false)
   const mbid = review.mbid || review.album_mbid || album?.mbid || ''
 
-  useEffect(() => {
-    if (!mbid || album?.title) return undefined
-    let cancelled = false
-    let requested = false
-    async function loadAlbum() {
-      if (requested) return
-      requested = true
-      try {
-        const metadata = await getAlbumDetails(mbid)
-        if (!cancelled && metadata.title && metadata.title !== mbid) setAlbum(metadata)
-      } catch {
-        // Keep the review visible even when album metadata is unavailable.
-      }
-    }
-    const node = cardRef.current
-    if (!node || !('IntersectionObserver' in window)) {
-      loadAlbum()
-      return () => { cancelled = true }
-    }
-    const observer = new IntersectionObserver((entries) => {
-      if (entries.some((entry) => entry.isIntersecting)) {
-        observer.disconnect()
-        loadAlbum()
-      }
-    }, { rootMargin: '180px' })
-    observer.observe(node)
-    return () => {
-      cancelled = true
-      observer.disconnect()
-    }
-  }, [album?.title, mbid])
-
-  const title = album?.title || review.album_title || 'Album'
+  const titleValue = [album?.title, review.album_title, review.title].find((value) => value && value !== mbid) || ''
+  const title = titleValue || 'Album'
   const artistCredits = album?.['artist-credit'] || []
   const artist = album?.artist || (Array.isArray(artistCredits)
     ? artistCredits.map((credit) => `${credit.name || credit.artist?.name || ''}${credit.joinphrase || ''}`).join('').trim()
@@ -50,7 +19,7 @@ function UserReviewCard({ review }) {
   const image = !imageError && (album?.image || (mbid ? `https://coverartarchive.org/release-group/${encodeURIComponent(mbid)}/front-250` : ''))
 
   return (
-    <article className="user-review-card" ref={cardRef}>
+    <article className="user-review-card">
       <div className="user-review-top">
         <div className="user-review-artwork">
           <span aria-hidden="true">♪</span>
@@ -85,7 +54,20 @@ function UserReviewsPage({ username }) {
         } catch (requestError) {
           if (!/404|not found/i.test(requestError.message)) throw requestError
         }
-        if (!cancelled) setReviews(result)
+        const withMetadata = await Promise.all(result.map(async (review) => {
+          const album = review.album || review.album_info || review.metadata || {}
+          const mbid = review.album_mbid || review.mbid || album.mbid || album.id || ''
+          const title = album.title || review.album_title || review.title
+          const artist = album.artist || review.artist || review.artist_name
+          if (!mbid || (title && artist)) return { ...review, metadataLookupComplete: true }
+          try {
+            const metadata = await getAlbumDetails(mbid)
+            return { ...review, album: { ...album, ...metadata }, metadataLookupComplete: true }
+          } catch {
+            return { ...review, metadataLookupComplete: true }
+          }
+        }))
+        if (!cancelled) setReviews(withMetadata)
       } catch (requestError) {
         if (cancelled) return
         setError(requestError.message || 'Could not load reviews.')
@@ -103,7 +85,7 @@ function UserReviewsPage({ username }) {
       <div className="user-reviews-wrap">
         <section className="user-reviews-board" aria-busy={loading} aria-label={`${username}'s reviews`}>
           <header className="user-reviews-heading"><h1>Reviews</h1></header>
-          {loading && <p className="user-reviews-message" role="status">Loading reviews…</p>}
+          {loading && <div className="user-reviews-metadata-loading"><MetadataBuffering label="Loading review details" /></div>}
           {error && !loading && <p className="user-reviews-message is-error" role="alert">{error}</p>}
           {!loading && !error && reviews.length === 0 && <p className="user-reviews-message">No reviews yet.</p>}
           {!loading && !error && reviews.length > 0 && <div className="user-reviews-grid">

@@ -1,0 +1,17 @@
+.metadata-buffering {
+  width: 34px;
+  height: 34px;
+  display: inline-block;
+  border: 3px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: metadata-buffer-spin .7s linear infinite;
+}
+
+@keyframes metadata-buffer-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .metadata-buffering { animation-duration: 1.8s; }
+}

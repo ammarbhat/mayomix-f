@@ -308,6 +308,7 @@
   color: #eee;
   text-decoration: none;
 }
+.profile-metadata-loading { min-height: 360px; display: grid; place-items: center; border-radius: 15px; background: #fff; }
 
 .artwork,
 .placeholder-square {

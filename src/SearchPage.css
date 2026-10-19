@@ -89,6 +89,7 @@
 .empty-library { padding-top: 64px; }
 
 .album-review-card { min-width: 0; min-height: 182px; display: grid; grid-template-columns: 88px minmax(0, 1fr); grid-template-rows: 94px 1px auto 24px; align-items: center; gap: 10px 16px; padding: 14px; border-radius: 17px; background: #d8d8d8; color: #292929; }
+.library-metadata-loading { min-height: 220px; grid-column: 1 / -1; display: grid; place-items: center; }
 .album-review-card .search-artwork { width: 88px; height: 94px; flex: none; grid-column: 1; grid-row: 1; border-radius: 13px; background: #c8c8c8; }
 .album-review-card .review-copy { min-width: 0; align-self: stretch; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; grid-column: 2; grid-row: 1; padding: 2px 4px; }
 .album-review-card .review-copy h3 { color: #252525; font-size: 23px; }

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import AppHeader from './AppHeader.jsx'
 import RatingVinyls from './RatingVinyls.jsx'
+import MetadataBuffering from './MetadataBuffering.jsx'
 import { addTasteItem, apiRequest, clearStoredToken, getMyTasteList, getStoredToken, getUserReviews, itemDetails, removeTasteItem, searchAlbums, searchSongs, updateTasteItem } from './api.js'
 import './TastePage.css'
 
@@ -130,7 +131,7 @@ function TasteSlot({ item, section, index, onRemove, onDragStart, onDragOver, on
   const titleIsMbid = Boolean(details?.mbid && details.title === details.mbid)
   const titleLoading = metadataLoading || (titleIsMbid && !details?.metadataLoaded)
   const title = titleLoading
-    ? 'Loading…'
+    ? ''
     : titleIsMbid
       ? `${section.kind === 'song' ? 'Song' : 'Album'} details unavailable`
       : details?.title || 'Music item'
@@ -469,14 +470,19 @@ function TastePage() {
   }
 
   if (!token) return null
+  const tasteMetadataPending = Object.values(draft).flat().some((item) => {
+    const details = itemDetails(item)
+    return Boolean(details.metadataLoading || (details.mbid && details.title === details.mbid && !details.metadataLoaded))
+  })
   return <main className="taste-page">
     <AppHeader />
     <div className="taste-workspace" aria-busy={loading}>
       <SearchPanel token={token} draft={draft} ratings={ratings} onAdd={addItem} />
       <section className="taste-editor-panel" aria-label="Current taste">
-        {loading && <p className="taste-loading" role="status">Loading your taste…</p>}
         {loadError && <p className="taste-inline-error" role="alert">{loadError}</p>}
-        {!loading && sections.map((section) => <TasteSection key={section.key} section={section} items={draft[section.key]} onRemove={removeItem} onReorder={reorderItem} />)}
+        {(loading || tasteMetadataPending)
+          ? <div className="taste-editor-metadata-loading"><MetadataBuffering label="Loading taste details" /></div>
+          : sections.map((section) => <TasteSection key={section.key} section={section} items={draft[section.key]} onRemove={removeItem} onReorder={reorderItem} />)}
         <div className="taste-actions">
           <button type="button" className="taste-clear-button" disabled={loading || saving || (!dirty && !sections.some(({ key }) => draft[key].length))} onClick={() => setClearOpen(true)}>Clear all</button>
           <button type="button" className="taste-save-button" disabled={loading || saving || !dirty} onClick={save} aria-busy={saving}>{saving ? 'Saving…' : 'Save'}</button>

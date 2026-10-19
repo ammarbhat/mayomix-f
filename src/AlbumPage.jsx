@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import AppHeader from './AppHeader.jsx'
 import { apiRequest, clearStoredToken, createAlbumReview, getAlbumDetails, getAlbumReviews, getStoredToken, getUserReviews, getAlbumTracklist, itemDetails } from './api.js'
 import RatingVinyls from './RatingVinyls.jsx'
+import MetadataBuffering from './MetadataBuffering.jsx'
 import './AlbumPage.css'
 
 function AlbumPage({ mbid }) {
@@ -9,6 +10,7 @@ function AlbumPage({ mbid }) {
   const [album, setAlbum] = useState(null)
   const [reviews, setReviews] = useState([])
   const [loading, setLoading] = useState(true)
+  const [tracklistLoading, setTracklistLoading] = useState(true)
   const [error, setError] = useState('')
   const [reviewsError, setReviewsError] = useState('')
   const [composerOpen, setComposerOpen] = useState(false)
@@ -23,6 +25,7 @@ function AlbumPage({ mbid }) {
     let cancelled = false
     async function load() {
       setLoading(true)
+      setTracklistLoading(true)
       setError('')
       setReviewCheck('checking')
       setComposerOpen(false)
@@ -70,6 +73,7 @@ function AlbumPage({ mbid }) {
         const tracklist = await getAlbumTracklist(mbid, details).catch(() => [])
         if (cancelled) return
         setAlbum((current) => ({ ...current, tracks: tracklist }))
+        setTracklistLoading(false)
       } catch (requestError) {
         if (!cancelled) {
           if (/401|unauthorized|unauthenticated|not authenticated|credentials/i.test(requestError.message)) {
@@ -77,7 +81,7 @@ function AlbumPage({ mbid }) {
             window.location.replace('/login')
           } else setError(requestError.message || 'Could not load this album.')
         }
-      } finally { if (!cancelled) setLoading(false) }
+      } finally { if (!cancelled) { setLoading(false); setTracklistLoading(false) } }
     }
     load()
     return () => { cancelled = true }
@@ -103,7 +107,7 @@ function AlbumPage({ mbid }) {
   }
 
   const details = itemDetails(album || {})
-  const title = details.title || 'Album'
+  const title = details.title && details.title !== mbid ? details.title : 'Album'
   const artistCredits = album?.['artist-credit'] || []
   const artist = details.artist || (Array.isArray(artistCredits) ? artistCredits.map((credit) => `${credit.name || credit.artist?.name || ''}${credit.joinphrase || ''}`).join('').trim() : '')
   const year = album?.['first-release-date']?.slice(0, 4) || album?.year || ''
@@ -116,9 +120,10 @@ function AlbumPage({ mbid }) {
       <section className="album-board" aria-busy={loading}>
         {error && <p className="album-page-message is-error" role="alert">{error}</p>}
         <section className="album-left-column" aria-label={`${title} album details`}>
+          {(loading || tracklistLoading) ? <div className="album-metadata-loading"><MetadataBuffering label="Loading album and track details" /></div> : <>
           <div className="album-summary">
             <div className="album-cover">{(album?.cover_url || details.image) && <img src={album.cover_url || details.image} alt={`${title} cover`} onError={(event) => event.currentTarget.remove()} />}</div>
-            <h1>{loading ? 'Loading album…' : title}</h1>
+            <h1>{title}</h1>
             <p>{artist}<span>{year ? `${genre} | ${year}` : ''}</span></p>
             {reviewCheck === 'available' && <button className="album-review-toggle album-review-toggle-desktop" type="button" aria-label={composerOpen ? 'Close review composer' : 'Write an album review'} aria-expanded={composerOpen} onClick={() => { setComposerOpen((open) => !open); setNotice('') }}><span>{composerOpen ? '×' : '+'}</span></button>}
           </div>
@@ -128,6 +133,7 @@ function AlbumPage({ mbid }) {
             <span className="album-down-mark" aria-hidden="true">⌄</span>
           </div>
           {reviewCheck === 'available' && <button className="album-review-toggle album-review-toggle-mobile" type="button" aria-label={composerOpen ? 'Close review composer' : 'Write an album review'} aria-expanded={composerOpen} onClick={() => { setComposerOpen((open) => !open); setNotice('') }}>Reviews</button>}
+          </>}
         </section>
         {reviewCheck === 'available' && composerOpen && <form className="album-review-composer" onSubmit={submitReview}>
             <button className="composer-close" type="button" aria-label="Close review composer" onClick={() => setComposerOpen(false)}>×</button>

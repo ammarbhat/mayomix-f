@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { acceptConnectionRequest, apiRequest, clearStoredToken, deleteConnection, getActivity, getAlbumDetails, getPendingConnections, getSentConnections, getStoredToken } from './api.js'
 import AppHeader from './AppHeader.jsx'
 import RatingVinyls from './RatingVinyls.jsx'
+import MetadataBuffering from './MetadataBuffering.jsx'
 import './ActivityPage.css'
 
 function connectionPerson(connection, incoming) {
@@ -61,6 +62,7 @@ function formatActivityDate(value) {
 function ActivityReviewCard({ review, token }) {
   const cardRef = useRef(null)
   const [album, setAlbum] = useState(review.album || review.album_info || null)
+  const [albumLookupComplete, setAlbumLookupComplete] = useState(Boolean(review.metadataLookupComplete))
   const owner = review.user || review.reviewer || review.owner || review.author || {}
   const mbid = review.album_mbid || review.mbid || album?.mbid || album?.id || ''
   const username = review.username || review.owner_username || review.reviewer_username || review.user_username || owner.username || review.handle || ''
@@ -68,7 +70,8 @@ function ActivityReviewCard({ review, token }) {
   const authorLabel = name || (username ? `@${username}` : 'MayoMix listener')
   const [authorProfile, setAuthorProfile] = useState(null)
   const date = formatActivityDate(review.create_date || review.created_at || review.review_date || review.date)
-  const title = album?.title || review.album_title || review.title || 'Album review'
+  const titleValue = [album?.title, review.album_title, review.title].find((value) => value && value !== mbid) || ''
+  const title = titleValue || 'Album review'
   const artist = album?.artist || review.artist || review.artist_name || ''
   const image = album?.image || album?.cover_url || review.cover_url || (mbid ? `https://coverartarchive.org/release-group/${encodeURIComponent(mbid)}/front-250` : '')
   const text = review.review_str || review.review_text || review.text || review.review || ''
@@ -83,11 +86,11 @@ function ActivityReviewCard({ review, token }) {
   }, [name, owner.pfp_link, username])
 
   useEffect(() => {
-    if (!mbid || album?.title) return undefined
+    if (!mbid || review.metadataLookupComplete || albumLookupComplete || (titleValue && artist)) return undefined
     let cancelled = false
     const load = () => getAlbumDetails(mbid, token).then((details) => {
-      if (!cancelled && details.title && details.title !== mbid) setAlbum(details)
-    }).catch(() => {})
+      if (!cancelled && (details.title || details.artist)) setAlbum(details)
+    }).catch(() => {}).finally(() => { if (!cancelled) setAlbumLookupComplete(true) })
     const node = cardRef.current
     if (!node || !('IntersectionObserver' in window)) {
       load()
@@ -101,7 +104,7 @@ function ActivityReviewCard({ review, token }) {
     }, { rootMargin: '160px' })
     observer.observe(node)
     return () => { cancelled = true; observer.disconnect() }
-  }, [album?.title, mbid, token])
+  }, [album?.artist, album?.title, albumLookupComplete, artist, mbid, review.artist, review.artist_name, review.metadataLookupComplete, titleValue, token])
 
   return (
     <article className="activity-entry" ref={cardRef}>
@@ -136,6 +139,8 @@ function ActivityPage() {
   const [sent, setSent] = useState([])
   const [connectionsExpanded, setConnectionsExpanded] = useState(false)
   const [activity, setActivity] = useState([])
+  const [resolvedActivity, setResolvedActivity] = useState([])
+  const [activityMetadataLoading, setActivityMetadataLoading] = useState(false)
   const [pendingError, setPendingError] = useState('')
   const [sentError, setSentError] = useState('')
   const [loading, setLoading] = useState(true)
@@ -164,8 +169,25 @@ function ActivityPage() {
         else setPendingError(incomingResult.reason?.message || 'Requests could not be loaded.')
         if (outgoingResult.status === 'fulfilled') setSent(outgoingResult.value)
         else setSentError(outgoingResult.reason?.message || 'Sent requests could not be loaded.')
-        if (feedResult.status === 'fulfilled') setActivity(feedResult.value)
-        else setError(feedResult.reason?.message || 'Activity could not be loaded.')
+        if (feedResult.status === 'fulfilled') {
+          const reviews = feedResult.value
+          setActivity(reviews)
+          setActivityMetadataLoading(reviews.length > 0)
+          Promise.all(reviews.map(async (review) => {
+            const album = review.album || review.album_info || {}
+            const mbid = review.album_mbid || review.mbid || album.mbid || album.id || ''
+            const title = album.title || review.album_title || review.title
+            const artist = album.artist || review.artist || review.artist_name
+            if (!mbid || (title && artist)) return { ...review, metadataLookupComplete: true }
+            try {
+              const details = await getAlbumDetails(mbid, token)
+              return { ...review, album: { ...album, ...details }, metadataLookupComplete: true }
+            } catch {
+              return { ...review, metadataLookupComplete: true }
+            }
+          })).then((enriched) => { if (!cancelled) setResolvedActivity(enriched) })
+            .finally(() => { if (!cancelled) setActivityMetadataLoading(false) })
+        } else setError(feedResult.reason?.message || 'Activity could not be loaded.')
       })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
@@ -231,10 +253,10 @@ function ActivityPage() {
         <section className="activity-feed-panel" aria-label="Activity" aria-busy={loading}>
           <h1><button className="activity-tab" type="button" onClick={returnToActivityTop}>Activity</button></h1>
           <div className="activity-feed">
-            {loading && <p className="activity-empty">Loading activity…</p>}
+            {(loading || activityMetadataLoading) && <div className="activity-metadata-loading"><MetadataBuffering label="Loading activity details" /></div>}
             {error && !loading && <p className="activity-empty is-error" role="alert">{error}</p>}
-            {!loading && !error && activity.length === 0 && <p className="activity-empty">Your connections’ reviews will appear here.</p>}
-            {activity.map((review, index) => <ActivityReviewCard key={review.id || review.review_id || `${review.mbid}-${index}`} review={review} token={token} />)}
+            {!loading && !activityMetadataLoading && !error && activity.length === 0 && <p className="activity-empty">Your connections’ reviews will appear here.</p>}
+            {!loading && !activityMetadataLoading && resolvedActivity.map((review, index) => <ActivityReviewCard key={review.id || review.review_id || `${review.mbid}-${index}`} review={review} token={token} />)}
           </div>
         </section>
       </div>

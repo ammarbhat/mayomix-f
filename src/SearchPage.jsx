@@ -13,6 +13,7 @@ import {
 } from './api.js'
 import RatingVinyls from './RatingVinyls.jsx'
 import AppHeader from './AppHeader.jsx'
+import MetadataBuffering from './MetadataBuffering.jsx'
 import './SearchPage.css'
 
 const emptyLibrary = { likedSongs: [], reviews: [] }
@@ -84,12 +85,39 @@ function LikedSongCard({ item }) {
 }
 
 function ReviewCard({ review }) {
-  const album = review.album || review.album_info || review.metadata || {}
-  const title = album.title || review.album_title || review.title || 'Album review'
+  const cardRef = useRef(null)
+  const [resolvedAlbum, setResolvedAlbum] = useState(null)
+  const [metadataComplete, setMetadataComplete] = useState(Boolean(review.metadataLookupComplete))
+  const album = resolvedAlbum || review.album || review.album_info || review.metadata || {}
+  const mbid = review.album_mbid || review.mbid || album.mbid || ''
+  const titleValue = [album.title, review.album_title, review.title].find((value) => value && value !== mbid) || ''
+  const title = titleValue || 'Album review'
   const artist = album.artist || review.artist || review.artist_name || ''
   const text = review.review_str || review.review_text || review.text || review.review || review.body || ''
+
+  useEffect(() => {
+    if (!mbid || review.metadataLookupComplete || metadataComplete || (titleValue && artist)) return undefined
+    let cancelled = false
+    const load = () => getAlbumDetails(mbid, getStoredToken()).then((details) => {
+      if (!cancelled && (details.title || details.artist)) setResolvedAlbum(details)
+    }).catch(() => {}).finally(() => { if (!cancelled) setMetadataComplete(true) })
+    const node = cardRef.current
+    if (!node || !('IntersectionObserver' in window)) {
+      load()
+      return () => { cancelled = true }
+    }
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) {
+        observer.disconnect()
+        load()
+      }
+    }, { rootMargin: '180px' })
+    observer.observe(node)
+    return () => { cancelled = true; observer.disconnect() }
+  }, [album.artist, album.title, artist, metadataComplete, mbid, review.metadataLookupComplete, titleValue])
+
   return (
-    <article className="album-review-card">
+    <article className="album-review-card" ref={cardRef}>
       <Artwork item={{ ...album, image: album.image || review.cover_url || review.image }} alt={`${title} cover`} />
       <div className="review-copy">
         <h3 title={title}>{title}</h3>
@@ -186,21 +214,20 @@ function SearchPage() {
         ])
         if (cancelled) return
         const reviewItems = reviews.slice(0, 12)
-        setLibrary({ likedSongs: enrichedLikedSongs || likedSongs, reviews: reviewItems })
-        Promise.all(reviewItems.map(async (review) => {
+        const enrichedReviews = await Promise.all(reviewItems.map(async (review) => {
           const album = review.album || review.album_info || review.metadata || {}
           const mbid = review.album_mbid || review.mbid || album.mbid || album.id
           const hasTitle = album.title || review.album_title || review.title
-          if (!mbid || hasTitle) return review
+          const hasArtist = album.artist || review.artist || review.artist_name
+          if (!mbid || (hasTitle && hasArtist)) return { ...review, metadataLookupComplete: true }
           try {
             const metadata = await getAlbumDetails(mbid, token)
-            return { ...review, album: { ...album, ...metadata } }
+            return { ...review, album: { ...album, ...metadata }, metadataLookupComplete: true }
           } catch {
-            return review
+            return { ...review, metadataLookupComplete: true }
           }
-        })).then((enrichedReviews) => {
-          if (!cancelled) setLibrary((current) => ({ ...current, reviews: enrichedReviews }))
-        })
+        }))
+        if (!cancelled) setLibrary({ likedSongs: enrichedLikedSongs || likedSongs, reviews: enrichedReviews })
       } catch (error) {
         if (!cancelled) {
           if (/401|unauthorized|unauthenticated|not authenticated|credentials/i.test(error.message)) {
@@ -308,7 +335,7 @@ function SearchPage() {
               <button type="button" role="tab" aria-selected={activeLibraryTab === 'reviews'} className={activeLibraryTab === 'reviews' ? 'is-active' : ''} onClick={() => setActiveLibraryTab('reviews')}>Album reviews</button>
             </div>
             <div className={`library-grid${activeLibraryTab === 'reviews' ? ' reviews-library-grid' : ''}`} role="tabpanel">
-              {libraryLoading && <p className="search-message" role="status">Loading your music…</p>}
+              {libraryLoading && <div className="library-metadata-loading"><MetadataBuffering label="Loading your music details" /></div>}
               {libraryError && !libraryLoading && <p className="search-message is-error" role="alert">{libraryError}</p>}
               {!libraryLoading && !libraryError && visibleLibraryItems.length === 0 && <p className="search-message empty-library">{activeLibraryTab === 'liked' ? 'Your liked songs will appear here.' : 'Your album reviews will appear here.'}</p>}
               {!libraryLoading && visibleLibraryItems.map((item, index) => activeLibraryTab === 'liked'
