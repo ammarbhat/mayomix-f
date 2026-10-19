@@ -134,6 +134,7 @@ function ActivityPage() {
   const token = getStoredToken()
   const [pending, setPending] = useState([])
   const [sent, setSent] = useState([])
+  const [connectionsExpanded, setConnectionsExpanded] = useState(false)
   const [activity, setActivity] = useState([])
   const [pendingError, setPendingError] = useState('')
   const [sentError, setSentError] = useState('')
@@ -185,13 +186,22 @@ function ActivityPage() {
     }
   }
 
+  function returnToActivityTop() {
+    if (window.matchMedia('(max-width: 760px)').matches) window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
   return (
     <main className="activity-page">
       <AppHeader />
       <div className="activity-workspace">
-        <section className="activity-connections-panel" aria-label="Connections">
+        <section className={`activity-connections-panel${connectionsExpanded ? ' is-expanded' : ''}`} aria-label="Connections">
           <h1>Connections</h1>
-          <section className="connection-group" aria-label="Incoming requests">
+          <button className="activity-connections-toggle" type="button" aria-expanded={connectionsExpanded} onClick={() => setConnectionsExpanded((expanded) => !expanded)}>
+            <span>Connections</span>
+            {!connectionsExpanded && <><span className="activity-connections-count">({pending.length})</span><span className="activity-connections-chevron" aria-hidden="true" /></>}
+          </button>
+          <div className={`activity-connections-content${connectionsExpanded ? ' is-expanded' : ''}`}>
+          <section className="connection-group incoming-group" aria-label="Incoming requests">
             <h2>Requests</h2>
             <div className="connection-list" aria-busy={loading}>
               {loading && <p className="activity-empty">Loading requests…</p>}
@@ -216,9 +226,10 @@ function ActivityPage() {
             </div>
           </section>
           {actionError && <p className="activity-action-error" role="alert">{actionError}</p>}
+          </div>
         </section>
         <section className="activity-feed-panel" aria-label="Activity" aria-busy={loading}>
-          <h1>Activity</h1>
+          <h1><button className="activity-tab" type="button" onClick={returnToActivityTop}>Activity</button></h1>
           <div className="activity-feed">
             {loading && <p className="activity-empty">Loading activity…</p>}
             {error && !loading && <p className="activity-empty is-error" role="alert">{error}</p>}
