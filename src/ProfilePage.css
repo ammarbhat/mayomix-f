@@ -22,10 +22,12 @@
 }
 
 .profile-sidebar {
-  width: 100%;
+  width: min(100%, 900px);
+  max-width: 100%;
   min-width: 0;
+  margin-inline: auto;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr) max-content;
   align-items: stretch;
   gap: 14px;
 }
@@ -149,6 +151,8 @@
 
 .details-panel {
   min-width: 0;
+  width: max-content;
+  max-width: 100%;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -160,8 +164,10 @@
 .details-panel .favorite-card {
   min-width: 0;
   flex: 1 1 0;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
+  width: 100%;
   padding: 14px 20px;
   border: 0;
   border-radius: 14px;
@@ -203,6 +209,13 @@
 .genre-list > span:nth-child(n+3),
 .identity-list > .muted-placeholder { color: #777; }
 .artist-list > span { letter-spacing: 0; }
+
+@media (min-width: 1100px) {
+  .details-panel .favorite-card { padding: 18px 24px; }
+  .favorite-card h2 { margin-bottom: 14px; font-size: clamp(25px, 2vw, 30px); }
+  .identity-list { gap: 9px; }
+  .identity-list > span { padding: 8px 16px; font-size: 18px; }
+}
 
 .profile-board > .public-reviews-link {
   width: min(50%, 490px);
