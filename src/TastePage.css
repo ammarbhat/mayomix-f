@@ -24,7 +24,7 @@
 .taste-result-vinyls .vinyl-rating-base { opacity: .9; }
 .taste-result-vinyls .is-full .vinyl-rating-base { opacity: 1; }
 .taste-add-wrap { position: relative; flex: 0 0 43px; }
-.taste-add-button { width: 42px; height: 42px; display: grid; place-items: center; padding: 0 0 3px; border: 2px solid #141414; border-radius: 50%; background: transparent; color: #141414; font-size: 34px; font-weight: 300; line-height: 1; cursor: pointer; }
+.taste-add-button { width: 42px; height: 42px; display: grid; place-items: center; padding: 0 0 3px; border: 0; border-radius: 50%; background: transparent; color: #141414; font-size: 34px; font-weight: 300; line-height: 1; cursor: pointer; }
 .taste-add-button:disabled { border-color: #8f8f8f; color: #8f8f8f; cursor: not-allowed; }
 .taste-add-menu { position: absolute; z-index: 4; top: calc(100% + 7px); right: 0; width: 172px; overflow: hidden; border: 1px solid #aaa; border-radius: 11px; background: #f4f4f4; box-shadow: 0 8px 24px #0003; }
 .taste-add-menu button { width: 100%; min-height: 42px; display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 10px; border: 0; background: transparent; color: #222; text-align: left; cursor: pointer; }
