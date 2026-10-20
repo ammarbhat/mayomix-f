@@ -3,6 +3,7 @@ import AppHeader from './AppHeader.jsx'
 import { apiRequest, clearStoredToken, createAlbumReview, getAlbumDetails, getAlbumReviews, getStoredToken, getUserReviews, getAlbumTracklist, itemDetails } from './api.js'
 import RatingVinyls from './RatingVinyls.jsx'
 import MetadataBuffering from './MetadataBuffering.jsx'
+import ReviewActions from './ReviewActions.jsx'
 import './AlbumPage.css'
 
 function AlbumPage({ mbid }) {
@@ -15,6 +16,8 @@ function AlbumPage({ mbid }) {
   const [reviewsError, setReviewsError] = useState('')
   const [composerOpen, setComposerOpen] = useState(false)
   const [reviewCheck, setReviewCheck] = useState('checking')
+  const [ownReview, setOwnReview] = useState(null)
+  const [currentUsername, setCurrentUsername] = useState('')
   const [reviewText, setReviewText] = useState('')
   const [rating, setRating] = useState(0)
   const [posting, setPosting] = useState(false)
@@ -28,6 +31,8 @@ function AlbumPage({ mbid }) {
       setTracklistLoading(true)
       setError('')
       setReviewCheck('checking')
+      setOwnReview(null)
+      setCurrentUsername('')
       setComposerOpen(false)
       try {
         const [detailsResult, reviewsResult, profileResult] = await Promise.allSettled([
@@ -49,21 +54,24 @@ function AlbumPage({ mbid }) {
         }
         if (profileResult.status === 'fulfilled') {
           try {
-            let hasReviewed = false
+            const username = profileResult.value.username
+            setCurrentUsername(username)
+            let matchingReview = null
             let offset = 0
             const pageSize = 29
-            while (!hasReviewed) {
-              const ownReviews = await getUserReviews(profileResult.value.username, token, pageSize, offset).catch((reviewError) => {
+            while (!matchingReview) {
+              const ownReviews = await getUserReviews(username, token, pageSize, offset).catch((reviewError) => {
                 if (reviewError.status === 404 || /404|not found/i.test(reviewError.message)) return []
                 throw reviewError
               })
               if (cancelled) return
-              hasReviewed = ownReviews.some((review) => String(review.mbid || review.album_mbid || review.album?.mbid || '') === String(mbid))
+              matchingReview = ownReviews.find((review) => String(review.mbid || review.album_mbid || review.album?.mbid || '') === String(mbid)) || null
               if (ownReviews.length < pageSize) break
               offset += pageSize
             }
-            setReviewCheck(hasReviewed ? 'reviewed' : 'available')
-            if (!hasReviewed && window.matchMedia('(max-width: 760px)').matches) setComposerOpen(true)
+            setOwnReview(matchingReview)
+            setReviewCheck(matchingReview ? 'reviewed' : 'available')
+            if (!matchingReview && window.matchMedia('(max-width: 760px)').matches) setComposerOpen(true)
           } catch {
             if (!cancelled) setReviewCheck('error')
           }
@@ -106,6 +114,20 @@ function AlbumPage({ mbid }) {
     } finally { setPosting(false) }
   }
 
+  function updateOwnReview(updated) {
+    const sameReview = (candidate) => String(candidate.id || candidate.review_id) === String(updated.id || updated.review_id)
+    setOwnReview(updated)
+    setReviews((current) => current.map((review) => sameReview(review) ? updated : review))
+  }
+
+  function removeOwnReview(removed) {
+    const sameReview = (candidate) => String(candidate.id || candidate.review_id) === String(removed.id || removed.review_id)
+    setReviews((current) => current.filter((review) => !sameReview(review)))
+    setOwnReview(null)
+    setReviewCheck('available')
+    setNotice('Your review was deleted.')
+  }
+
   const details = itemDetails(album || {})
   const title = details.title && details.title !== mbid ? details.title : 'Album'
   const artistCredits = album?.['artist-credit'] || []
@@ -113,6 +135,8 @@ function AlbumPage({ mbid }) {
   const year = album?.['first-release-date']?.slice(0, 4) || album?.year || ''
   const genre = album?.genres?.[0]?.name || 'Pop'
   const tracks = album?.tracks || album?.tracklist || album?.media?.flatMap((medium) => medium.tracks || []) || []
+  const displayedReviews = [...reviews]
+  if (ownReview && !displayedReviews.some((review) => String(review.id || review.review_id) === String(ownReview.id || ownReview.review_id))) displayedReviews.push(ownReview)
 
   return <main className="album-page">
       <AppHeader />
@@ -160,11 +184,14 @@ function AlbumPage({ mbid }) {
         {notice && !composerOpen && <p className="album-post-notice" role="status">{notice}</p>}
         <section className="album-reviews-panel" aria-label="Album reviews">
           {reviewsError && <p className="album-empty-reviews" role="status">Reviews are temporarily unavailable.</p>}
-          {reviews.length ? reviews.map((review, index) => <article className="album-review-entry" key={review.id || review.review_id || index}>
-            <span>@{review.username || review.user?.username || review.reviewer?.username || review.author?.username || 'listener'}</span>
+          {displayedReviews.length ? displayedReviews.map((review, index) => {
+            const isOwnReview = Boolean(ownReview && String(review.id || review.review_id) === String(ownReview.id || ownReview.review_id))
+            return <article className="album-review-entry" key={review.id || review.review_id || index}>
+            {isOwnReview && <ReviewActions review={ownReview} token={token} onSaved={updateOwnReview} onDeleted={removeOwnReview} />}
+            <span>@{review.username || review.user?.username || review.reviewer?.username || review.author?.username || (isOwnReview ? currentUsername : '') || 'listener'}</span>
             <p>{review.review_str || review.review_text || ''}</p>
             <RatingVinyls className="album-review-rating" size="small" rating={review.rating} />
-          </article>) : !loading && !error ? <p className="album-empty-reviews">No reviews yet. Start the conversation.</p> : null}
+          </article>}) : !loading && !error ? <p className="album-empty-reviews">No reviews yet. Start the conversation.</p> : null}
         </section>
       </section>
     </div>

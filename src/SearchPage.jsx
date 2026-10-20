@@ -12,6 +12,7 @@ import {
   searchUsers,
 } from './api.js'
 import RatingVinyls from './RatingVinyls.jsx'
+import ReviewActions from './ReviewActions.jsx'
 import AppHeader from './AppHeader.jsx'
 import MetadataBuffering from './MetadataBuffering.jsx'
 import './SearchPage.css'
@@ -84,7 +85,7 @@ function LikedSongCard({ item }) {
   )
 }
 
-function ReviewCard({ review }) {
+function ReviewCard({ review, token, onSaved, onDeleted }) {
   const cardRef = useRef(null)
   const [resolvedAlbum, setResolvedAlbum] = useState(null)
   const [metadataComplete, setMetadataComplete] = useState(Boolean(review.metadataLookupComplete))
@@ -118,6 +119,7 @@ function ReviewCard({ review }) {
 
   return (
     <article className="album-review-card" ref={cardRef}>
+      <ReviewActions review={review} token={token} onSaved={onSaved} onDeleted={onDeleted} />
       <Artwork item={{ ...album, image: album.image || review.cover_url || review.image }} alt={`${title} cover`} />
       <div className="review-copy">
         <h3 title={title}>{title}</h3>
@@ -340,7 +342,13 @@ function SearchPage() {
               {!libraryLoading && !libraryError && visibleLibraryItems.length === 0 && <p className="search-message empty-library">{activeLibraryTab === 'liked' ? 'Your liked songs will appear here.' : 'Your album reviews will appear here.'}</p>}
               {!libraryLoading && visibleLibraryItems.map((item, index) => activeLibraryTab === 'liked'
                 ? <LikedSongCard item={item} key={item.mbid || item.id || index} />
-                : <ReviewCard review={item} key={item.id || item.review_id || item.album_mbid || index} />)}
+                : <ReviewCard
+                  review={item}
+                  token={token}
+                  key={item.id || item.review_id || item.album_mbid || index}
+                  onSaved={(updated) => setLibrary((current) => ({ ...current, reviews: current.reviews.map((review) => String(review.id || review.review_id) === String(updated.id || updated.review_id) ? updated : review) }))}
+                  onDeleted={(removed) => setLibrary((current) => ({ ...current, reviews: current.reviews.filter((review) => String(review.id || review.review_id) !== String(removed.id || removed.review_id)) }))}
+                />)}
             </div>
           </section>
         )}

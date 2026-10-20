@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
-import { apiRequest, getAlbumDetails, getUserReviews } from './api.js'
+import { apiRequest, getAlbumDetails, getStoredToken, getUserReviews } from './api.js'
 import AppHeader from './AppHeader.jsx'
 import RatingVinyls from './RatingVinyls.jsx'
 import MetadataBuffering from './MetadataBuffering.jsx'
+import ReviewActions from './ReviewActions.jsx'
 import './UserReviewsPage.css'
 
-function UserReviewCard({ review }) {
+function UserReviewCard({ review, canEdit, token, onSaved, onDeleted }) {
   const album = review.album || null
   const [imageError, setImageError] = useState(false)
   const mbid = review.mbid || review.album_mbid || album?.mbid || ''
@@ -20,6 +21,7 @@ function UserReviewCard({ review }) {
 
   return (
     <article className="user-review-card">
+      {canEdit && <ReviewActions review={review} token={token} onSaved={onSaved} onDeleted={onDeleted} />}
       <div className="user-review-top">
         <div className="user-review-artwork">
           <span aria-hidden="true">♪</span>
@@ -41,12 +43,17 @@ function UserReviewsPage({ username }) {
   const [reviews, setReviews] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [currentUsername, setCurrentUsername] = useState('')
+  const token = getStoredToken()
   useEffect(() => {
     let cancelled = false
     async function loadReviews() {
       setLoading(true)
       setError('')
       try {
+        const authToken = getStoredToken()
+        const me = authToken ? await apiRequest('/users/me', { token: authToken }).catch(() => null) : null
+        if (!cancelled) setCurrentUsername(me?.username || '')
         await apiRequest(`/users/${encodeURIComponent(username)}`)
         let result = []
         try {
@@ -89,7 +96,7 @@ function UserReviewsPage({ username }) {
           {error && !loading && <p className="user-reviews-message is-error" role="alert">{error}</p>}
           {!loading && !error && reviews.length === 0 && <p className="user-reviews-message">No reviews yet.</p>}
           {!loading && !error && reviews.length > 0 && <div className="user-reviews-grid">
-            {reviews.map((review, index) => <UserReviewCard key={review.id || review.review_id || `${review.mbid}-${index}`} review={review} />)}
+            {reviews.map((review, index) => <UserReviewCard key={review.id || review.review_id || `${review.mbid}-${index}`} review={review} canEdit={Boolean(currentUsername && currentUsername === username)} token={token} onSaved={(updated) => setReviews((items) => items.map((item) => String(item.id || item.review_id) === String(updated.id || updated.review_id) ? updated : item))} onDeleted={(removed) => setReviews((items) => items.filter((item) => String(item.id || item.review_id) !== String(removed.id || removed.review_id)))} />)}
           </div>}
         </section>
       </div>
