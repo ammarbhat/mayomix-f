@@ -24,7 +24,7 @@ function SearchIcon() {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="7.2" /><path d="m16.2 16.2 5 5" /></svg>
 }
 
-function ResultCard({ item, draft, ratings, options, onAdd }) {
+function ResultCard({ item, draft, ratings, options, onAdd, targetCategory }) {
   const [open, setOpen] = useState(false)
   const mbid = identity(item)
   const title = item.title || 'Untitled'
@@ -42,8 +42,9 @@ function ResultCard({ item, draft, ratings, options, onAdd }) {
       {ratings[mbid] != null && <RatingVinyls rating={ratings[mbid]} size="small" className="taste-result-vinyls" />}
     </div>
     <div className="taste-add-wrap">
-      <button type="button" className="taste-add-button" aria-label={`Add ${title}`} aria-expanded={open} aria-haspopup="menu" disabled={!mbid || alreadyInEveryOption} onClick={() => setOpen((current) => !current)}>{alreadyInEveryOption ? '✓' : '+'}</button>
-      {open && <div className="taste-add-menu" role="menu" aria-label={`Add ${title} to`}>
+      {targetCategory ? <button type="button" className="taste-add-button" aria-label={`Add ${title} to ${targetCategory}`} disabled={!mbid || draft[targetCategory].some((entry) => identity(entry) === mbid) || draft[targetCategory].length >= sections.find(({ key }) => key === targetCategory).max} onClick={() => onAdd(targetCategory, item)}>+</button> : <>
+        <button type="button" className="taste-add-button" aria-label={`Add ${title}`} aria-expanded={open} aria-haspopup="menu" disabled={!mbid || alreadyInEveryOption} onClick={() => setOpen((current) => !current)}>{alreadyInEveryOption ? '✓' : '+'}</button>
+        {open && <div className="taste-add-menu" role="menu" aria-label={`Add ${title} to`}>
         {options.map((section) => {
           const full = draft[section.key].length >= section.max
           const duplicate = draft[section.key].some((entry) => identity(entry) === mbid)
@@ -51,13 +52,14 @@ function ResultCard({ item, draft, ratings, options, onAdd }) {
             <span>{section.title}</span><small>{duplicate ? 'Added' : full ? 'Full' : `${draft[section.key].length}/${section.max}`}</small>
           </button>
         })}
-      </div>}
+        </div>}
+      </>}
     </div>
   </article>
 }
 
-function SearchPanel({ token, draft, ratings, onAdd }) {
-  const [mode, setMode] = useState('album')
+function SearchPanel({ token, draft, ratings, onAdd, mobileTargetSection, onClose }) {
+  const [mode, setMode] = useState(mobileTargetSection?.kind || 'album')
   const [query, setQuery] = useState('')
   const [results, setResults] = useState([])
   const [submitted, setSubmitted] = useState(false)
@@ -65,6 +67,7 @@ function SearchPanel({ token, draft, ratings, onAdd }) {
   const [error, setError] = useState('')
   const requestId = useRef(0)
   const inputRef = useRef(null)
+  const inputId = `taste-search-${mobileTargetSection?.key || 'desktop'}`
   const options = useMemo(() => mode === 'album'
     ? sections.slice(0, 2)
     : sections.slice(2), [mode])
@@ -101,29 +104,30 @@ function SearchPanel({ token, draft, ratings, onAdd }) {
   }
 
   return (
-    <section className="taste-search-panel" aria-label="Find music">
+    <section className={`taste-search-panel${mobileTargetSection ? ' taste-inline-search' : ''}`} aria-label={mobileTargetSection ? `Search ${mobileTargetSection.kind === 'album' ? 'albums' : 'songs'} for ${mobileTargetSection.title}` : 'Find music'}>
       <form className="taste-search-form" onSubmit={submit}>
-        <label className="visually-hidden" htmlFor="taste-search-input">Search {mode === 'album' ? 'albums' : 'songs'}</label>
-        <input id="taste-search-input" ref={inputRef} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search music" autoComplete="off" />
+        <label className="visually-hidden" htmlFor={inputId}>Search {mode === 'album' ? 'albums' : 'songs'}</label>
+        <input id={inputId} ref={inputRef} value={query} onChange={(event) => setQuery(event.target.value)} placeholder={mobileTargetSection ? `Search ${mode === 'album' ? 'albums' : 'songs'}` : 'Search music'} autoComplete="off" />
         {query && <button type="button" className="taste-search-clear" aria-label="Clear search" onClick={() => { setQuery(''); setResults([]); setSubmitted(false); setError(''); inputRef.current?.focus() }}>×</button>}
         <button className="taste-search-submit" type="submit" aria-label={`Search ${mode === 'album' ? 'albums' : 'songs'}`} disabled={!query.trim()}><SearchIcon /></button>
+        {mobileTargetSection && <button type="button" className="taste-inline-search-close" aria-label="Close search" onClick={onClose}>×</button>}
       </form>
-      <div className="taste-search-modes" role="group" aria-label="Search type">
+      {!mobileTargetSection && <div className="taste-search-modes" role="group" aria-label="Search type">
         <button type="button" className={mode === 'album' ? 'is-active' : ''} aria-pressed={mode === 'album'} onClick={() => changeMode('album')}>Albums</button>
         <button type="button" className={mode === 'song' ? 'is-active' : ''} aria-pressed={mode === 'song'} onClick={() => changeMode('song')}>Songs</button>
-      </div>
+      </div>}
       <div className="taste-results" aria-live="polite" aria-busy={loading}>
         {loading && <p className="taste-search-message">Searching {mode === 'album' ? 'albums' : 'songs'}…</p>}
         {!loading && error && <p className="taste-search-message is-error" role="alert">{error}</p>}
         {!loading && !error && submitted && results.length === 0 && <p className="taste-search-message">No results</p>}
         {!loading && !error && !submitted && <p className="taste-search-message taste-search-hint">Search by album, song, or artist.</p>}
-        {!loading && results.map((item, index) => <ResultCard key={identity(item) || `${item.title}-${index}`} item={item} draft={draft} ratings={ratings} options={options} onAdd={onAdd} />)}
+        {!loading && results.map((item, index) => <ResultCard key={identity(item) || `${item.title}-${index}`} item={item} draft={draft} ratings={ratings} options={options} onAdd={onAdd} targetCategory={mobileTargetSection?.key} />)}
       </div>
     </section>
   )
 }
 
-function TasteSlot({ item, section, index, onRemove, onDragStart, onDragOver, onDrop, dragging }) {
+function TasteSlot({ item, section, index, onRemove, onEmptyTap, onDragStart, onTouchDragStart, onTouchDragMove, onTouchDragEnd, onDragOver, onDrop, dragging }) {
   const [loadedImage, setLoadedImage] = useState('')
   const [failedImage, setFailedImage] = useState('')
   const details = item ? itemDetails(item) : null
@@ -139,23 +143,25 @@ function TasteSlot({ item, section, index, onRemove, onDragStart, onDragOver, on
   const showBuffering = metadataLoading || imageLoading
   return <div
     className={`taste-slot${item ? ' is-filled' : ''}${dragging ? ' is-dragging' : ''}`}
+    data-slot-index={index}
     onDragOver={onDragOver ? (event) => onDragOver(event, index) : undefined}
     onDrop={onDrop ? (event) => onDrop(event, index) : undefined}
   >
     {item ? <>
-      <div className="taste-slot-art" draggable onDragStart={(event) => onDragStart(event, index)} onDragEnd={() => onDragStart(null, null)} aria-busy={showBuffering}>
+      <div className="taste-slot-art" draggable onDragStart={(event) => onDragStart(event, index)} onDragEnd={() => onDragStart(null, null)} onPointerDown={(event) => onTouchDragStart(event, index)} onPointerMove={onTouchDragMove} onPointerUp={onTouchDragEnd} onPointerCancel={onTouchDragEnd} aria-busy={showBuffering}>
         {details.image && <img className={imageLoading ? 'is-loading' : ''} src={details.image} alt={`${title} cover`} loading="lazy" onLoad={() => setLoadedImage(details.image)} onError={(event) => { setFailedImage(details.image); event.currentTarget.remove() }} />}
         {showBuffering && <span className="taste-buffering" role="status" aria-label={`Loading ${section.kind} details`} />}
         {!showBuffering && (!details.image || failedImage === details.image) && <span className="taste-art-fallback" aria-hidden="true">♫</span>}
         <button type="button" className="taste-remove-button" aria-label={`Remove ${title} from ${section.title}`} onClick={() => onRemove(section.key, index)}><span aria-hidden="true">×</span></button>
       </div>
       <span className="taste-slot-title" title={title}>{title}</span>
-    </> : <div className="taste-slot-empty" aria-label={`Empty ${section.title} slot ${index + 1}`} />}
+    </> : <button type="button" className="taste-slot-empty" aria-label={`Add to ${section.title}, slot ${index + 1}`} onClick={() => onEmptyTap(section.key)}><span aria-hidden="true" /></button>}
   </div>
 }
 
-function TasteSection({ section, items, onRemove, onReorder }) {
+function TasteSection({ section, items, onRemove, onReorder, activeMobileSearch, setActiveMobileSearch, token, draft, ratings, onAdd }) {
   const [draggingIndex, setDraggingIndex] = useState(null)
+  const touchDragRef = useRef(null)
 
   function startDrag(event, index) {
     if (index == null) {
@@ -175,15 +181,48 @@ function TasteSection({ section, items, onRemove, onReorder }) {
     if (value !== '' && Number.isInteger(fromIndex) && fromIndex !== toIndex) onReorder(section.key, fromIndex, toIndex)
   }
 
+  function startTouchDrag(event, index) {
+    if (event.pointerType !== 'touch' || event.target.closest('button')) return
+    event.preventDefault()
+    const drag = { fromIndex: index, toIndex: index, active: false, timer: null }
+    drag.timer = window.setTimeout(() => {
+      drag.active = true
+      setDraggingIndex(index)
+    }, 180)
+    touchDragRef.current = drag
+    event.currentTarget.setPointerCapture(event.pointerId)
+  }
+
+  function moveTouchDrag(event) {
+    const drag = touchDragRef.current
+    if (!drag?.active) return
+    event.preventDefault()
+    const slot = document.elementFromPoint(event.clientX, event.clientY)?.closest('.taste-slot[data-slot-index]')
+    if (slot) drag.toIndex = Number(slot.dataset.slotIndex)
+  }
+
+  function endTouchDrag() {
+    const drag = touchDragRef.current
+    if (!drag) return
+    window.clearTimeout(drag.timer)
+    touchDragRef.current = null
+    setDraggingIndex(null)
+    if (drag.active && drag.fromIndex !== drag.toIndex) onReorder(section.key, drag.fromIndex, drag.toIndex)
+  }
+
   return <section className="taste-section" aria-labelledby={`taste-heading-${section.key}`}>
     <h2 id={`taste-heading-${section.key}`}>{section.title}</h2>
     <div className="taste-tray">
-      {Array.from({ length: section.max }, (_, index) => <TasteSlot
+    {Array.from({ length: section.max }, (_, index) => <TasteSlot
         key={`${section.key}-${index}`}
         item={items[index]}
         section={section}
         index={index}
         itemCount={items.length}
+        onEmptyTap={setActiveMobileSearch}
+        onTouchDragStart={startTouchDrag}
+        onTouchDragMove={moveTouchDrag}
+        onTouchDragEnd={endTouchDrag}
         onRemove={onRemove}
         onDragStart={startDrag}
         onDragOver={(event) => event.preventDefault()}
@@ -191,6 +230,7 @@ function TasteSection({ section, items, onRemove, onReorder }) {
         dragging={draggingIndex === index}
       />)}
     </div>
+    {activeMobileSearch === section.key && <SearchPanel token={token} draft={draft} ratings={ratings} onAdd={onAdd} mobileTargetSection={section} onClose={() => setActiveMobileSearch(null)} />}
     {items.length > section.max && <p className="taste-overflow-note">Showing 3 of {items.length} saved songs. Remove a visible song to bring the next one into view.</p>}
   </section>
 }
@@ -265,6 +305,7 @@ function TastePage() {
   const [loadFailures, setLoadFailures] = useState({})
   const [saveError, setSaveError] = useState('')
   const [notice, setNotice] = useState('')
+  const [activeMobileSearch, setActiveMobileSearch] = useState(null)
   const [saving, setSaving] = useState(false)
   const [clearOpen, setClearOpen] = useState(false)
   const [leaveOpen, setLeaveOpen] = useState(false)
@@ -482,7 +523,7 @@ function TastePage() {
         {loadError && <p className="taste-inline-error" role="alert">{loadError}</p>}
         {(loading || tasteMetadataPending)
           ? <div className="taste-editor-metadata-loading"><MetadataBuffering label="Loading taste details" /></div>
-          : sections.map((section) => <TasteSection key={section.key} section={section} items={draft[section.key]} onRemove={removeItem} onReorder={reorderItem} />)}
+          : sections.map((section) => <TasteSection key={section.key} section={section} items={draft[section.key]} onRemove={removeItem} onReorder={reorderItem} activeMobileSearch={activeMobileSearch} setActiveMobileSearch={setActiveMobileSearch} token={token} draft={draft} ratings={ratings} onAdd={addItem} />)}
         <div className="taste-actions">
           <button type="button" className="taste-clear-button" disabled={loading || saving || (!dirty && !sections.some(({ key }) => draft[key].length))} onClick={() => setClearOpen(true)}>Clear all</button>
           <button type="button" className="taste-save-button" disabled={loading || saving || !dirty} onClick={save} aria-busy={saving}>{saving ? 'Saving…' : 'Save'}</button>
