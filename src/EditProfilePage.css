@@ -82,3 +82,64 @@
 }
 
 .edit-artist-search-wrap { z-index: 4; }
+
+@media (max-width: 480px) {
+  .edit-profile-page { min-height: 100dvh; }
+  .edit-profile-board { width: 100%; min-height: 100dvh; margin: 0 auto calc(82px + env(safe-area-inset-bottom)); padding: 16px 20px 30px; border-radius: 0; background: #242424; }
+  .edit-profile-board > section,
+  .edit-profile-board > .edit-field-row { grid-template-columns: 73px minmax(0, 1fr); column-gap: 12px; align-items: center; padding: 21px 0; border-bottom: 1px solid #d5d5d5; }
+  .edit-profile-board h1,
+  .edit-profile-board h2,
+  .edit-field-row label { color: #eee; font-size: 14px; }
+  .edit-pfp-row { display: flex !important; min-height: 0; flex-direction: column; align-items: center; gap: 8px !important; padding: 0 0 17px !important; }
+  .edit-profile-board .edit-pfp-row h1 { font-size: 16px; }
+  .edit-pfp-preview { width: 79px; height: 79px; border-radius: 13px; }
+  .edit-search-wrap { width: auto; align-self: center; }
+  .edit-search-form { width: max-content; height: 20px; padding: 0 5px; border-radius: 5px; }
+  .edit-search-form input { width: 94px; font-size: 10px; }
+  .edit-search-form input::placeholder { text-align: center; }
+  .edit-search-form button { width: 18px; height: 18px; }
+  .edit-search-form svg { width: 14px; height: 14px; }
+  .edit-search-popover { top: calc(100% + 5px); max-height: 250px; padding: 6px; }
+  .edit-album-result { gap: 8px; padding: 7px; }
+  .edit-album-result img { width: 46px; height: 46px; }
+  .edit-field-row { min-height: 84px; }
+  .edit-field-row label { font-size: 13px; }
+  .edit-field-row input,
+  .edit-field-row textarea { width: 100%; min-height: 21px; padding: 3px 8px; border-radius: 6px; font-size: 14px; }
+  .edit-field-row textarea { height: 88px; min-height: 88px; resize: vertical; }
+  .edit-bio-row { min-height: 0; align-items: start !important; padding: 21px 0 14px !important; }
+  .edit-bio-row label { padding-top: 3px; }
+  .edit-bio-row small { right: 0; bottom: 0; color: #aaa; font-size: 10px; }
+  .edit-ranked-section { grid-template-columns: minmax(0, 1fr) !important; gap: 10px !important; align-items: start !important; padding: 11px 0 10px !important; }
+  .edit-ranked-section h2 { padding: 0; text-align: center; font-size: 14px; }
+  .edit-ranked-controls { width: 100%; }
+  .edit-ranked-list { min-height: 0; gap: 8px; padding: 12px 10px; border-radius: 6px; }
+  .edit-ranked-row { position: relative; min-height: 36px; grid-template-columns: minmax(0, 1fr) 25px; gap: 8px; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+  .edit-ranked-row { touch-action: none; }
+  .edit-ranked-row.is-touch-dragging { opacity: .55; }
+  .edit-ranked-row::before { position: absolute; inset: 0 33px 0 0; border-radius: 14px; background: #d5d5d5; box-shadow: 0 2px 5px #0004; content: ''; }
+  .edit-rank-number,
+  .edit-rank-title { position: relative; z-index: 1; font-size: 14px; }
+  .edit-rank-number { grid-column: 1; grid-row: 1; align-self: center; padding-left: 10px; text-align: left; }
+  .edit-rank-title { grid-column: 1; grid-row: 1; padding: 0 34px 0 30px; text-align: center; }
+  .edit-remove { grid-column: 2; grid-row: 1; width: 25px; height: 25px; padding: 0 0 2px; border-radius: 3px; font-size: 24px; line-height: 1; }
+  .edit-empty-list { padding: 28px 5px; font-size: 12px; }
+  .edit-picker-button { width: min(100%, 171px); min-height: 31px; margin: 14px auto 0; border-radius: 6px; font-size: 14px; }
+  .edit-genre-menu,
+  .edit-artist-results { top: calc(100% + 5px); padding: 6px; }
+  .edit-genre-menu { grid-template-columns: 1fr 1fr; }
+  .edit-genre-menu button,
+  .edit-artist-results button { min-height: 34px; padding: 6px 8px; font-size: 12px; }
+  .edit-artist-search-wrap { width: min(100%, 171px); margin: 14px auto 0; }
+  .edit-artist-search { height: 31px; padding: 0 6px; border-radius: 6px; }
+  .edit-artist-search input { font-size: 13px; }
+  .edit-artist-search input::placeholder { text-align: center; }
+  .edit-artist-search button { width: 22px; height: 24px; }
+  .edit-artist-search svg { width: 16px; height: 16px; }
+  .edit-artist-results { top: calc(100% + 5px); }
+  .edit-profile-actions { flex-direction: column; align-items: stretch; gap: 8px; padding-top: 18px; }
+  .edit-profile-actions button { width: 100%; min-height: 40px; font-size: 15px; }
+  .edit-profile-actions span { text-align: center; font-size: 12px; }
+  .edit-error { font-size: 12px; }
+}

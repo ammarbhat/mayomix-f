@@ -13,8 +13,37 @@ function SearchIcon() {
 
 function RankedList({ title, items, onRemove, onReorder }) {
   const dragIndex = useRef(null)
+  const touchDrag = useRef(null)
+
+  function startTouchDrag(event, index) {
+    if (event.pointerType !== 'touch' || event.target.closest('button')) return
+    event.preventDefault()
+    const rowElement = event.currentTarget
+    const state = { from: index, to: index, active: false, timer: null }
+    state.timer = window.setTimeout(() => { state.active = true; rowElement.classList.add('is-touch-dragging') }, 180)
+    touchDrag.current = state
+    event.currentTarget.setPointerCapture(event.pointerId)
+  }
+
+  function moveTouchDrag(event) {
+    const state = touchDrag.current
+    if (!state?.active) return
+    event.preventDefault()
+    const row = document.elementFromPoint(event.clientX, event.clientY)?.closest('.edit-ranked-row[data-rank-index]')
+    if (row) state.to = Number(row.dataset.rankIndex)
+  }
+
+  function endTouchDrag(event) {
+    const state = touchDrag.current
+    if (!state) return
+    window.clearTimeout(state.timer)
+    event.currentTarget.classList.remove('is-touch-dragging')
+    touchDrag.current = null
+    if (state.active && state.from !== state.to) onReorder(state.from, state.to)
+  }
+
   return <div className="edit-ranked-list" aria-label={title}>
-    {items.map((item, index) => <div className="edit-ranked-row" key={`${idOf(item) || item.title}-${index}`} draggable onDragStart={(event) => { dragIndex.current = index; event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', String(index)) }} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); const from = Number(event.dataTransfer.getData('text/plain')); if (Number.isInteger(from)) onReorder(from, index) }} onDragEnd={() => { dragIndex.current = null }}>
+    {items.map((item, index) => <div className="edit-ranked-row" data-rank-index={index} key={`${idOf(item) || item.title}-${index}`} draggable onPointerDown={(event) => startTouchDrag(event, index)} onPointerMove={moveTouchDrag} onPointerUp={endTouchDrag} onPointerCancel={endTouchDrag} onDragStart={(event) => { dragIndex.current = index; event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', String(index)) }} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); const from = Number(event.dataTransfer.getData('text/plain')); if (Number.isInteger(from)) onReorder(from, index) }} onDragEnd={() => { dragIndex.current = null }}>
       <span className="edit-rank-number">{index + 1}</span><span className="edit-rank-title" title={item.title}>{item.title}</span>
       <button className="edit-remove" type="button" aria-label={`Remove ${item.title}`} onClick={() => onRemove(index)}>×</button>
     </div>)}
