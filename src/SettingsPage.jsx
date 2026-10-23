@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import AppHeader from './AppHeader.jsx'
 import EditProfilePage from './EditProfilePage.jsx'
 import { apiRequest, changePassword, clearStoredToken, getStoredToken } from './api.js'
@@ -125,9 +126,60 @@ function ChangePassword({ token }) {
   </form>
 }
 
+function LogoutDialog({ onCancel, onConfirm }) {
+  const dialogRef = useRef(null)
+  const cancelRef = useRef(null)
+
+  useEffect(() => {
+    const previousFocus = document.activeElement
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    cancelRef.current?.focus()
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+      if (previousFocus instanceof HTMLElement && previousFocus.isConnected) previousFocus.focus()
+    }
+  }, [])
+
+  function handleKeyDown(event) {
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      onCancel()
+      return
+    }
+    if (event.key !== 'Tab') return
+    const actions = dialogRef.current?.querySelectorAll('button:not(:disabled)')
+    if (!actions?.length) return
+    const first = actions[0]
+    const last = actions[actions.length - 1]
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault()
+      last.focus()
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault()
+      first.focus()
+    }
+  }
+
+  return createPortal(
+    <div className="settings-logout-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onCancel() }}>
+      <section ref={dialogRef} className="settings-logout-dialog" role="dialog" aria-modal="true" aria-labelledby="settings-logout-title" onKeyDown={handleKeyDown}>
+        <h2 id="settings-logout-title">Are you sure you want to log out of mayomix?</h2>
+        <div className="settings-logout-actions">
+          <button ref={cancelRef} className="settings-logout-choice" type="button" onClick={onCancel}>No</button>
+          <button className="settings-logout-choice is-confirm" type="button" onClick={onConfirm}>Yes</button>
+        </div>
+      </section>
+    </div>,
+    document.body,
+  )
+}
+
 function SettingsPage() {
   const token = getStoredToken()
   const [active, setActive] = useState(selectedSection)
+  const [logoutOpen, setLogoutOpen] = useState(false)
   const title = useMemo(() => [...accountSections, ...appSections].find((section) => section.id === active)?.label || 'Account Information', [active])
 
   useEffect(() => {
@@ -140,7 +192,7 @@ function SettingsPage() {
     return () => window.removeEventListener('popstate', syncSection)
   }, [])
 
-  function logOut() {
+  function confirmLogOut() {
     clearStoredToken()
     window.location.replace('/login')
   }
@@ -150,7 +202,7 @@ function SettingsPage() {
   }
 
   if (!token) return null
-  return <main className="settings-page">
+  return <main className="settings-page" inert={logoutOpen}>
     <AppHeader />
     <section className="settings-shell" aria-label="Settings">
       <aside className="settings-sidebar">
@@ -159,7 +211,7 @@ function SettingsPage() {
           <h2>Account</h2>
           <nav className="settings-nav-group" aria-label="Account settings">
             {accountSections.map(sectionLink)}
-            <button className="settings-nav-link" type="button" onClick={logOut}>Log Out</button>
+            <button className="settings-nav-link" type="button" onClick={() => setLogoutOpen(true)}>Log Out</button>
           </nav>
           <h2 className="settings-app-heading">App</h2>
           <nav className="settings-nav-group" aria-label="App information">
@@ -177,6 +229,7 @@ function SettingsPage() {
         </div>
       </section>
     </section>
+    {logoutOpen && <LogoutDialog onCancel={() => setLogoutOpen(false)} onConfirm={confirmLogOut} />}
   </main>
 }
 
