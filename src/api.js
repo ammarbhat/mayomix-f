@@ -80,6 +80,15 @@ export function changePassword(password, newPassword, token) {
   })
 }
 
+export function changeUsername(username, token) {
+  return apiRequest('/users/me', {
+    method: 'PATCH',
+    token,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username }),
+  })
+}
+
 export function getStoredToken() {
   return sessionStorage.getItem(TOKEN_KEY)
 }

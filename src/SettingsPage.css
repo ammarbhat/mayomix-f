@@ -29,11 +29,20 @@
 .settings-password-fields label { color: #f1f1f1; font-size: 16px; }
 .settings-password-fields input { width: 100%; height: 34px; padding: 4px 12px; border: 1px solid #aaa; border-radius: 5px; background: #d0d0d0; color: #333; font-size: 16px; }
 .settings-password-fields input:focus-visible { outline: 2px solid #129ded; outline-offset: 3px; }
+.settings-username-form { width: min(100%, 748px); min-height: 246px; margin: 0 auto; padding: 21px 34px 30px; border: 1px solid #aaa; border-radius: 14px; display: flex; flex-direction: column; align-items: center; }
+.settings-username-fields { width: min(100%, 530px); display: grid; grid-template-columns: minmax(190px, 210px) minmax(220px, 300px); align-items: center; column-gap: 20px; row-gap: 30px; }
+.settings-username-label,.settings-username-fields label { color: #f1f1f1; font-size: 16px; }
+.settings-username-current { min-height: 34px; display: flex; align-items: center; color: #f1f1f1; font-size: 16px; }
+.settings-username-fields input { width: 100%; height: 34px; padding: 4px 12px; border: 1px solid #aaa; border-radius: 5px; background: #d0d0d0; color: #333; font-size: 16px; }
+.settings-username-fields input::placeholder { color: #666; opacity: 1; }
+.settings-username-fields input:focus-visible { outline: 2px solid #129ded; outline-offset: 3px; }
+.settings-username-form .settings-password-submit { margin-top: 56px; }
 .settings-password-submit { min-width: 154px; min-height: 31px; margin-top: 36px; padding: 3px 15px; border: 1px solid #aaa; border-radius: 999px; background: #d0d0d0; color: #555; font-size: 16px; line-height: 1.2; cursor: pointer; }
 .settings-password-submit:disabled { cursor: not-allowed; opacity: .8; }
 .settings-feedback { min-height: 54px; width: min(100%, 480px); display: flex; align-items: center; justify-content: center; gap: 22px; margin: 14px 0 0; padding: 8px 10px; border-bottom: 1px solid #999; color: #d6d6d6; font-size: 16px; text-align: center; }
 .settings-feedback img { width: 27px; height: 27px; flex: 0 0 27px; object-fit: contain; }
 .settings-feedback.is-error { width: max-content; max-width: 100%; }
+.settings-feedback-detail { display: block; margin-top: 3px; color: #bdbdbd; font-size: 13px; }
 .settings-work-in-progress { min-height: 240px; display: grid; align-content: center; justify-items: center; gap: 14px; color: #c9c9c9; }
 .settings-work-in-progress > span { width: 58px; height: 58px; display: grid; place-items: center; border: 1px solid #999; border-radius: 50%; color: #e99b9c; font-size: 27px; }
 .settings-work-in-progress p { margin: 0; font-size: 19px; }
@@ -82,6 +91,12 @@
   .settings-password-fields { grid-template-columns: minmax(0, 1fr); row-gap: 8px; }
   .settings-password-fields label { margin-top: 10px; font-size: 14px; }
   .settings-password-fields input { height: 42px; }
+  .settings-username-form { min-height: 0; padding: 20px 16px 18px; }
+  .settings-username-fields { grid-template-columns: minmax(0, 1fr); row-gap: 8px; }
+  .settings-username-label,.settings-username-fields label { margin-top: 10px; font-size: 14px; }
+  .settings-username-current { min-height: 28px; }
+  .settings-username-fields input { height: 42px; }
+  .settings-username-form .settings-password-submit { margin-top: 22px; }
   .settings-password-submit { margin-top: 22px; }
   .settings-feedback { gap: 12px; font-size: 14px; }
   .settings-content-edit-profile { padding: 0; }
@@ -97,6 +112,7 @@
   .settings-content { padding-right: 12px; padding-left: 12px; }
   .settings-account-row { grid-template-columns: 104px minmax(0, 1fr); }
   .settings-password-form { padding-right: 14px; padding-left: 14px; }
+  .settings-username-form { padding-right: 14px; padding-left: 14px; }
   .settings-content-edit-profile > .settings-editor-board { width: 100%; min-height: 0; margin: 0; padding: 12px 18px 24px; border-radius: 0; }
   .settings-content .settings-editor-board > section,.settings-content .settings-editor-board > .edit-field-row { grid-template-columns: minmax(0, 1fr); }
 }

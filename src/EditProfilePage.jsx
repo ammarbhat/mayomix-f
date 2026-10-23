@@ -180,7 +180,7 @@ function EditProfilePage({ embedded = false }) {
     if (!genres.length) { setSaveError('Choose at least one genre before saving.'); return }
     setSaving(true); setSaveError(''); setNotice('')
     try {
-      await apiRequest('/users/me', { method: 'PATCH', token, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: profile.name.trim(), username: profile.username.trim(), bio: profile.bio.trim() || null, pfp_link: profile.pfp_link || null, fav_genres: genres.map((item) => item.title) }) })
+      await apiRequest('/users/me', { method: 'PATCH', token, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: profile.name.trim(), bio: profile.bio.trim() || null, pfp_link: profile.pfp_link || null, fav_genres: genres.map((item) => item.title) }) })
       await replaceRanked('top_genres', initialGenres.current, genres)
       await replaceRanked('top_artists', initialArtists.current, artists)
       const [freshGenres, freshArtists] = await Promise.all([
@@ -220,7 +220,6 @@ function EditProfilePage({ embedded = false }) {
         </div>
       </section>
       <div className="edit-field-row"><label htmlFor="edit-name">Name</label><input id="edit-name" value={profile.name} onChange={(event) => setProfile({ ...profile, name: event.target.value })} required /></div>
-      <div className="edit-field-row"><label htmlFor="edit-username">Username</label><input id="edit-username" value={profile.username} onChange={(event) => setProfile({ ...profile, username: event.target.value })} required /></div>
       <div className="edit-field-row edit-bio-row"><label htmlFor="edit-bio">Bio</label><textarea id="edit-bio" maxLength={100} value={profile.bio} onChange={(event) => setProfile({ ...profile, bio: event.target.value })} /><small>{profile.bio.length}/100</small></div>
       <section className="edit-ranked-section"><h2>Top Genres</h2><div className="edit-ranked-controls"><RankedList title="Top genres" items={genres} onRemove={(index) => setGenres((items) => items.filter((_, i) => i !== index))} onReorder={(from, to) => reorder(setGenres, genres, from, to)} /><button className="edit-picker-button" type="button" onClick={() => setGenreMenu((open) => !open)} aria-expanded={genreMenu}>Select Genres</button>
         {genreMenu && <div className="edit-genre-menu" role="group" aria-label="Available genres">{GENRES.filter((genre) => !genres.some((entry) => entry.title === genre)).map((genre) => <button type="button" key={genre} disabled={genres.length >= 3} onClick={() => addGenre(genre)}>{genre}</button>)}</div>}

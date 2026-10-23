@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import AppHeader from './AppHeader.jsx'
 import EditProfilePage from './EditProfilePage.jsx'
-import { apiRequest, changePassword, clearStoredToken, getStoredToken } from './api.js'
+import { apiRequest, changePassword, changeUsername, clearStoredToken, getStoredToken } from './api.js'
 import './SettingsPage.css'
 
 const accountSections = [
@@ -126,6 +126,76 @@ function ChangePassword({ token }) {
   </form>
 }
 
+function ChangeUsername({ token }) {
+  const [currentUsername, setCurrentUsername] = useState('')
+  const [newUsername, setNewUsername] = useState('')
+  const [feedback, setFeedback] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    apiRequest('/users/me', { token, cache: false }).then((user) => {
+      if (!cancelled) setCurrentUsername(user.username || '')
+    }).catch((error) => {
+      if (cancelled) return
+      if (error.status === 401) {
+        clearStoredToken()
+        window.location.replace('/login')
+      } else setFeedback({ type: 'error', text: error.message || 'Username could not be loaded.' })
+    }).finally(() => {
+      if (!cancelled) setLoading(false)
+    })
+    return () => { cancelled = true }
+  }, [token])
+
+  async function submit(event) {
+    event.preventDefault()
+    if (saving || loading) return
+    const username = newUsername.trim().replace(/^@/, '')
+    setFeedback(null)
+    if (!username) return
+    if (username === currentUsername) {
+      setFeedback({ type: 'error', text: 'Cannot use same username.' })
+      return
+    }
+
+    setSaving(true)
+    try {
+      await changeUsername(username, token)
+      setCurrentUsername(username)
+      setNewUsername(`@${username}`)
+      setFeedback({ type: 'success', text: 'Username changed successfully!', detail: 'Sign in again with your new username to continue.' })
+      clearStoredToken()
+      window.setTimeout(() => window.location.replace('/login'), 3000)
+    } catch (error) {
+      if (error.status === 409) setFeedback({ type: 'error', text: 'Username taken.' })
+      else if (error.status === 401) {
+        clearStoredToken()
+        window.location.replace('/login')
+      } else setFeedback({ type: 'error', text: error.message || 'Username could not be changed. Try again.' })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return <form className="settings-username-form" onSubmit={submit} noValidate aria-busy={loading || saving}>
+    <div className="settings-username-fields">
+      <span className="settings-username-label">Old Username</span>
+      <span className="settings-username-current">{loading ? 'Loading…' : currentUsername ? `@${currentUsername}` : '—'}</span>
+      <label htmlFor="settings-new-username">New Username</label>
+      <input id="settings-new-username" type="text" autoComplete="username" value={newUsername} onChange={(event) => { setNewUsername(event.target.value); setFeedback(null) }} placeholder="@username" required />
+    </div>
+    <button className="settings-password-submit" type="submit" disabled={loading || saving || !newUsername.trim()}>
+      {saving ? 'Saving…' : 'Confirm Change'}
+    </button>
+    {feedback && <p className={`settings-feedback is-${feedback.type}`} role={feedback.type === 'error' ? 'alert' : 'status'}>
+      <img src={feedback.type === 'success' ? '/images/connection-check.png' : '/images/connection-decline.png'} alt="" />
+      <span>{feedback.text}{feedback.detail && <small className="settings-feedback-detail">{feedback.detail}</small>}</span>
+    </p>}
+  </form>
+}
+
 function LogoutDialog({ onCancel, onConfirm }) {
   const dialogRef = useRef(null)
   const cancelRef = useRef(null)
@@ -225,7 +295,8 @@ function SettingsPage() {
           {active === 'account' && <AccountInformation token={token} />}
           {active === 'edit-profile' && <EditProfilePage embedded />}
           {active === 'change-password' && <ChangePassword token={token} />}
-          {!['account', 'edit-profile', 'change-password'].includes(active) && <div className="settings-work-in-progress" role="status"><span aria-hidden="true">♪</span><p>Work in progress</p></div>}
+          {active === 'change-username' && <ChangeUsername token={token} />}
+          {!['account', 'edit-profile', 'change-password', 'change-username'].includes(active) && <div className="settings-work-in-progress" role="status"><span aria-hidden="true">♪</span><p>Work in progress</p></div>}
         </div>
       </section>
     </section>
