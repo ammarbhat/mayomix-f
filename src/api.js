@@ -71,6 +71,15 @@ export async function signUp(user, password) {
   })
 }
 
+export function changePassword(password, newPassword, token) {
+  return apiRequest('/users/me/password', {
+    method: 'PATCH',
+    token,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password, new_password: newPassword }),
+  })
+}
+
 export function getStoredToken() {
   return sessionStorage.getItem(TOKEN_KEY)
 }

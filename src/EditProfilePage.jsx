@@ -51,7 +51,7 @@ function RankedList({ title, items, onRemove, onReorder }) {
   </div>
 }
 
-function EditProfilePage() {
+function EditProfilePage({ embedded = false }) {
   const token = getStoredToken()
   const [profile, setProfile] = useState(blank)
   const [genres, setGenres] = useState([])
@@ -201,9 +201,7 @@ function EditProfilePage() {
   }
 
   if (!token) return null
-  return <main className="edit-profile-page">
-    <AppHeader />
-    <form className="edit-profile-board" onSubmit={save}>
+  const form = <form className={`edit-profile-board${embedded ? ' settings-editor-board' : ''}`} onSubmit={save}>
       <section className="edit-pfp-row">
         <h1>Profile picture</h1>
         <img className="edit-pfp-preview" src={profile.pfp_link || '/images/profile-default.png'} alt="Profile picture preview" onError={(event) => { event.currentTarget.src = '/images/profile-default.png' }} />
@@ -236,6 +234,9 @@ function EditProfilePage() {
       <div className="edit-profile-actions"><span role={notice ? 'status' : undefined}>{notice}</span><button type="submit" disabled={!loaded || saving || Boolean(loadError)}>{saving ? 'Saving…' : 'Save changes'}</button></div>
       {loadError && <p className="edit-error" role="alert">{loadError}</p>}{saveError && <p className="edit-error" role="alert">{saveError}</p>}
     </form>
+  return embedded ? form : <main className="edit-profile-page">
+    <AppHeader />
+    {form}
   </main>
 }
 

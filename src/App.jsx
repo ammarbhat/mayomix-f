@@ -7,6 +7,7 @@ import AlbumPage from './AlbumPage.jsx'
 import ActivityPage from './ActivityPage.jsx'
 import TastePage from './TastePage.jsx'
 import EditProfilePage from './EditProfilePage.jsx'
+import SettingsPage from './SettingsPage.jsx'
 
 function App() {
   const [path, setPath] = useState(window.location.pathname)
@@ -41,6 +42,7 @@ function App() {
   if (normalizedPath === '/activity') return <ActivityPage />
   if (normalizedPath === '/taste') return <TastePage />
   if (normalizedPath === '/edit-profile') return <EditProfilePage />
+  if (normalizedPath === '/settings' || normalizedPath.startsWith('/settings/')) return <SettingsPage />
   const segments = normalizedPath.split('/').filter(Boolean)
   if (segments[0] === 'albums' && segments.length === 2) return <AlbumPage mbid={decodeURIComponent(segments[1])} />
   if (segments[0] === 'users' && segments.length === 2) {
