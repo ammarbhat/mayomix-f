@@ -196,7 +196,7 @@ function ChangeUsername({ token }) {
   </form>
 }
 
-function LogoutDialog({ onCancel, onConfirm }) {
+function LogoutDialog({ onCancel, onConfirm, title = 'Are you sure you want to log out of mayomix?', cancelLabel = 'No', confirmLabel = 'Yes', confirmBusy = false }) {
   const dialogRef = useRef(null)
   const cancelRef = useRef(null)
 
@@ -235,10 +235,10 @@ function LogoutDialog({ onCancel, onConfirm }) {
   return createPortal(
     <div className="settings-logout-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onCancel() }}>
       <section ref={dialogRef} className="settings-logout-dialog" role="dialog" aria-modal="true" aria-labelledby="settings-logout-title" onKeyDown={handleKeyDown}>
-        <h2 id="settings-logout-title">Are you sure you want to log out of mayomix?</h2>
+        <h2 id="settings-logout-title">{title}</h2>
         <div className="settings-logout-actions">
-          <button ref={cancelRef} className="settings-logout-choice" type="button" onClick={onCancel}>No</button>
-          <button className="settings-logout-choice is-confirm" type="button" onClick={onConfirm}>Yes</button>
+          <button ref={cancelRef} className="settings-logout-choice" type="button" onClick={onCancel}>{cancelLabel}</button>
+          <button className="settings-logout-choice is-confirm" type="button" onClick={onConfirm} disabled={confirmBusy}>{confirmLabel}</button>
         </div>
       </section>
     </div>,
@@ -246,10 +246,100 @@ function LogoutDialog({ onCancel, onConfirm }) {
   )
 }
 
+function DeleteAccount({ token, onConfirmOpenChange }) {
+  const [username, setUsername] = useState('')
+  const [confirmedUsername, setConfirmedUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [deleting, setDeleting] = useState(false)
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [feedback, setFeedback] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+    apiRequest('/users/me', { token, cache: false }).then((user) => {
+      if (!cancelled) setUsername(user.username || '')
+    }).catch((error) => {
+      if (cancelled) return
+      if (error.status === 401) {
+        clearStoredToken()
+        window.location.replace('/login')
+      } else setFeedback({ text: error.message || 'Username could not be loaded.' })
+    }).finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [token])
+
+  function setConfirmation(open) {
+    setConfirmOpen(open)
+    onConfirmOpenChange(open)
+  }
+
+  function submit(event) {
+    event.preventDefault()
+    if (loading || deleting) return
+    setFeedback(null)
+    if (confirmedUsername.trim().replace(/^@/, '') !== username) {
+      setFeedback({ text: 'Incorrect Username!' })
+      return
+    }
+    if (!password) {
+      setFeedback({ text: 'Enter your password to continue.' })
+      return
+    }
+    setConfirmation(true)
+  }
+
+  async function deleteAccount() {
+    if (deleting) return
+    setDeleting(true)
+    try {
+      await apiRequest(`/users/${encodeURIComponent(username)}`, {
+        method: 'DELETE', token,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      })
+      sessionStorage.setItem('mayomix.account_deleted_notice', '1')
+      clearStoredToken()
+      window.location.replace('/login')
+    } catch (error) {
+      setConfirmation(false)
+      if (error.status === 401 && /incorrect password/i.test(error.message || '')) setFeedback({ text: 'Incorrect Password!' })
+      else if (error.status === 404) setFeedback({ text: 'Incorrect Username!' })
+      else if (error.status === 401) {
+        clearStoredToken()
+        window.location.replace('/login')
+      } else setFeedback({ text: error.message || 'Account could not be deleted. Try again.' })
+    } finally { setDeleting(false) }
+  }
+
+  return <>
+    <p className="settings-delete-warning">Deleting your account means all your data will be permanently deleted and cannot be recovered.</p>
+    <form className="settings-delete-form" onSubmit={submit} noValidate aria-busy={loading || deleting}>
+      <div className="settings-delete-fields">
+        <label htmlFor="settings-confirm-username">Confirm Username</label>
+        <input id="settings-confirm-username" type="text" autoComplete="username" placeholder="@username" value={confirmedUsername} onChange={(event) => { setConfirmedUsername(event.target.value); setFeedback(null) }} disabled={loading || deleting} required />
+        <label htmlFor="settings-delete-password">Password</label>
+        <input id="settings-delete-password" type="password" autoComplete="current-password" value={password} onChange={(event) => { setPassword(event.target.value); setFeedback(null) }} disabled={loading || deleting} required />
+      </div>
+      <button className="settings-delete-submit" type="submit" disabled={loading || deleting || !confirmedUsername || !password}>{deleting ? 'Deleting…' : 'Delete my account'}</button>
+      {feedback && <p className="settings-feedback is-error" role="alert"><img src="/images/connection-decline.png" alt="" /><span>{feedback.text}</span></p>}
+      {loading && <p className="settings-loading" role="status">Loading username…</p>}
+    </form>
+    {confirmOpen && <LogoutDialog
+      title="Are you sure you want to delete your account?"
+      onCancel={() => setConfirmation(false)}
+      onConfirm={deleteAccount}
+      confirmLabel={deleting ? 'Deleting…' : 'Yes'}
+      confirmBusy={deleting}
+    />}
+  </>
+}
+
 function SettingsPage() {
   const token = getStoredToken()
   const [active, setActive] = useState(selectedSection)
   const [logoutOpen, setLogoutOpen] = useState(false)
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const title = useMemo(() => [...accountSections, ...appSections].find((section) => section.id === active)?.label || 'Account Information', [active])
 
   useEffect(() => {
@@ -272,7 +362,7 @@ function SettingsPage() {
   }
 
   if (!token) return null
-  return <main className="settings-page" inert={logoutOpen}>
+  return <main className="settings-page" inert={logoutOpen || deleteConfirmOpen}>
     <AppHeader />
     <section className="settings-shell" aria-label="Settings">
       <aside className="settings-sidebar">
@@ -296,7 +386,8 @@ function SettingsPage() {
           {active === 'edit-profile' && <EditProfilePage embedded />}
           {active === 'change-password' && <ChangePassword token={token} />}
           {active === 'change-username' && <ChangeUsername token={token} />}
-          {!['account', 'edit-profile', 'change-password', 'change-username'].includes(active) && <div className="settings-work-in-progress" role="status"><span aria-hidden="true">♪</span><p>Work in progress</p></div>}
+          {active === 'delete-account' && <DeleteAccount token={token} onConfirmOpenChange={setDeleteConfirmOpen} />}
+          {!['account', 'edit-profile', 'change-password', 'change-username', 'delete-account'].includes(active) && <div className="settings-work-in-progress" role="status"><span aria-hidden="true">♪</span><p>Work in progress</p></div>}
         </div>
       </section>
     </section>

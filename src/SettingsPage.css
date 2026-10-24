@@ -43,6 +43,18 @@
 .settings-feedback img { width: 27px; height: 27px; flex: 0 0 27px; object-fit: contain; }
 .settings-feedback.is-error { width: max-content; max-width: 100%; }
 .settings-feedback-detail { display: block; margin-top: 3px; color: #bdbdbd; font-size: 13px; }
+.settings-content-delete-account { padding-top: 16px; }
+.settings-delete-warning { width: min(100%, 900px); margin: 0 auto 30px; color: #eee; font-size: 16px; line-height: 1.45; }
+.settings-delete-form { width: min(100%, 748px); min-height: 284px; margin: 0 auto; padding: 25px 34px 22px; border: 1px solid #aaa; border-radius: 14px; display: flex; flex-direction: column; align-items: center; }
+.settings-delete-fields { width: min(100%, 530px); display: grid; grid-template-columns: minmax(190px, 225px) minmax(220px, 300px); align-items: center; column-gap: 20px; row-gap: 30px; }
+.settings-delete-fields label { color: #f1f1f1; font-size: 16px; }
+.settings-delete-fields input { width: 100%; height: 34px; padding: 4px 12px; border: 1px solid #aaa; border-radius: 5px; background: #d0d0d0; color: #333; font-size: 16px; }
+.settings-delete-fields input:focus-visible { outline: 2px solid #129ded; outline-offset: 3px; }
+.settings-delete-fields input:disabled { opacity: .65; }
+.settings-delete-submit { min-width: 232px; min-height: 40px; margin-top: 56px; padding: 6px 20px; border: 1px solid #aaa; border-radius: 999px; background: transparent; color: #f0787e; font-size: 16px; cursor: pointer; }
+.settings-delete-submit:hover:not(:disabled) { background: #26191a; }
+.settings-delete-submit:disabled { cursor: not-allowed; opacity: .65; }
+.settings-delete-form .settings-feedback { margin-top: 28px; }
 .settings-work-in-progress { min-height: 240px; display: grid; align-content: center; justify-items: center; gap: 14px; color: #c9c9c9; }
 .settings-work-in-progress > span { width: 58px; height: 58px; display: grid; place-items: center; border: 1px solid #999; border-radius: 50%; color: #e99b9c; font-size: 27px; }
 .settings-work-in-progress p { margin: 0; font-size: 19px; }
@@ -98,6 +110,13 @@
   .settings-username-fields input { height: 42px; }
   .settings-username-form .settings-password-submit { margin-top: 22px; }
   .settings-password-submit { margin-top: 22px; }
+  .settings-content-delete-account { padding-top: 22px; }
+  .settings-delete-warning { margin-bottom: 17px; font-size: 14px; }
+  .settings-delete-form { min-height: 0; padding: 20px 16px 18px; }
+  .settings-delete-fields { grid-template-columns: minmax(0, 1fr); row-gap: 8px; }
+  .settings-delete-fields label { margin-top: 10px; font-size: 14px; }
+  .settings-delete-fields input { height: 42px; }
+  .settings-delete-submit { min-height: 42px; margin-top: 25px; }
   .settings-feedback { gap: 12px; font-size: 14px; }
   .settings-content-edit-profile { padding: 0; }
   .settings-content-edit-profile > .settings-editor-board { padding: 14px 18px 24px; }

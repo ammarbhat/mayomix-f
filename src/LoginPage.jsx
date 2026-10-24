@@ -1,15 +1,27 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { signIn, signUp } from './api.js'
 import { GENRES } from './genreOptions.js'
 import './LoginPage.css'
 
 function LoginPage() {
+  const [accountDeletedNotice, setAccountDeletedNotice] = useState(() => {
+    const pending = sessionStorage.getItem('mayomix.account_deleted_notice') === '1'
+    if (pending) sessionStorage.removeItem('mayomix.account_deleted_notice')
+    return pending
+  })
+  const accountDeletedDialogRef = useRef(null)
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [isSigningUp, setIsSigningUp] = useState(false)
   const [genres, setGenres] = useState([])
   const [genreMenu, setGenreMenu] = useState(false)
+
+  useEffect(() => {
+    const dialog = accountDeletedDialogRef.current
+    if (accountDeletedNotice && dialog && !dialog.open) dialog.showModal()
+    if (!accountDeletedNotice && dialog?.open) dialog.close()
+  }, [accountDeletedNotice])
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -101,6 +113,10 @@ function LoginPage() {
           </p>
         </div>
       </section>
+      <dialog className="login-account-deleted-dialog" ref={accountDeletedDialogRef} aria-label="Account deleted" onClose={() => setAccountDeletedNotice(false)}>
+        <p>Your account has been deleted and you were logged out.</p>
+        <button type="button" onClick={() => setAccountDeletedNotice(false)}>Okay</button>
+      </dialog>
     </main>
   )
 }
