@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import AppHeader from './AppHeader.jsx'
 import EditProfilePage from './EditProfilePage.jsx'
-import { apiRequest, changePassword, changeUsername, clearStoredToken, getStoredToken } from './api.js'
+import { apiRequest, changePassword, changeUsername, clearStoredToken, getAppDocument, getStoredToken } from './api.js'
 import './SettingsPage.css'
 
 const accountSections = [
@@ -196,6 +196,55 @@ function ChangeUsername({ token }) {
   </form>
 }
 
+function renderDocumentInline(text, keyPrefix) {
+  const parts = text.split(/(\*\*[^*]+\*\*|\[[^\]]+\]\(https?:\/\/[^)]+\))/g)
+  return parts.map((part, index) => {
+    const key = `${keyPrefix}-${index}`
+    if (part.startsWith('**') && part.endsWith('**')) return <strong key={key}>{part.slice(2, -2)}</strong>
+    const link = part.match(/^\[([^\]]+)\]\((https?:\/\/[^)]+)\)$/)
+    if (link) return <a key={key} href={link[2]} target="_blank" rel="noreferrer">{link[1]}</a>
+    return part
+  })
+}
+
+function DocumentContent({ section }) {
+  const [document, setDocument] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    setError('')
+    getAppDocument(section).then((content) => {
+      if (!cancelled) setDocument(typeof content === 'string' ? content : '')
+    }).catch((requestError) => {
+      if (!cancelled) setError(requestError.message || 'This information could not be loaded.')
+    }).finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [section])
+
+  if (loading) return <p className="settings-loading" role="status">Loading…</p>
+  if (error) return <p className="settings-load-error" role="alert">{error}</p>
+
+  const blocks = document.trim().split(/\r?\n\s*\r?\n/)
+  return <article className={`settings-document settings-document-${section}`}>
+    {blocks.map((block, index) => {
+      const lines = block.split(/\r?\n/).map((line) => line.trim()).filter(Boolean)
+      if (!lines.length) return null
+      const heading = lines.length === 1 && lines[0].match(/^(#{1,3})\s+(.+)$/)
+      if (heading) {
+        const Tag = `h${Math.min(heading[1].length + 1, 4)}`
+        return <Tag key={index}>{renderDocumentInline(heading[2], `heading-${index}`)}</Tag>
+      }
+      if (lines.every((line) => /^[-*]\s+/.test(line))) {
+        return <ul key={index}>{lines.map((line, lineIndex) => <li key={lineIndex}>{renderDocumentInline(line.replace(/^[-*]\s+/, ''), `list-${index}-${lineIndex}`)}</li>)}</ul>
+      }
+      return <p key={index}>{lines.map((line, lineIndex) => <span key={lineIndex}>{lineIndex > 0 && ' '}{renderDocumentInline(line, `paragraph-${index}-${lineIndex}`)}</span>)}</p>
+    })}
+  </article>
+}
+
 function LogoutDialog({ onCancel, onConfirm, title = 'Are you sure you want to log out of mayomix?', cancelLabel = 'No', confirmLabel = 'Yes', confirmBusy = false }) {
   const dialogRef = useRef(null)
   const cancelRef = useRef(null)
@@ -358,6 +407,7 @@ function SettingsPage() {
   }
 
   function sectionLink(section) {
+    if (section.id === 'github') return <a key={section.id} className="settings-nav-link" href="https://github.com/ammarbhat/mayomix" target="_blank" rel="noreferrer">{section.label}</a>
     return <a key={section.id} className={`settings-nav-link${active === section.id ? ' is-active' : ''}`} href={`/settings/${section.id}`} aria-current={active === section.id ? 'page' : undefined} onClick={() => setActive(section.id)}>{section.label}</a>
   }
 
@@ -387,7 +437,8 @@ function SettingsPage() {
           {active === 'change-password' && <ChangePassword token={token} />}
           {active === 'change-username' && <ChangeUsername token={token} />}
           {active === 'delete-account' && <DeleteAccount token={token} onConfirmOpenChange={setDeleteConfirmOpen} />}
-          {!['account', 'edit-profile', 'change-password', 'change-username', 'delete-account'].includes(active) && <div className="settings-work-in-progress" role="status"><span aria-hidden="true">♪</span><p>Work in progress</p></div>}
+          {['developer', 'privacy', 'terms'].includes(active) && <DocumentContent section={active} />}
+          {!['account', 'edit-profile', 'change-password', 'change-username', 'delete-account', 'developer', 'privacy', 'terms'].includes(active) && <div className="settings-work-in-progress" role="status"><span aria-hidden="true">♪</span><p>Work in progress</p></div>}
         </div>
       </section>
     </section>

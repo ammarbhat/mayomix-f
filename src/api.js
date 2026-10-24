@@ -89,6 +89,17 @@ export function changeUsername(username, token) {
   })
 }
 
+export function getAppDocument(documentName) {
+  const paths = {
+    developer: '/docs/developer-note',
+    privacy: '/docs/privacy-policy',
+    terms: '/docs/terms-of-service',
+  }
+  const path = paths[documentName]
+  if (!path) return Promise.reject(new Error('Unknown document.'))
+  return apiRequest(path, { cache: false })
+}
+
 export function getStoredToken() {
   return sessionStorage.getItem(TOKEN_KEY)
 }
