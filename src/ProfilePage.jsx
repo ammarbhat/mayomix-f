@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { apiRequest, cacheProfileArtwork, clearStoredToken, getConnectionStatus, getStoredToken, getTasteList, itemDetails, sendConnectionRequest } from './api.js'
+import { apiRequest, cacheProfileArtwork, clearStoredToken, getConnectionStatus, getStoredToken, getTasteList, itemDetails, normalizeArtworkUrl, sendConnectionRequest } from './api.js'
 import { getTokenScope } from './queryKeys.js'
 import { getProfileSnapshot, saveProfileSnapshot } from './profileSnapshotCache.js'
 import RatingVinyls from './RatingVinyls.jsx'
@@ -210,7 +210,8 @@ function ProfilePage({ username: viewedUsername = '' }) {
   const user = profile.user || {}
   const handle = user.username || user.handle || user.name || 'listener'
   const bio = user.bio || user.biography || user.about || ''
-  const usesAlbumArtwork = /coverartarchive\.org/i.test(user.pfp_link || '')
+  const profilePicture = normalizeArtworkUrl(user.pfp_link || '')
+  const usesAlbumArtwork = /coverartarchive\.org|^\/artwork\//i.test(user.pfp_link || '')
   const artistMetadataPending = profile.artists.some(itemNeedsMetadata)
   const mediaMetadataPending = [profile.topAlbums, profile.songs, profile.rotationAlbums, profile.artists].some((items) => items.some(itemNeedsMetadata))
 
@@ -223,7 +224,7 @@ function ProfilePage({ username: viewedUsername = '' }) {
             <section className={`identity-panel${isPublicProfile ? ' public-identity-panel' : ''}`}>
               <div className="identity-heading">
                 {usesAlbumArtwork
-                  ? <img className="identity-album-art" src={user.pfp_link} alt={`${user.name || handle}'s selected album artwork`} onError={(event) => { event.currentTarget.src = '/images/profile-default.png' }} />
+                  ? <img className="identity-album-art" src={profilePicture} alt={`${user.name || handle}'s selected album artwork`} onError={(event) => { event.currentTarget.src = '/images/profile-default.png' }} />
                   : <div className="profile-turntable" aria-label="Profile photo on a record player">
                     <img className="turntable-base" src="/images/turntable-white-platter.png" alt="" />
                     <img className="turntable-profile" src={user.pfp_link || '/images/profile-default.png'} alt={`${user.name || handle}'s profile picture`} onError={(event) => { if (!event.currentTarget.src.endsWith('/images/profile-default.png')) event.currentTarget.src = '/images/profile-default.png' }} />

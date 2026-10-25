@@ -6,6 +6,11 @@ import { clearProfileSnapshot } from './profileSnapshotCache.js'
 const API_ROOT = '/api'
 const TOKEN_KEY = 'mayomix.access_token'
 const TOKEN_TYPE_KEY = 'mayomix.token_type'
+const USE_LOCAL_ARTWORK_PROXY = Boolean(import.meta.env?.DEV || (
+  typeof window !== 'undefined'
+  && window.location.protocol === 'http:'
+  && !['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname)
+))
 
 async function performApiRequest(path, token, options) {
   const headers = new Headers(options.headers || {})
@@ -211,6 +216,7 @@ export function normalizeArtworkUrl(url, size = 250) {
     const parsed = new URL(url)
     if (parsed.hostname === 'coverartarchive.org') {
       parsed.pathname = parsed.pathname.replace(/\/front(?:-\d+)?\/?$/, `/front-${size}`)
+      if (USE_LOCAL_ARTWORK_PROXY) return `/artwork${parsed.pathname}${parsed.search}`
       return parsed.toString()
     }
   } catch {

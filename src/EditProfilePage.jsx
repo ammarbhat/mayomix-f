@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import AppHeader from './AppHeader.jsx'
-import { apiRequest, clearStoredToken, getMyTasteList, getStoredToken, searchAlbums, searchArtists } from './api.js'
+import { apiRequest, clearStoredToken, getMyTasteList, getStoredToken, normalizeArtworkUrl, searchAlbums, searchArtists } from './api.js'
 import { GENRES } from './genreOptions.js'
 import './EditProfilePage.css'
 
@@ -204,7 +204,7 @@ function EditProfilePage({ embedded = false }) {
   const form = <form className={`edit-profile-board${embedded ? ' settings-editor-board' : ''}`} onSubmit={save}>
       <section className="edit-pfp-row">
         <h1>Profile picture</h1>
-        <img className="edit-pfp-preview" src={profile.pfp_link || '/images/profile-default.png'} alt="Profile picture preview" onError={(event) => { event.currentTarget.src = '/images/profile-default.png' }} />
+        <img className="edit-pfp-preview" src={normalizeArtworkUrl(profile.pfp_link) || '/images/profile-default.png'} alt="Profile picture preview" onError={(event) => { event.currentTarget.src = '/images/profile-default.png' }} />
         <div className="edit-search-wrap">
           <div className="edit-search-form">
             <input aria-label="Search album art" value={query} onChange={(event) => setQuery(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') search(event, 'album') }} placeholder="Search album art." />
