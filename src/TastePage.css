@@ -101,6 +101,8 @@
   .taste-clear-button,.taste-save-button { min-width: 0; width: 40%; min-height: 36px; padding: 5px 12px; }
   .taste-inline-search { display: flex; height: auto; gap: 8px; padding: 8px 10px 10px; overflow: visible; border-radius: 16px; background: #dedede; box-shadow: 0 2px 4px #0003; }
   .taste-inline-search .taste-search-form { width: 100%; height: 42px; flex: 0 0 42px; margin: 0; padding: 0 76px 0 12px; border: 0; border-radius: 16px; background: #dedede; box-shadow: inset 0 1px 5px #0002; }
+  .taste-inline-search .taste-search-form:focus-within { box-shadow: inset 0 0 0 1px #aaa, inset 0 1px 5px #0002; }
+  .taste-inline-search .taste-search-form :focus-visible { outline: 0; }
   .taste-inline-search .taste-search-form input { padding: 0 4px; text-align: left; font-size: 15px; }
   .taste-inline-search .taste-search-submit { right: 38px; width: 34px; height: 34px; }
   .taste-inline-search .taste-search-submit svg { width: 21px; height: 21px; }

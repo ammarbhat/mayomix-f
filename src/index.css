@@ -1,9 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Moderustic:wght@400;500;600;700&family=Russo+One&display=swap');
 
-:root { font-family: 'Moderustic', Arial, sans-serif; color: #111; background: #fff; font-synthesis: none; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+:root { font-family: 'Moderustic', Arial, sans-serif; color: #111; background: #5d5d5d; font-synthesis: none; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
 * { box-sizing: border-box; }
 html { min-width: 320px; scroll-behavior: smooth; overflow-x: hidden; overflow-x: clip; }
-body { min-width: 320px; min-height: 100vh; margin: 0; overflow-x: hidden; overflow-x: clip; }
+body { min-width: 320px; min-height: 100vh; margin: 0; overflow-x: hidden; overflow-x: clip; background: #5d5d5d; }
 #root { min-height: 100vh; min-height: 100dvh; overflow-x: hidden; overflow-x: clip; }
 button, input { font: inherit; }
 button, a { -webkit-tap-highlight-color: transparent; }

@@ -208,22 +208,20 @@ function renderDocumentInline(text, keyPrefix) {
 }
 
 function DocumentContent({ section }) {
-  const [document, setDocument] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(true)
+  const [result, setResult] = useState({ section, document: '', error: '', loaded: false })
 
   useEffect(() => {
     let cancelled = false
-    setLoading(true)
-    setError('')
     getAppDocument(section).then((content) => {
-      if (!cancelled) setDocument(typeof content === 'string' ? content : '')
+      if (!cancelled) setResult({ section, document: typeof content === 'string' ? content : '', error: '', loaded: true })
     }).catch((requestError) => {
-      if (!cancelled) setError(requestError.message || 'This information could not be loaded.')
-    }).finally(() => { if (!cancelled) setLoading(false) })
+      if (!cancelled) setResult({ section, document: '', error: requestError.message || 'This information could not be loaded.', loaded: true })
+    })
     return () => { cancelled = true }
   }, [section])
 
+  const loading = result.section !== section || !result.loaded
+  const { document, error } = result
   if (loading) return <p className="settings-loading" role="status">Loading…</p>
   if (error) return <p className="settings-load-error" role="alert">{error}</p>
 
@@ -454,6 +452,7 @@ function DeleteAccount({ token, onConfirmOpenChange }) {
 function SettingsPage() {
   const token = getStoredToken()
   const [active, setActive] = useState(selectedSection)
+  const [isSettingsHome, setIsSettingsHome] = useState(() => window.location.pathname.replace(/\/$/, '') === '/settings')
   const [logoutOpen, setLogoutOpen] = useState(false)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const title = useMemo(() => [...accountSections, ...appSections].find((section) => section.id === active)?.label || 'Account Information', [active])
@@ -463,7 +462,10 @@ function SettingsPage() {
   }, [token])
 
   useEffect(() => {
-    function syncSection() { setActive(selectedSection()) }
+    function syncSection() {
+      setActive(selectedSection())
+      setIsSettingsHome(window.location.pathname.replace(/\/$/, '') === '/settings')
+    }
     window.addEventListener('popstate', syncSection)
     return () => window.removeEventListener('popstate', syncSection)
   }, [])
@@ -475,15 +477,15 @@ function SettingsPage() {
 
   function sectionLink(section) {
     if (section.id === 'github') return <a key={section.id} className="settings-nav-link" href="https://github.com/ammarbhat/mayomix" target="_blank" rel="noreferrer">{section.label}</a>
-    return <a key={section.id} className={`settings-nav-link${active === section.id ? ' is-active' : ''}`} href={`/settings/${section.id}`} aria-current={active === section.id ? 'page' : undefined} onClick={() => setActive(section.id)}>{section.label}</a>
+    return <a key={section.id} className={`settings-nav-link${active === section.id ? ' is-active' : ''}`} href={`/settings/${section.id}`} aria-current={active === section.id ? 'page' : undefined} onClick={() => { setActive(section.id); setIsSettingsHome(false) }}>{section.label}</a>
   }
 
   if (!token) return null
-  return <main className="settings-page" inert={logoutOpen || deleteConfirmOpen}>
+  return <main className={`settings-page${isSettingsHome ? ' is-mobile-settings-home' : ' is-mobile-settings-detail'}`} inert={logoutOpen || deleteConfirmOpen}>
     <AppHeader />
     <section className="settings-shell" aria-label="Settings">
       <aside className="settings-sidebar">
-        <h1>Settings</h1>
+        <h1><a className="settings-mobile-back" href="/profile" aria-label="Back to profile"><span aria-hidden="true" /></a><span>Settings</span></h1>
         <div className="settings-sidebar-content">
           <h2>Account</h2>
           <nav className="settings-nav-group" aria-label="Account settings">
@@ -497,7 +499,10 @@ function SettingsPage() {
         </div>
       </aside>
       <section className="settings-main" aria-labelledby="settings-page-title">
-        <header className="settings-main-heading"><h2 id="settings-page-title">{title}</h2></header>
+        <header className="settings-main-heading">
+          <a className="settings-mobile-back settings-detail-back" href="/settings" aria-label="Back to settings" onClick={() => { setActive('account'); setIsSettingsHome(true) }}><span aria-hidden="true" /></a>
+          <h2 id="settings-page-title">{title}</h2>
+        </header>
         <div className={`settings-content settings-content-${active}`}>
           {active === 'account' && <AccountInformation token={token} />}
           {active === 'edit-profile' && <EditProfilePage embedded />}

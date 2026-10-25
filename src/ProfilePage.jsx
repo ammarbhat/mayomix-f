@@ -200,7 +200,7 @@ function ProfilePage({ username: viewedUsername = '' }) {
                 <div className="identity-copy">
                   <h1>{loading && !user.name ? <span className="text-skeleton name-skeleton" aria-label="Loading profile" /> : user.name || 'Your profile'}</h1>
                   <p className="identity-handle">{loading && !user.username ? <span className="text-skeleton handle-skeleton" aria-label="Loading username" /> : `@${handle}`}</p>
-                  {!isPublicProfile && <div className="profile-edit-actions"><a href="/settings/edit-profile">Edit Profile</a><a href="/taste">Edit Display</a><a href="/settings/account">Settings</a></div>}
+                  {!isPublicProfile && <div className="profile-edit-actions"><a href="/settings/edit-profile">Edit Profile</a><a href="/taste">Edit Display</a><a href="/settings">Settings</a></div>}
                 </div>
               </div>
               <p className="identity-bio">{loading && !bio ? <span className="text-skeleton bio-skeleton" aria-label="Loading bio" /> : bio}</p>

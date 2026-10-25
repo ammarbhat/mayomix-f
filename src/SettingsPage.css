@@ -145,3 +145,67 @@
 .settings-document li { margin: 0 0 5px; }
 .settings-document a { color: #8bc9ff; text-decoration: underline; }
 .settings-document-developer { padding-top: 30px; font-size: 17px; }
+
+@media (max-width: 760px) {
+  .settings-mobile-back { display: none; }
+  .settings-page.is-mobile-settings-home,
+  .settings-page.is-mobile-settings-detail { min-height: 100dvh; padding-bottom: 0; background: #151515; }
+  .settings-page.is-mobile-settings-home .settings-shell,
+  .settings-page.is-mobile-settings-detail .settings-shell { min-height: 100dvh; background: #151515; }
+  .settings-page.is-mobile-settings-home .app-header,
+  .settings-page.is-mobile-settings-home .mobile-bottom-nav,
+  .settings-page.is-mobile-settings-detail .app-header,
+  .settings-page.is-mobile-settings-detail .mobile-bottom-nav { display: none; }
+  .settings-page.is-mobile-settings-home .settings-main { display: none; }
+  .settings-page.is-mobile-settings-detail .settings-sidebar { display: none; }
+  .settings-page.is-mobile-settings-home .settings-sidebar { border: 0; }
+  .settings-page.is-mobile-settings-home .settings-sidebar > h1 {
+    position: relative;
+    min-height: 48px;
+    justify-content: center;
+    padding: 0 48px;
+    font-size: 24px;
+  }
+  .settings-mobile-back {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    width: 30px;
+    height: 34px;
+    align-items: center;
+    justify-content: center;
+    transform: translateY(-50%);
+    color: #f2f2f2;
+    text-decoration: none;
+  }
+  .settings-mobile-back span {
+    width: 11px;
+    height: 11px;
+    border-left: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: rotate(45deg);
+  }
+  .settings-page.is-mobile-settings-home .settings-mobile-back { display: flex; }
+  .settings-page.is-mobile-settings-home .settings-sidebar-content {
+    display: block;
+    overflow: visible;
+    padding: 17px 30px 28px;
+  }
+  .settings-page.is-mobile-settings-home .settings-sidebar-content h2 {
+    margin: 0 0 10px 4px;
+    font-size: 20px;
+  }
+  .settings-page.is-mobile-settings-home .settings-sidebar-content .settings-app-heading { margin: 24px 0 10px 4px !important; }
+  .settings-page.is-mobile-settings-home .settings-nav-group { width: 100%; }
+  .settings-page.is-mobile-settings-home .settings-nav-link { min-height: 28px; padding: 3px 23px; font-size: 16px; }
+  .settings-page.is-mobile-settings-detail .settings-main { min-height: 100dvh; }
+  .settings-page.is-mobile-settings-detail .settings-main-heading { position: relative; min-height: 48px; flex: 0 0 48px; justify-content: center; }
+  .settings-page.is-mobile-settings-detail .settings-main-heading h2 { min-height: 48px; justify-content: center; padding: 0 48px; font-size: 23px; text-align: center; }
+  .settings-page.is-mobile-settings-detail .settings-detail-back { display: flex; }
+  .settings-page.is-mobile-settings-detail .settings-content { padding: 28px 17px 32px; overflow: visible; }
+  .settings-page.is-mobile-settings-detail .settings-content-account { padding-top: 82px; }
+  .settings-page.is-mobile-settings-detail .settings-account-wrap { width: 100%; }
+  .settings-page.is-mobile-settings-detail .settings-account-row { min-height: 44px; grid-template-columns: 116px minmax(0, 1fr); }
+  .settings-page.is-mobile-settings-detail .settings-account-row dt,
+  .settings-page.is-mobile-settings-detail .settings-account-row dd { padding: 8px 16px; font-size: 12px; }
+}
