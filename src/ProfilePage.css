@@ -434,7 +434,7 @@
   .identity-heading { display: contents; }
   .profile-turntable,
   .identity-album-art { grid-column: 1; grid-row: 1; width: 68px; height: 68px; flex-basis: 68px; border-radius: 12px; }
-  .turntable-profile { width: 78%; height: 78%; }
+  .turntable-profile { width: 84%; height: 84%; }
   .identity-copy { grid-column: 2; grid-row: 1; align-self: start; padding-top: 1px; }
   .identity-panel h1 { font-size: 16px; line-height: 1.2; }
   .identity-handle { margin-top: 1px; font-size: 11px; line-height: 1.2; }
