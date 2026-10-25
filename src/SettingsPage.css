@@ -1,5 +1,5 @@
 .settings-page { height: 100vh; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; background: #5d5d5d; color: #f2f2f2; }
-.settings-shell { width: calc(100% - 26px); min-height: 0; flex: 1; display: grid; grid-template-columns: 28.2% minmax(0, 1fr); margin: 12px auto 17px; overflow: hidden; border-radius: 17px; background: #151515; }
+.settings-shell { width: calc(100% - 26px); min-height: 0; flex: 1; display: grid; grid-template-columns: clamp(260px, 28.2%, 354px) minmax(0, 1fr); margin: 12px auto 17px; overflow: hidden; border-radius: 17px; background: #151515; }
 .settings-sidebar { min-width: 0; display: flex; flex-direction: column; border-right: 3px solid #aaa; }
 .settings-sidebar > h1,.settings-main-heading h2 { min-height: 77px; display: flex; align-items: center; margin: 0; border-bottom: 1px solid #777; color: #f3f3f3; font-size: 33px; line-height: 1.15; font-weight: 400; }
 .settings-sidebar > h1 { padding: 0 21px; }
@@ -10,7 +10,7 @@
 .settings-nav-link:last-child { border-bottom: 0; }
 .settings-nav-link:hover { background: #292929; }
 .settings-nav-link.is-active { background: #383838; }
-.settings-nav-link:focus-visible { position: relative; z-index: 1; outline: 2px solid #39a9ff; outline-offset: -2px; }
+.settings-nav-link:focus-visible { position: relative; z-index: 1; outline: 2px solid #aaa; outline-offset: -2px; }
 .settings-app-heading { margin-top: 24px !important; }
 .settings-main { min-width: 0; min-height: 0; display: flex; flex-direction: column; }
 .settings-main-heading h2 { padding: 0 38px; }
@@ -28,14 +28,14 @@
 .settings-password-fields { width: min(100%, 530px); display: grid; grid-template-columns: minmax(190px, 210px) minmax(220px, 300px); align-items: center; column-gap: 20px; row-gap: 30px; }
 .settings-password-fields label { color: #f1f1f1; font-size: 16px; }
 .settings-password-fields input { width: 100%; height: 34px; padding: 4px 12px; border: 1px solid #aaa; border-radius: 5px; background: #d0d0d0; color: #333; font-size: 16px; }
-.settings-password-fields input:focus-visible { outline: 2px solid #129ded; outline-offset: 3px; }
+.settings-password-fields input:focus-visible { outline: 2px solid #aaa; outline-offset: 3px; }
 .settings-username-form { width: min(100%, 748px); min-height: 246px; margin: 0 auto; padding: 21px 34px 30px; border: 1px solid #aaa; border-radius: 14px; display: flex; flex-direction: column; align-items: center; }
 .settings-username-fields { width: min(100%, 530px); display: grid; grid-template-columns: minmax(190px, 210px) minmax(220px, 300px); align-items: center; column-gap: 20px; row-gap: 30px; }
 .settings-username-label,.settings-username-fields label { color: #f1f1f1; font-size: 16px; }
 .settings-username-current { min-height: 34px; display: flex; align-items: center; color: #f1f1f1; font-size: 16px; }
 .settings-username-fields input { width: 100%; height: 34px; padding: 4px 12px; border: 1px solid #aaa; border-radius: 5px; background: #d0d0d0; color: #333; font-size: 16px; }
 .settings-username-fields input::placeholder { color: #666; opacity: 1; }
-.settings-username-fields input:focus-visible { outline: 2px solid #129ded; outline-offset: 3px; }
+.settings-username-fields input:focus-visible { outline: 2px solid #aaa; outline-offset: 3px; }
 .settings-username-form .settings-password-submit { margin-top: 56px; }
 .settings-password-submit { min-width: 154px; min-height: 31px; margin-top: 36px; padding: 3px 15px; border: 1px solid #aaa; border-radius: 999px; background: #d0d0d0; color: #555; font-size: 16px; line-height: 1.2; cursor: pointer; }
 .settings-password-submit:disabled { cursor: not-allowed; opacity: .8; }
@@ -44,12 +44,12 @@
 .settings-feedback.is-error { width: max-content; max-width: 100%; }
 .settings-feedback-detail { display: block; margin-top: 3px; color: #bdbdbd; font-size: 13px; }
 .settings-content-delete-account { padding-top: 16px; }
-.settings-delete-warning { width: min(100%, 900px); margin: 0 auto 30px; color: #eee; font-size: 16px; line-height: 1.45; }
+.settings-delete-warning { width: min(100%, 900px); margin: 0 0 30px; color: #eee; font-size: 16px; line-height: 1.45; }
 .settings-delete-form { width: min(100%, 748px); min-height: 284px; margin: 0 auto; padding: 25px 34px 22px; border: 1px solid #aaa; border-radius: 14px; display: flex; flex-direction: column; align-items: center; }
 .settings-delete-fields { width: min(100%, 530px); display: grid; grid-template-columns: minmax(190px, 225px) minmax(220px, 300px); align-items: center; column-gap: 20px; row-gap: 30px; }
 .settings-delete-fields label { color: #f1f1f1; font-size: 16px; }
 .settings-delete-fields input { width: 100%; height: 34px; padding: 4px 12px; border: 1px solid #aaa; border-radius: 5px; background: #d0d0d0; color: #333; font-size: 16px; }
-.settings-delete-fields input:focus-visible { outline: 2px solid #129ded; outline-offset: 3px; }
+.settings-delete-fields input:focus-visible { outline: 2px solid #aaa; outline-offset: 3px; }
 .settings-delete-fields input:disabled { opacity: .65; }
 .settings-delete-submit { min-width: 232px; min-height: 40px; margin-top: 56px; padding: 6px 20px; border: 1px solid #aaa; border-radius: 999px; background: transparent; color: #f0787e; font-size: 16px; cursor: pointer; }
 .settings-delete-submit:hover:not(:disabled) { background: #26191a; }
@@ -64,12 +64,12 @@
 .settings-editor-board .edit-field-row input,.settings-editor-board .edit-field-row textarea { width: 100%; max-width: 500px; }
 .settings-editor-board .edit-profile-actions { padding-bottom: 12px; }
 .settings-editor-board .edit-error { color: #ffb2ad; }
-.settings-page :focus-visible { outline-color: #159ff3; }
+.settings-page :focus-visible { outline-color: #aaa; }
 .settings-logout-backdrop { position: fixed; z-index: 1000; inset: 0; display: grid; place-items: center; padding: 24px; background: #0008; -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px); }
 .settings-logout-dialog { width: min(40vw, 510px); min-width: min(320px, calc(100vw - 32px)); min-height: min(190px, calc(100dvh - 48px)); display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 42px 20px 28px; border: 1px solid #aaa; border-radius: 15px; background: #151515; color: #f5f5f5; }
 .settings-logout-dialog h2 { max-width: 100%; margin: 0; font-size: clamp(16px, 1.3vw, 18px); line-height: 1.2; font-weight: 400; text-align: center; }
 .settings-logout-actions { width: min(100%, 256px); min-height: 44px; display: grid; grid-template-columns: 1fr 1fr; overflow: hidden; border: 1px solid #aaa; border-radius: 15px; }
-.settings-logout-actions:focus-within { outline: 2px solid #159ff3; outline-offset: 0; }
+.settings-logout-actions:focus-within { outline: 2px solid #aaa; outline-offset: 0; }
 .settings-logout-choice { min-width: 0; border: 0; background: transparent; color: #f5f5f5; font-size: 17px; cursor: pointer; }
 .settings-logout-choice + .settings-logout-choice { border-left: 1px solid #777; }
 .settings-logout-choice.is-confirm { color: #f0787e; }

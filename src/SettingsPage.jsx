@@ -245,6 +245,73 @@ function DocumentContent({ section }) {
   </article>
 }
 
+/* Temporarily disabled until feedback submission is ready to be enabled again.
+function FeedbackForm({ section, token }) {
+  const [user, setUser] = useState(null)
+  const [description, setDescription] = useState('')
+  const [feedback, setFeedback] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [sending, setSending] = useState(false)
+  const reportType = section === 'bug' ? 'Bug report' : 'Feedback'
+
+  useEffect(() => {
+    let cancelled = false
+    apiRequest('/users/me', { token, cache: false }).then((profile) => {
+      if (!cancelled) setUser(profile)
+    }).catch((error) => {
+      if (cancelled) return
+      if (error.status === 401) {
+        clearStoredToken()
+        window.location.replace('/login')
+      } else setFeedback({ type: 'error', text: error.message || 'Your account details could not be loaded.' })
+    }).finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [token])
+
+  async function submit(event) {
+    event.preventDefault()
+    if (sending || !user || !description.trim()) return
+    setSending(true)
+    setFeedback(null)
+    const subject = `${reportType} from @${user.username || 'MayoMix user'}`
+    try {
+      const response = await fetch('https://formsubmit.co/ajax/bhatmmr@gmail.com', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          _subject: subject,
+          _template: 'table',
+          name: `${user.name || 'MayoMix user'} (@${user.username || 'unknown'})`,
+          email: user.email || 'No account email provided',
+          type: reportType,
+          username: user.username ? `@${user.username}` : 'Unknown',
+          message: description.trim(),
+        }),
+      })
+      const result = await response.json().catch(() => ({}))
+      if (!response.ok || result.success === false || result.success === 'false') throw new Error(result.message || 'Your message could not be sent. Try again.')
+      setDescription('')
+      setFeedback({ type: 'success', text: 'Thanks, your message has been sent.' })
+    } catch (error) {
+      setFeedback({ type: 'error', text: error.message || 'Your message could not be sent. Check your connection and try again.' })
+    } finally {
+      setSending(false)
+    }
+  }
+
+  return <form className="settings-message-form" onSubmit={submit} aria-busy={loading || sending}>
+    <label htmlFor="settings-message-description">Description</label>
+    <textarea id="settings-message-description" value={description} onChange={(event) => { setDescription(event.target.value); setFeedback(null) }} disabled={loading || sending} required />
+    <div className="settings-message-actions">
+      <span aria-live="polite" className={`settings-message-status${feedback ? ` is-${feedback.type}` : ''}`}>
+        {loading ? 'Loading your account…' : feedback?.text || ''}
+      </span>
+      <button type="submit" disabled={loading || sending || !user || !description.trim()}>{sending ? 'Sending…' : 'Send'}</button>
+    </div>
+  </form>
+}
+*/
+
 function LogoutDialog({ onCancel, onConfirm, title = 'Are you sure you want to log out of mayomix?', cancelLabel = 'No', confirmLabel = 'Yes', confirmBusy = false }) {
   const dialogRef = useRef(null)
   const cancelRef = useRef(null)

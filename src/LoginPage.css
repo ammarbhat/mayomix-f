@@ -54,7 +54,7 @@
 .login-account-deleted-dialog p { max-width: 100%; margin: 0; font-size: clamp(16px, 1.3vw, 18px); line-height: 1.35; text-align: center; }
 .login-account-deleted-dialog button { min-width: min(166px, 100%); min-height: 56px; padding: 7px 20px; border: 1px solid #aaa; border-radius: 19px; background: transparent; color: #d8d8d8; font: inherit; font-size: 17px; cursor: pointer; }
 .login-account-deleted-dialog button:hover { background: #222; }
-.login-account-deleted-dialog button:focus-visible { outline: 2px solid #159ff3; outline-offset: 3px; }
+.login-account-deleted-dialog button:focus-visible { outline: 2px solid #aaa; outline-offset: 3px; }
 
 @media (max-width: 760px) {
   .login-account-deleted-dialog[open] { width: min(90vw, 380px); min-width: 0; min-height: 220px; padding: 48px 18px 24px; border-radius: 20px; }
