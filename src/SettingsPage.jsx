@@ -39,7 +39,7 @@ function AccountInformation({ token }) {
 
   useEffect(() => {
     let cancelled = false
-    apiRequest('/users/me', { token, cache: false }).then((profile) => {
+    apiRequest('/users/me', { token }).then((profile) => {
       if (!cancelled) setUser(profile)
     }).catch((requestError) => {
       if (cancelled) return
@@ -135,7 +135,7 @@ function ChangeUsername({ token }) {
 
   useEffect(() => {
     let cancelled = false
-    apiRequest('/users/me', { token, cache: false }).then((user) => {
+    apiRequest('/users/me', { token }).then((user) => {
       if (!cancelled) setCurrentUsername(user.username || '')
     }).catch((error) => {
       if (cancelled) return
@@ -254,7 +254,7 @@ function FeedbackForm({ section, token }) {
 
   useEffect(() => {
     let cancelled = false
-    apiRequest('/users/me', { token, cache: false }).then((profile) => {
+    apiRequest('/users/me', { token }).then((profile) => {
       if (!cancelled) setUser(profile)
     }).catch((error) => {
       if (cancelled) return
@@ -371,7 +371,7 @@ function DeleteAccount({ token, onConfirmOpenChange }) {
 
   useEffect(() => {
     let cancelled = false
-    apiRequest('/users/me', { token, cache: false }).then((user) => {
+    apiRequest('/users/me', { token }).then((user) => {
       if (!cancelled) setUsername(user.username || '')
     }).catch((error) => {
       if (cancelled) return

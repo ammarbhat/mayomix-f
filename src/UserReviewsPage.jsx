@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { apiRequest, getAlbumDetails, getStoredToken, getUserReviews } from './api.js'
+import { apiRequest, getAlbumDetails, getStoredToken, getUserReviews, normalizeArtworkUrl } from './api.js'
 import AppHeader from './AppHeader.jsx'
 import RatingVinyls from './RatingVinyls.jsx'
 import MetadataBuffering from './MetadataBuffering.jsx'
@@ -17,7 +17,7 @@ function UserReviewCard({ review, canEdit, token, onSaved, onDeleted }) {
   const artist = album?.artist || (Array.isArray(artistCredits)
     ? artistCredits.map((credit) => `${credit.name || credit.artist?.name || ''}${credit.joinphrase || ''}`).join('').trim()
     : '')
-  const image = !imageError && (album?.image || (mbid ? `https://coverartarchive.org/release-group/${encodeURIComponent(mbid)}/front-250` : ''))
+  const image = !imageError && normalizeArtworkUrl(album?.image || (mbid ? `https://coverartarchive.org/release-group/${encodeURIComponent(mbid)}/front-250` : ''))
 
   return (
     <article className="user-review-card">

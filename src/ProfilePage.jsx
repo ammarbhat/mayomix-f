@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react'
-import { apiRequest, clearStoredToken, getConnectionStatus, getStoredToken, getTasteList, itemDetails, sendConnectionRequest } from './api.js'
+import { apiRequest, cacheProfileArtwork, clearStoredToken, getConnectionStatus, getStoredToken, getTasteList, itemDetails, sendConnectionRequest } from './api.js'
+import { getTokenScope } from './queryKeys.js'
+import { getProfileSnapshot, saveProfileSnapshot } from './profileSnapshotCache.js'
 import RatingVinyls from './RatingVinyls.jsx'
 import MetadataBuffering from './MetadataBuffering.jsx'
 import AppHeader from './AppHeader.jsx'
 import './ProfilePage.css'
 
 const emptyProfile = { user: null, userId: null, topAlbums: [], songs: [], rotationAlbums: [], genres: [], artists: [] }
+const loadedArtworkUrls = new Set()
 const itemNeedsMetadata = (entry) => {
   const item = itemDetails(entry)
   return Boolean(item.metadataLoading || (item.mbid && item.title === item.mbid && !item.metadataLoaded))
@@ -20,15 +23,15 @@ function PlaceholderCards({ count = 3, className = '' }) {
 }
 
 function Artwork({ item, className = '', kind = 'album' }) {
-  const [loadedImage, setLoadedImage] = useState('')
-  const [failedImage, setFailedImage] = useState('')
   const details = itemDetails(item)
+  const [loadedImage, setLoadedImage] = useState(() => loadedArtworkUrls.has(details.image) ? details.image : '')
+  const [failedImage, setFailedImage] = useState('')
   const metadataPending = Boolean(details.metadataLoading)
   const imagePending = Boolean(details.image && details.image !== loadedImage && details.image !== failedImage)
   const isLoading = metadataPending || imagePending
   return (
     <div className={`artwork ${className}`} aria-busy={isLoading}>
-      {details.image && <img className={`image-fade${loadedImage === details.image ? ' is-loaded' : ''}`} src={details.image} alt={`${details.title && details.title !== details.mbid ? details.title : kind} artwork`} loading="lazy" onLoad={() => setLoadedImage(details.image)} onError={() => setFailedImage(details.image)} />}
+      {details.image && <img className={`image-fade${loadedImage === details.image ? ' is-loaded' : ''}`} src={details.image} alt={`${details.title && details.title !== details.mbid ? details.title : kind} artwork`} loading="lazy" onLoad={() => { loadedArtworkUrls.add(details.image); setLoadedImage(details.image) }} onError={() => { loadedArtworkUrls.delete(details.image); setFailedImage(details.image) }} />}
       {isLoading
         ? <span className="profile-art-buffering" role="status" aria-label={`Loading ${kind} artwork`} />
         : !details.image || failedImage === details.image
@@ -72,13 +75,31 @@ function MediaSection({ id, title, items, loading, type = 'artwork' }) {
 
 function ProfilePage({ username: viewedUsername = '' }) {
   const isPublicProfile = Boolean(viewedUsername)
-  const [profile, setProfile] = useState(emptyProfile)
-  const [loading, setLoading] = useState(true)
+  const token = getStoredToken()
+  const profileCacheKey = isPublicProfile ? viewedUsername : getTokenScope(token)
+  const [profile, setProfile] = useState(() => getProfileSnapshot(profileCacheKey) || emptyProfile)
+  const [loading, setLoading] = useState(() => !getProfileSnapshot(profileCacheKey))
   const [error, setError] = useState('')
   const [connectionStatus, setConnectionStatus] = useState('')
   const [connectionBusy, setConnectionBusy] = useState(false)
   const [connectionError, setConnectionError] = useState('')
-  const token = getStoredToken()
+
+  useEffect(() => {
+    if (!isPublicProfile && !loading && profile.user?.username === profileCacheKey) {
+      saveProfileSnapshot(profileCacheKey, profile)
+    }
+  }, [isPublicProfile, loading, profile, profileCacheKey])
+
+  useEffect(() => {
+    if (isPublicProfile || !profile.user?.username) return
+    const profileImages = [
+      profile.user.pfp_link,
+      ...profile.topAlbums,
+      ...profile.songs,
+      ...profile.rotationAlbums,
+    ].map((entry) => typeof entry === 'string' ? entry : itemDetails(entry).image)
+    cacheProfileArtwork(profile.user.username, profileImages)
+  }, [isPublicProfile, profile])
 
   useEffect(() => {
     if (!token) {
@@ -88,7 +109,7 @@ function ProfilePage({ username: viewedUsername = '' }) {
 
     let cancelled = false
     async function loadProfile() {
-      setLoading(true)
+      if (!getProfileSnapshot(profileCacheKey)) setLoading(true)
       setError('')
       try {
         const currentUser = await apiRequest('/users/me', { token })
@@ -99,6 +120,9 @@ function ProfilePage({ username: viewedUsername = '' }) {
         const user = isPublicProfile
           ? await apiRequest(`/users/${encodeURIComponent(viewedUsername)}`)
           : currentUser
+        setProfile((current) => current.user?.username === user.username
+          ? { ...current, user }
+          : { ...emptyProfile, user })
         const categories = ['top_albums', 'rotation_song', 'rotation_album', 'top_artists', 'top_genres']
         const enrichmentUpdates = {}
         const profileKeyByCategory = { top_albums: 'topAlbums', rotation_song: 'songs', rotation_album: 'rotationAlbums', top_artists: 'artists' }
@@ -108,6 +132,13 @@ function ProfilePage({ username: viewedUsername = '' }) {
           setProfile((current) => current.user
             ? { ...current, [profileKeyByCategory[category] || category]: items }
             : current)
+        }).then((items) => {
+          if (cancelled) return items
+          setProfile((current) => ({
+            ...current,
+            [profileKeyByCategory[category] || category]: enrichmentUpdates[category] || items,
+          }))
+          return items
         }))
         if (isPublicProfile) requests.push(getConnectionStatus(user.username, token))
         const results = await Promise.allSettled(requests)
@@ -151,13 +182,13 @@ function ProfilePage({ username: viewedUsername = '' }) {
 
     loadProfile()
     return () => { cancelled = true }
-  }, [isPublicProfile, token, viewedUsername])
+  }, [isPublicProfile, profileCacheKey, token, viewedUsername])
 
   async function connect() {
     setConnectionBusy(true)
     setConnectionError('')
     try {
-      await sendConnectionRequest(token, user.id ?? profile.userId)
+      await sendConnectionRequest(token, user.id ?? profile.userId, user.username)
       setConnectionStatus('pending_sent')
     } catch (requestError) {
       if (/409|already exists/i.test(requestError.message)) {
@@ -235,10 +266,10 @@ function ProfilePage({ username: viewedUsername = '' }) {
           <a className="public-reviews-link" href={`/users/${encodeURIComponent(user.username || viewedUsername || handle)}/reviews`}>Reviews</a>
 
           <div className="listening-panel">
-            {(loading || mediaMetadataPending) ? <div className="profile-metadata-loading"><MetadataBuffering label="Loading profile music details" /></div> : <>
-              <MediaSection id="top-albums" title="Top Albums" items={profile.topAlbums} loading={loading} type="top-album" />
-              <MediaSection id="rotation" title="Rotation" items={profile.rotationAlbums} loading={loading} type="rotation" />
-              <MediaSection id="songs" title="Songs" items={profile.songs} loading={loading} type="song" />
+            {(loading && !profile.user) ? <div className="profile-metadata-loading"><MetadataBuffering label="Loading profile music details" /></div> : <>
+              <MediaSection id="top-albums" title="Top Albums" items={profile.topAlbums} loading={loading || mediaMetadataPending} type="top-album" />
+              <MediaSection id="rotation" title="Rotation" items={profile.rotationAlbums} loading={loading || mediaMetadataPending} type="rotation" />
+              <MediaSection id="songs" title="Songs" items={profile.songs} loading={loading || mediaMetadataPending} type="song" />
             </>}
             {error && <p className="profile-status" role="status">{error}</p>}
           </div>

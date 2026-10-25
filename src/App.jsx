@@ -37,7 +37,7 @@ function App() {
   }, [])
 
   const normalizedPath = path.replace(/\/$/, '') || '/'
-  if (normalizedPath === '/profile') return <ProfilePage />
+  if (normalizedPath === '/profile') return <ProfilePage key="self-profile" />
   if (normalizedPath === '/search') return <SearchPage />
   if (normalizedPath === '/activity') return <ActivityPage />
   if (normalizedPath === '/taste') return <TastePage />
@@ -46,7 +46,8 @@ function App() {
   const segments = normalizedPath.split('/').filter(Boolean)
   if (segments[0] === 'albums' && segments.length === 2) return <AlbumPage mbid={decodeURIComponent(segments[1])} />
   if (segments[0] === 'users' && segments.length === 2) {
-    return <ProfilePage username={decodeURIComponent(segments[1])} />
+    const username = decodeURIComponent(segments[1])
+    return <ProfilePage key={`public-profile:${username}`} username={username} />
   }
   if (segments[0] === 'users' && segments.length === 3 && segments[2] === 'reviews') {
     return <UserReviewsPage username={decodeURIComponent(segments[1])} />

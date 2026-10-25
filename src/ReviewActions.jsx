@@ -52,6 +52,7 @@ function ReviewActions({ review, token, onSaved, onDeleted }) {
       await apiRequest(`/users/me/reviews/${encodeURIComponent(reviewId)}`, {
         method: 'PATCH', token, headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ review_str: reviewText.trim(), rating }),
+        invalidationContext: { albumMbid: review.mbid },
       })
       onSaved?.({ ...review, review_str: reviewText.trim(), rating })
       setDialogMode('')
@@ -63,7 +64,7 @@ function ReviewActions({ review, token, onSaved, onDeleted }) {
     setBusy(true)
     setError('')
     try {
-      await apiRequest(`/users/me/reviews/${encodeURIComponent(reviewId)}`, { method: 'DELETE', token })
+      await apiRequest(`/users/me/reviews/${encodeURIComponent(reviewId)}`, { method: 'DELETE', token, invalidationContext: { albumMbid: review.mbid } })
       onDeleted?.(review)
       setDialogMode('')
     } catch (requestError) { setError(requestError.message || 'Could not delete this review.') }

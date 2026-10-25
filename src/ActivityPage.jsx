@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { acceptConnectionRequest, apiRequest, clearStoredToken, deleteConnection, getActivity, getAlbumDetails, getPendingConnections, getSentConnections, getStoredToken } from './api.js'
+import { acceptConnectionRequest, apiRequest, clearStoredToken, deleteConnection, getActivity, getAlbumDetails, getPendingConnections, getSentConnections, getStoredToken, normalizeArtworkUrl } from './api.js'
 import AppHeader from './AppHeader.jsx'
 import RatingVinyls from './RatingVinyls.jsx'
 import MetadataBuffering from './MetadataBuffering.jsx'
@@ -73,7 +73,7 @@ function ActivityReviewCard({ review, token }) {
   const titleValue = [album?.title, review.album_title, review.title].find((value) => value && value !== mbid) || ''
   const title = titleValue || 'Album review'
   const artist = album?.artist || review.artist || review.artist_name || ''
-  const image = album?.image || album?.cover_url || review.cover_url || (mbid ? `https://coverartarchive.org/release-group/${encodeURIComponent(mbid)}/front-250` : '')
+  const image = normalizeArtworkUrl(album?.image || album?.cover_url || review.cover_url || (mbid ? `https://coverartarchive.org/release-group/${encodeURIComponent(mbid)}/front-250` : ''))
   const text = review.review_str || review.review_text || review.text || review.review || ''
 
   useEffect(() => {

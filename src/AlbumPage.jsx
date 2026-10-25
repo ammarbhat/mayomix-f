@@ -146,7 +146,7 @@ function AlbumPage({ mbid }) {
         <section className="album-left-column" aria-label={`${title} album details`}>
           {(loading || tracklistLoading) ? <div className="album-metadata-loading"><MetadataBuffering label="Loading album and track details" /></div> : <>
           <div className="album-summary">
-            <div className="album-cover">{(album?.cover_url || details.image) && <img src={album.cover_url || details.image} alt={`${title} cover`} onError={(event) => event.currentTarget.remove()} />}</div>
+            <div className="album-cover">{details.image && <img src={details.image} alt={`${title} cover`} onError={(event) => event.currentTarget.remove()} />}</div>
             <h1>{title}</h1>
             <p>{artist}<span>{year ? `${genre} | ${year}` : ''}</span></p>
             {reviewCheck === 'available' && <button className="album-review-toggle album-review-toggle-desktop" type="button" aria-label={composerOpen ? 'Close review composer' : 'Write an album review'} aria-expanded={composerOpen} onClick={() => { setComposerOpen((open) => !open); setNotice('') }}><span>{composerOpen ? '×' : '+'}</span></button>}
