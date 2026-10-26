@@ -267,6 +267,7 @@
 .connection-button img { width: 34px; height: 34px; object-fit: contain; }
 .connection-button.can-connect:hover { transform: translateY(-1px); }
 .connection-button:disabled { cursor: default; opacity: .92; }
+.connection-area { margin-top: 12px; }
 .connection-error { margin: 8px 0 0; color: #ffb8b8; font-size: 12px; }
 
 .listening-panel {
@@ -442,9 +443,10 @@
   .profile-edit-actions { gap: 8px; margin: 7px 0 0; }
   .profile-edit-actions a { min-height: 26px; padding: 4px 10px; border-radius: 14px; font-size: 11px; line-height: 1; }
   .identity-panel .identity-bio { grid-column: 1 / -1; grid-row: 2; min-height: 50px; padding: 10px 15px; border-radius: 14px; font-size: 13px; line-height: 1.35; }
-  .connection-button { grid-column: 2; grid-row: 1; min-width: 0; min-height: 25px; align-self: end; justify-self: start; gap: 6px; margin: 0 0 1px; padding: 3px 8px; border-radius: 16px; font-size: 12px; }
+  .connection-area { margin-top: 7px; }
+  .connection-button { min-width: 0; min-height: 25px; gap: 6px; margin: 0; padding: 3px 8px; border-radius: 16px; font-size: 12px; }
   .connection-button img { width: 19px; height: 19px; }
-  .connection-error { grid-column: 1 / -1; grid-row: 3; margin: 0; font-size: 11px; }
+  .connection-error { margin: 4px 0 0; font-size: 11px; }
   .listening-panel { order: 1; width: 100%; gap: var(--profile-stack-gap); margin: 0 auto; }
   .music-section { padding: 8px 10px; border-radius: 15px; background: #fff; }
   .music-section > h2 { margin: 0 0 4px; color: #666; font-size: 16px; line-height: 1.15; }

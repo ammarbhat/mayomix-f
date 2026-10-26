@@ -600,7 +600,12 @@ export async function getAlbumTracklist(mbid, album) {
 export async function searchUsers(username) {
   const query = new URLSearchParams({ username })
   const payload = await apiRequest(`/users/search?${query}`)
-  return listFromPayload(payload)
+  return listFromPayload(payload).map(normalizeUserResponse)
+}
+
+export function normalizeUserResponse(user) {
+  if (!user || typeof user !== 'object' || Array.isArray(user)) return user
+  return { ...user, id: user.id ?? user.user_id }
 }
 
 export async function searchAlbums(queryText, token, limit = 15) {

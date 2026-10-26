@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { apiRequest, cacheProfileArtwork, clearStoredToken, getConnectionStatus, getStoredToken, getTasteList, itemDetails, normalizeArtworkUrl, sendConnectionRequest } from './api.js'
+import { apiRequest, cacheProfileArtwork, clearStoredToken, getConnectionStatus, getStoredToken, getTasteList, itemDetails, normalizeArtworkUrl, normalizeUserResponse, sendConnectionRequest } from './api.js'
 import { getTokenScope } from './queryKeys.js'
 import { getProfileSnapshot, saveProfileSnapshot } from './profileSnapshotCache.js'
 import RatingVinyls from './RatingVinyls.jsx'
@@ -112,13 +112,13 @@ function ProfilePage({ username: viewedUsername = '' }) {
       if (!getProfileSnapshot(profileCacheKey)) setLoading(true)
       setError('')
       try {
-        const currentUser = await apiRequest('/users/me', { token })
+        const currentUser = normalizeUserResponse(await apiRequest('/users/me', { token }))
         if (isPublicProfile && currentUser.username === viewedUsername) {
           window.location.replace('/profile')
           return
         }
         const user = isPublicProfile
-          ? await apiRequest(`/users/${encodeURIComponent(viewedUsername)}`)
+          ? normalizeUserResponse(await apiRequest(`/users/${encodeURIComponent(viewedUsername)}`))
           : currentUser
         setProfile((current) => current.user?.username === user.username
           ? { ...current, user }
@@ -233,13 +233,13 @@ function ProfilePage({ username: viewedUsername = '' }) {
                   <h1>{loading && !user.name ? <span className="text-skeleton name-skeleton" aria-label="Loading profile" /> : user.name || 'Your profile'}</h1>
                   <p className="identity-handle">{loading && !user.username ? <span className="text-skeleton handle-skeleton" aria-label="Loading username" /> : `@${handle}`}</p>
                   {!isPublicProfile && <div className="profile-edit-actions"><a href="/taste">Edit Display</a><a href="/settings">Settings</a></div>}
+                  {isPublicProfile && <div className="connection-area">
+                    <ConnectionButton status={connectionStatus} loading={connectionBusy || loading} onClick={connect} />
+                    {connectionError && <p className="connection-error" role="alert">{connectionError}</p>}
+                  </div>}
                 </div>
               </div>
               <p className="identity-bio">{loading && !bio ? <span className="text-skeleton bio-skeleton" aria-label="Loading bio" /> : bio}</p>
-              {isPublicProfile && <>
-                <ConnectionButton status={connectionStatus} loading={connectionBusy || loading} onClick={connect} />
-                {connectionError && <p className="connection-error" role="alert">{connectionError}</p>}
-              </>}
             </section>
             <section className="details-panel" aria-label={isPublicProfile ? `${handle}'s favorites` : 'Your favorites'}>
               <div className="identity-section favorite-card genre-card">
