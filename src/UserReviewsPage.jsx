@@ -6,18 +6,35 @@ import MetadataBuffering from './MetadataBuffering.jsx'
 import ReviewActions from './ReviewActions.jsx'
 import './UserReviewsPage.css'
 
+function getAlbumTitle(mbid, ...values) {
+  return values.find((value) => typeof value === 'string'
+    && value.trim()
+    && value.trim() !== mbid
+    && !/^album\s+review$/i.test(value.trim())) || ''
+}
+
 function UserReviewCard({ review, canEdit, token, onSaved, onDeleted }) {
-  const album = review.album || null
+  const [album, setAlbum] = useState(review.album || review.album_info || null)
   const [imageError, setImageError] = useState(false)
   const mbid = review.mbid || review.album_mbid || album?.mbid || ''
 
-  const titleValue = [album?.title, review.album_title, review.title].find((value) => value && value !== mbid) || ''
+  const titleValue = getAlbumTitle(mbid, album?.title, review.album_title, review.title)
   const title = titleValue || 'Album'
   const artistCredits = album?.['artist-credit'] || []
   const artist = album?.artist || (Array.isArray(artistCredits)
     ? artistCredits.map((credit) => `${credit.name || credit.artist?.name || ''}${credit.joinphrase || ''}`).join('').trim()
     : '')
   const image = !imageError && normalizeArtworkUrl(album?.image || (mbid ? `https://coverartarchive.org/release-group/${encodeURIComponent(mbid)}/front-250` : ''))
+
+  useEffect(() => {
+    if (!mbid || titleValue || review.metadataLookupComplete) return undefined
+    let cancelled = false
+    getAlbumDetails(mbid, token).then((metadata) => {
+      if (cancelled || !getAlbumTitle(mbid, metadata.title, metadata.name)) return
+      setAlbum((current) => ({ ...current, ...metadata }))
+    }).catch(() => {})
+    return () => { cancelled = true }
+  }, [mbid, review.metadataLookupComplete, titleValue, token])
 
   return (
     <article className="user-review-card">
@@ -64,14 +81,15 @@ function UserReviewsPage({ username }) {
         const withMetadata = await Promise.all(result.map(async (review) => {
           const album = review.album || review.album_info || review.metadata || {}
           const mbid = review.album_mbid || review.mbid || album.mbid || album.id || ''
-          const title = album.title || review.album_title || review.title
+          const title = getAlbumTitle(mbid, album.title, review.album_title, review.title)
           const artist = album.artist || review.artist || review.artist_name
           if (!mbid || (title && artist)) return { ...review, metadataLookupComplete: true }
           try {
             const metadata = await getAlbumDetails(mbid)
-            return { ...review, album: { ...album, ...metadata }, metadataLookupComplete: true }
+            const resolvedTitle = getAlbumTitle(mbid, metadata.title, metadata.name)
+            return { ...review, album: { ...album, ...metadata }, metadataLookupComplete: Boolean(resolvedTitle) }
           } catch {
-            return { ...review, metadataLookupComplete: true }
+            return { ...review, metadataLookupComplete: false }
           }
         }))
         if (!cancelled) setReviews(withMetadata)

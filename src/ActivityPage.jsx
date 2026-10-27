@@ -59,6 +59,13 @@ function formatActivityDate(value) {
   return new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(date)
 }
 
+function getAlbumTitle(mbid, ...values) {
+  return values.find((value) => typeof value === 'string'
+    && value.trim()
+    && value.trim() !== mbid
+    && !/^album\s+review$/i.test(value.trim())) || ''
+}
+
 function ActivityReviewCard({ review, token }) {
   const cardRef = useRef(null)
   const [album, setAlbum] = useState(review.album || review.album_info || null)
@@ -70,7 +77,7 @@ function ActivityReviewCard({ review, token }) {
   const authorLabel = name || (username ? `@${username}` : 'MayoMix listener')
   const [authorProfile, setAuthorProfile] = useState(null)
   const date = formatActivityDate(review.create_date || review.created_at || review.review_date || review.date)
-  const titleValue = [album?.title, review.album_title, review.title].find((value) => value && value !== mbid) || ''
+  const titleValue = getAlbumTitle(mbid, album?.title, review.album_title, review.title)
   const title = titleValue || 'Album review'
   const artist = album?.artist || review.artist || review.artist_name || ''
   const image = normalizeArtworkUrl(album?.image || album?.cover_url || review.cover_url || (mbid ? `https://coverartarchive.org/release-group/${encodeURIComponent(mbid)}/front-250` : ''))
@@ -176,14 +183,15 @@ function ActivityPage() {
           Promise.all(reviews.map(async (review) => {
             const album = review.album || review.album_info || {}
             const mbid = review.album_mbid || review.mbid || album.mbid || album.id || ''
-            const title = album.title || review.album_title || review.title
+            const title = getAlbumTitle(mbid, album.title, review.album_title, review.title)
             const artist = album.artist || review.artist || review.artist_name
             if (!mbid || (title && artist)) return { ...review, metadataLookupComplete: true }
             try {
               const details = await getAlbumDetails(mbid, token)
-              return { ...review, album: { ...album, ...details }, metadataLookupComplete: true }
+              const resolvedTitle = getAlbumTitle(mbid, details.title, details.name)
+              return { ...review, album: { ...album, ...details }, metadataLookupComplete: Boolean(resolvedTitle) }
             } catch {
-              return { ...review, metadataLookupComplete: true }
+              return { ...review, metadataLookupComplete: false }
             }
           })).then((enriched) => { if (!cancelled) setResolvedActivity(enriched) })
             .finally(() => { if (!cancelled) setActivityMetadataLoading(false) })
