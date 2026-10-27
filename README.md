@@ -1,12 +1,12 @@
-# MayoMix
+# Mayomix
 
-MayoMix is a music discovery and social listening frontend. Create a profile, build ranked taste lists, find albums and people, rate and review albums, and follow what your connections are listening to.
+Mayomix is a music discovery and social listening frontend. Create a profile, build ranked taste lists, find albums and people, rate and review albums, and follow what your connections are listening to.
 
 This repository contains the React frontend. It uses a separate FastAPI backend for accounts, authentication, reviews, taste lists, connections, and MusicBrainz-backed search and album data.
 
 ## Features
 
-- Sign up and sign in with a MayoMix account.
+- Sign up and sign in with a Mayomix account.
 - View your profile and public user profiles, including favorite genres and ranked music lists.
 - Edit profile details and manage account settings.
 - Search for users, albums, artists, and songs.
@@ -25,7 +25,7 @@ This repository contains the React frontend. It uses a separate FastAPI backend 
 ## Requirements
 
 - Node.js and npm
-- The MayoMix FastAPI backend running locally at `http://127.0.0.1:8000`
+- The Mayomix FastAPI backend running locally at `http://127.0.0.1:8000`
 
 The frontend uses Vite's `/api` proxy for backend requests. The proxy target is currently set in `vite.config.js`; the backend must allow the frontend origin if you call it directly from a browser.
 
