@@ -1,35 +1,92 @@
 # MayoMix
 
-## Pages
+MayoMix is a music discovery and social listening frontend. Create a profile, build ranked taste lists, find albums and people, rate and review albums, and follow what your connections are listening to.
 
-The login page is at `/` (or `/login`). The profile page is at `/profile`.
+This repository contains the React frontend. It uses a separate FastAPI backend for accounts, authentication, reviews, taste lists, connections, and MusicBrainz-backed search and album data.
 
-The profile loads the signed-in user's name, photo, genres, and taste lists from the FastAPI service at `http://127.0.0.1:8000`. Keep that API running; Vite proxies `/api` requests to it during development and preview.
+## Features
 
-To view the production build locally:
+- Sign up and sign in with a MayoMix account.
+- View your profile and public user profiles, including favorite genres and ranked music lists.
+- Edit profile details and manage account settings.
+- Search for users, albums, artists, and songs.
+- Open album pages, rate albums, and write reviews.
+- Browse your reviews and activity from connected users; send and manage connection requests.
+- Organize favorite music into taste lists and mark liked entries.
+
+## Tech stack
+
+- React 19
+- Vite 8
+- TanStack Query
+- FastAPI backend
+- MusicBrainz metadata and Cover Art Archive artwork
+
+## Requirements
+
+- Node.js and npm
+- The MayoMix FastAPI backend running locally at `http://127.0.0.1:8000`
+
+The frontend uses Vite's `/api` proxy for backend requests. The proxy target is currently set in `vite.config.js`; the backend must allow the frontend origin if you call it directly from a browser.
+
+## Getting started
+
+Install dependencies:
 
 ```sh
-npm.cmd run build
-npm.cmd run preview
+npm install
 ```
 
-Open the URL printed by Vite (usually `http://localhost:4173/` for login or `http://localhost:4173/profile` for the profile). Keep the preview command running while you view the pages.
+Start the FastAPI backend, then run the frontend development server:
 
-For live development, run `npm.cmd run dev` and open the Vite URL with `/profile` appended.
+```sh
+npm run dev
+```
 
-## Vite notes
+Open the local URL printed by Vite (typically `http://localhost:5173`). Vite is configured to listen on all network interfaces, so it can also be reached from another device on the same network using the host machine's LAN address and the port shown by Vite.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Pages
 
-Currently, two official plugins are available:
+| Path | Page |
+| --- | --- |
+| `/` or `/login` | Sign in or create an account |
+| `/profile` | Your profile |
+| `/users/:username` | Public profile |
+| `/users/:username/reviews` | A user's album reviews |
+| `/search` | Search MayoMix users and music |
+| `/albums/:mbid` | Album details, ratings, and reviews |
+| `/activity` | Connected users' activity and connection requests |
+| `/taste` | Manage your ranked taste lists |
+| `/edit-profile` | Edit profile information and taste selections |
+| `/settings` | Account settings and related settings pages |
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Available scripts
 
-## React Compiler
+```sh
+npm run dev      # Start the Vite development server
+npm run build    # Create a production build in dist/
+npm run preview  # Preview the production build locally
+npm run lint     # Run ESLint
+npm test         # Run the Node test suite
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+On Windows PowerShell, use `npm.cmd` if script execution blocks `npm`, for example `npm.cmd run dev`.
 
-## Expanding the ESLint configuration
+## Backend and API notes
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- The backend base URL defaults to `http://127.0.0.1:8000` through the Vite proxy in `vite.config.js`.
+- Frontend API requests go through `/api`, which Vite rewrites to the backend during development and preview.
+- Login uses the backend's OAuth2 form-encoded `POST /token` endpoint. The bearer token is stored in `sessionStorage` for the current browser session.
+- The backend also contacts MusicBrainz and Cover Art Archive for catalog metadata and artwork.
+- The backend integration guide and live API schema (`/docs`) are the source of truth for endpoint behavior. Some backend list endpoints return `404` for empty results.
+
+There is no production API URL configured in this repository. For a deployed frontend, configure the API origin and backend CORS policy for that environment before release; the current Vite proxy is intended for local development and preview.
+
+## Project layout
+
+```text
+src/          React pages, shared components, API helpers, and styles
+public/       Static images and service worker
+tests/        Node tests for API and MusicBrainz caching helpers
+vite.config.js Vite development/preview configuration and local proxies
+```
