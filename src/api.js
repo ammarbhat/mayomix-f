@@ -521,6 +521,10 @@ export function getSentConnections(token) {
   return getConnectionList('/connections/me/sent', token)
 }
 
+export function getConnections(token) {
+  return getConnectionList('/connections/me', token)
+}
+
 export function acceptConnectionRequest(connectionId, token) {
   return apiRequest(`/connections/${encodeURIComponent(connectionId)}/accept`, { method: 'PATCH', token })
 }

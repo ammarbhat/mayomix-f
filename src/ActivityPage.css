@@ -48,6 +48,20 @@
 .activity-action-error { margin: 8px 3px 0; font-size: 13px; }
 .activity-page :focus-visible { outline: 2px solid #141414; outline-offset: 3px; }
 .activity-connections-content { display: contents; }
+.connection-tabs { min-height: 40px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: center; margin: 0 0 8px; padding: 3px; border: 1px solid #777; border-radius: 999px; }
+.connection-tabs button { min-width: 0; min-height: 32px; padding: 4px 8px; border: 0; border-radius: 999px; background: transparent; color: #333; font: inherit; font-size: 14px; cursor: pointer; }
+.connection-tabs button + button { border-left: 1px solid #999; border-radius: 0 999px 999px 0; }
+.connection-tabs button.is-active { border-radius: 999px; background: #b6b6b6; }
+.connection-tabs button:focus-visible { outline: 2px solid #111; outline-offset: 2px; }
+.connection-group { min-height: 0; flex: 1; display: flex; flex-direction: column; }
+.connection-confirm-dialog { width: min(440px, calc(100vw - 36px)); padding: 24px; border: 1px solid #bbb; border-radius: 16px; background: #f4f4f4; color: #222; box-shadow: 0 16px 54px #0005; }
+.connection-confirm-dialog::backdrop { background: #0008; }
+.connection-confirm-dialog h2 { margin: 0; font-size: 20px; font-weight: 600; }
+.connection-confirm-dialog p { margin: 10px 0 22px; color: #585858; font-size: 14px; line-height: 1.5; }
+.connection-confirm-actions { display: flex; justify-content: flex-end; gap: 9px; }
+.connection-confirm-actions button { min-height: 40px; padding: 8px 14px; border: 1px solid #999; border-radius: 999px; background: #eee; color: #222; cursor: pointer; }
+.connection-confirm-actions button.is-danger { border-color: #db8788; background: #ed9a9b; color: #fff; }
+.connection-confirm-actions button:disabled { opacity: .65; cursor: wait; }
 .activity-connections-toggle { display: none; }
 .activity-tab { margin: 0; padding: 0; border: 0; background: transparent; color: inherit; font: inherit; text-align: inherit; }
 
@@ -142,28 +156,29 @@
   }
   .activity-connections-toggle > span:first-child { flex: 1; }
   .activity-connections-count { font-size: 23px; font-weight: 400; }
+  .activity-connections-toggle .activity-connections-count { display: none; }
   .activity-connections-chevron { width: 15px; height: 15px; margin: -7px 2px 0 1px; border-right: 1.5px solid #555; border-bottom: 1.5px solid #555; transform: rotate(45deg); transition: transform .18s ease; }
   .activity-connections-panel.is-expanded { margin-bottom: 10px; padding: 7px 14px 14px; }
-  .activity-connections-panel.is-expanded .activity-connections-toggle { height: 40px; border-bottom: 1px solid #444; font-size: 24px; }
+  .activity-connections-panel.is-expanded { height: min(84dvh, 700px); min-height: 430px; }
+  .activity-connections-panel.is-expanded .activity-connections-toggle { height: 40px; justify-content: center; border-bottom: 1px solid #444; font-size: 22px; }
+  .activity-connections-panel.is-expanded .activity-connections-toggle > span:first-child { flex: none; }
   .activity-connections-panel.is-expanded .activity-connections-toggle::after { width: 0; content: ''; }
   .activity-connections-panel.is-expanded .activity-connections-count,
   .activity-connections-panel.is-expanded .activity-connections-chevron { display: none; }
-  .activity-connections-panel.is-expanded .activity-connections-content { display: flex; flex-direction: column; }
+  .activity-connections-panel.is-expanded .activity-connections-content { min-height: 0; flex: 1; display: flex; flex-direction: column; }
   .activity-connections-panel:not(.is-expanded) .activity-connections-content { display: none; }
-  .connection-group { min-height: 0; flex: none; }
-  .connection-group h2 { flex-basis: 38px; font-size: 23px; line-height: 32px; }
-  .incoming-group h2 { flex-basis: 43px; visibility: hidden; }
-  .connection-list { min-height: 0; flex: none; gap: 8px; overflow: visible; padding: 0; border: 0; border-radius: 0; background: transparent; }
-  .sent-group { margin-top: 17px; }
-  .activity-connections-panel.is-expanded .sent-group h2 { flex-basis: 39px; }
-  .activity-connection-card { min-height: 53px; padding: 6px 9px; border-radius: 19px; background: #555; color: #f1f1f1; }
-  .activity-person { gap: 9px; }
-  .activity-person > img { width: 35px; height: 35px; flex-basis: 35px; }
-  .activity-person-copy strong { color: #f4f4f4; font-size: 14px; }
-  .activity-person-copy > span { color: #ccc; font-size: 11px; }
+  .connection-tabs { flex: 0 0 40px; margin-bottom: 6px; }
+  .connection-tabs button { min-height: 32px; font-size: 14px; }
+  .connection-group { min-height: 0; flex: 1; }
+  .connection-list { min-height: 0; flex: 1; gap: 12px; overflow: auto; padding: 21px 18px; border: 0; border-radius: 17px; background: #5d5d5d; }
+  .activity-connection-card { min-height: 73px; padding: 8px 12px; border-radius: 16px; background: #d8d8d8; color: #252525; }
+  .activity-person { gap: 12px; }
+  .activity-person > img { width: 46px; height: 46px; flex-basis: 46px; }
+  .activity-person-copy strong { color: #111; font-size: 16px; }
+  .activity-person-copy > span { color: #666; font-size: 13px; }
   .activity-connection-actions { gap: 8px; }
-  .activity-connection-actions button { width: 32px; height: 32px; }
-  .connection-list .activity-empty { padding: 8px 3px; color: #666; font-size: 11px; }
+  .activity-connection-actions button { width: 36px; height: 36px; }
+  .connection-list .activity-empty { margin: auto; padding: 12px; color: #f1f1f1; font-size: 14px; }
   .activity-feed-panel { display: contents; height: auto; min-height: 0; padding: 0; }
   .activity-feed-panel > h1 { height: 44px; flex: none; margin: 0; border-radius: 16px; background: #d8d8d8; font-size: 23px; line-height: 44px; }
   .activity-tab { width: 100%; height: 100%; padding-left: 27px; border-radius: inherit; cursor: pointer; }

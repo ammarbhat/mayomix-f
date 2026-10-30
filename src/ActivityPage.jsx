@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { acceptConnectionRequest, apiRequest, clearStoredToken, deleteConnection, getActivity, getAlbumDetails, getPendingConnections, getSentConnections, getStoredToken, normalizeArtworkUrl } from './api.js'
+import { acceptConnectionRequest, apiRequest, clearStoredToken, deleteConnection, getActivity, getAlbumDetails, getConnections, getPendingConnections, getSentConnections, getStoredToken, normalizeArtworkUrl } from './api.js'
 import AppHeader from './AppHeader.jsx'
 import RatingVinyls from './RatingVinyls.jsx'
 import MetadataBuffering from './MetadataBuffering.jsx'
@@ -32,7 +32,7 @@ function connectionPerson(connection, incoming) {
   }
 }
 
-function ConnectionCard({ connection, incoming, onAccept, onDelete, busy }) {
+function ConnectionCard({ connection, incoming, section, onAccept, onDelete, busy }) {
   const person = connectionPerson(connection, incoming)
   const connectionId = connection.con_id ?? connection.connection_id ?? connection.id
   return (
@@ -46,10 +46,38 @@ function ConnectionCard({ connection, incoming, onAccept, onDelete, busy }) {
       </a>
       <div className="activity-connection-actions">
         {incoming && <button type="button" aria-label={`Accept ${person.username}'s request`} disabled={busy || connectionId == null} onClick={() => onAccept(connectionId)}><img src="/images/connection-accept.png" alt="" /></button>}
-        <button type="button" aria-label={`${incoming ? 'Decline' : 'Cancel'} ${person.username}'s request`} disabled={busy || connectionId == null} onClick={() => onDelete(connectionId)}><img src="/images/connection-decline.png" alt="" /></button>
+        <button type="button" aria-label={`${section === 'requests' ? 'Decline' : section === 'sent' ? 'Cancel' : 'Disconnect'} ${person.username}${section === 'connected' ? '' : "'s request"}`} disabled={busy || connectionId == null} onClick={() => onDelete(connectionId, person, connection)}><img src="/images/connection-decline.png" alt="" /></button>
       </div>
     </article>
   )
+}
+
+function ConnectionConfirmDialog({ confirmation, busy, onCancel, onConfirm }) {
+  const dialogRef = useRef(null)
+  useEffect(() => {
+    const dialog = dialogRef.current
+    if (!dialog) return undefined
+    dialog.showModal()
+    return () => { if (dialog.open) dialog.close() }
+  }, [])
+  if (!confirmation) return null
+  const username = confirmation.person.username
+  const title = confirmation.section === 'requests'
+    ? 'Decline this connection request?'
+    : confirmation.section === 'sent'
+      ? 'Cancel this connection request?'
+      : 'Disconnect from this person?'
+  const description = confirmation.section === 'requests'
+    ? `Decline @${username}'s request to connect with you?`
+    : confirmation.section === 'sent'
+      ? `Cancel your request to connect with @${username}?`
+      : `Remove @${username} from your connections?`
+  const actionLabel = confirmation.section === 'requests' ? 'Decline request' : confirmation.section === 'sent' ? 'Cancel request' : 'Disconnect'
+  return <dialog className="connection-confirm-dialog" ref={dialogRef} aria-labelledby="connection-confirm-title" aria-describedby="connection-confirm-description" onCancel={(event) => { event.preventDefault(); onCancel() }}>
+    <h2 id="connection-confirm-title">{title}</h2>
+    <p id="connection-confirm-description">{description}</p>
+    <div className="connection-confirm-actions"><button type="button" onClick={onCancel}>{confirmation.section === 'connected' ? 'Keep connection' : 'Keep request'}</button><button type="button" className="is-danger" disabled={busy} onClick={onConfirm}>{busy ? 'Working…' : actionLabel}</button></div>
+  </dialog>
 }
 
 function formatActivityDate(value) {
@@ -144,16 +172,20 @@ function ActivityPage() {
   const token = getStoredToken()
   const [pending, setPending] = useState([])
   const [sent, setSent] = useState([])
-  const [connectionsExpanded, setConnectionsExpanded] = useState(false)
+  const [connections, setConnections] = useState([])
+  const [activeConnectionTab, setActiveConnectionTab] = useState('requests')
+  const [connectionsExpanded, setConnectionsExpanded] = useState(true)
   const [activity, setActivity] = useState([])
   const [resolvedActivity, setResolvedActivity] = useState([])
   const [activityMetadataLoading, setActivityMetadataLoading] = useState(false)
   const [pendingError, setPendingError] = useState('')
   const [sentError, setSentError] = useState('')
+  const [connectionsError, setConnectionsError] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [actionError, setActionError] = useState('')
   const [busyId, setBusyId] = useState(null)
+  const [confirmation, setConfirmation] = useState(null)
 
   useEffect(() => {
     if (!token) {
@@ -161,10 +193,10 @@ function ActivityPage() {
       return undefined
     }
     let cancelled = false
-    Promise.allSettled([getPendingConnections(token), getSentConnections(token), getActivity(token)])
-      .then(([incomingResult, outgoingResult, feedResult]) => {
+    Promise.allSettled([getPendingConnections(token), getSentConnections(token), getConnections(token), getActivity(token)])
+      .then(([incomingResult, outgoingResult, connectionsResult, feedResult]) => {
         if (cancelled) return
-        const results = [incomingResult, outgoingResult, feedResult]
+        const results = [incomingResult, outgoingResult, connectionsResult, feedResult]
         const authFailure = results.find((result) => result.status === 'rejected'
           && /401|unauthorized|unauthenticated|not authenticated|credentials/i.test(result.reason?.message || ''))
         if (authFailure) {
@@ -176,6 +208,8 @@ function ActivityPage() {
         else setPendingError(incomingResult.reason?.message || 'Requests could not be loaded.')
         if (outgoingResult.status === 'fulfilled') setSent(outgoingResult.value)
         else setSentError(outgoingResult.reason?.message || 'Sent requests could not be loaded.')
+        if (connectionsResult.status === 'fulfilled') setConnections(connectionsResult.value)
+        else setConnectionsError(connectionsResult.reason?.message || 'Connections could not be loaded.')
         if (feedResult.status === 'fulfilled') {
           const reviews = feedResult.value
           setActivity(reviews)
@@ -201,19 +235,39 @@ function ActivityPage() {
     return () => { cancelled = true }
   }, [token])
 
-  async function updateConnection(connectionId, action) {
+  async function updateConnection(connectionId, action, section) {
     setBusyId(connectionId)
     setActionError('')
     try {
       if (action === 'accept') await acceptConnectionRequest(connectionId, token)
       else await deleteConnection(connectionId, token)
-      setPending((items) => items.filter((item) => (item.con_id ?? item.connection_id ?? item.id) !== connectionId))
-      setSent((items) => items.filter((item) => (item.con_id ?? item.connection_id ?? item.id) !== connectionId))
+      if (action === 'accept') {
+        setPending((items) => items.filter((item) => (item.con_id ?? item.connection_id ?? item.id) !== connectionId))
+        try {
+          setConnections(await getConnections(token))
+          setConnectionsError('')
+        } catch (refreshError) {
+          setConnectionsError(refreshError.message || 'Connections could not be refreshed.')
+        }
+      } else if (section === 'requests') setPending((items) => items.filter((item) => (item.con_id ?? item.connection_id ?? item.id) !== connectionId))
+      else if (section === 'sent') setSent((items) => items.filter((item) => (item.con_id ?? item.connection_id ?? item.id) !== connectionId))
+      else setConnections((items) => items.filter((item) => (item.con_id ?? item.connection_id ?? item.id) !== connectionId))
     } catch (requestError) {
       setActionError(requestError.message || 'The connection request could not be updated.')
     } finally {
       setBusyId(null)
     }
+  }
+
+  function requestConnectionRemoval(connectionId, section, person, connection) {
+    setConfirmation({ connectionId, section, person, connection })
+  }
+
+  async function confirmConnectionRemoval() {
+    if (!confirmation) return
+    const { connectionId, section } = confirmation
+    await updateConnection(connectionId, 'delete', section)
+    setConfirmation(null)
   }
 
   function returnToActivityTop() {
@@ -231,31 +285,33 @@ function ActivityPage() {
             {!connectionsExpanded && <><span className="activity-connections-count">({pending.length})</span><span className="activity-connections-chevron" aria-hidden="true" /></>}
           </button>
           <div className={`activity-connections-content${connectionsExpanded ? ' is-expanded' : ''}`}>
-          <section className="connection-group incoming-group" aria-label="Incoming requests">
-            <h2>Requests</h2>
-            <div className="connection-list" aria-busy={loading}>
-              {loading && <p className="activity-empty">Loading requests…</p>}
-              {!loading && pendingError && <p className="activity-empty is-error" role="alert">{pendingError}</p>}
-              {!loading && !pendingError && pending.length === 0 && <p className="activity-empty">No requests</p>}
-              {pending.map((connection, index) => {
-                const id = connection.con_id ?? connection.connection_id ?? connection.id ?? `pending-${index}`
-                return <ConnectionCard key={id} connection={connection} incoming onAccept={(connectionId) => updateConnection(connectionId, 'accept')} onDelete={(connectionId) => updateConnection(connectionId, 'delete')} busy={busyId === id} />
-              })}
+            <div className="connection-tabs" role="group" aria-label="Connection lists">
+              {[['requests', 'Requests'], ['sent', 'Sent'], ['connected', 'Connected']].map(([tab, label]) => <button key={tab} id={`connection-tab-${tab}`} className={activeConnectionTab === tab ? 'is-active' : ''} type="button" aria-pressed={activeConnectionTab === tab} aria-controls="connection-tab-panel" onClick={() => setActiveConnectionTab(tab)}>{label}</button>)}
             </div>
-          </section>
-          <section className="connection-group sent-group" aria-label="Sent requests">
-            <h2>Sent</h2>
-            <div className="connection-list" aria-busy={loading}>
-              {loading && <p className="activity-empty">Loading requests…</p>}
-              {!loading && sentError && <p className="activity-empty is-error" role="alert">{sentError}</p>}
-              {!loading && !sentError && sent.length === 0 && <p className="activity-empty">No sent requests</p>}
-              {sent.map((connection, index) => {
-                const id = connection.con_id ?? connection.connection_id ?? connection.id ?? `sent-${index}`
-                return <ConnectionCard key={id} connection={connection} incoming={false} onDelete={(connectionId) => updateConnection(connectionId, 'delete')} busy={busyId === id} />
-              })}
-            </div>
-          </section>
-          {actionError && <p className="activity-action-error" role="alert">{actionError}</p>}
+            <section className="connection-group" id="connection-tab-panel" role="tabpanel" aria-labelledby={`connection-tab-${activeConnectionTab}`} aria-label={`${activeConnectionTab} connections`}>
+              <div className="connection-list" aria-busy={loading}>
+                {loading && <p className="activity-empty">Loading {activeConnectionTab === 'requests' ? 'requests' : activeConnectionTab === 'sent' ? 'sent requests' : 'connections'}…</p>}
+                {!loading && activeConnectionTab === 'requests' && pendingError && <p className="activity-empty is-error" role="alert">{pendingError}</p>}
+                {!loading && activeConnectionTab === 'sent' && sentError && <p className="activity-empty is-error" role="alert">{sentError}</p>}
+                {!loading && activeConnectionTab === 'connected' && connectionsError && <p className="activity-empty is-error" role="alert">{connectionsError}</p>}
+                {!loading && activeConnectionTab === 'requests' && !pendingError && pending.length === 0 && <p className="activity-empty">No requests</p>}
+                {!loading && activeConnectionTab === 'sent' && !sentError && sent.length === 0 && <p className="activity-empty">No sent requests</p>}
+                {!loading && activeConnectionTab === 'connected' && !connectionsError && connections.length === 0 && <p className="activity-empty">No connections yet</p>}
+                {!loading && activeConnectionTab === 'requests' && pending.map((connection, index) => {
+                  const id = connection.con_id ?? connection.connection_id ?? connection.id ?? `pending-${index}`
+                  return <ConnectionCard key={id} connection={connection} incoming section="requests" onAccept={(connectionId) => updateConnection(connectionId, 'accept', 'requests')} onDelete={(connectionId, person, item) => requestConnectionRemoval(connectionId, 'requests', person, item)} busy={busyId === id} />
+                })}
+                {!loading && activeConnectionTab === 'sent' && sent.map((connection, index) => {
+                  const id = connection.con_id ?? connection.connection_id ?? connection.id ?? `sent-${index}`
+                  return <ConnectionCard key={id} connection={connection} incoming={false} section="sent" onDelete={(connectionId, person, item) => requestConnectionRemoval(connectionId, 'sent', person, item)} busy={busyId === id} />
+                })}
+                {!loading && activeConnectionTab === 'connected' && connections.map((connection, index) => {
+                  const id = connection.con_id ?? connection.connection_id ?? connection.id ?? `connected-${index}`
+                  return <ConnectionCard key={id} connection={connection} incoming={false} section="connected" onDelete={(connectionId, person, item) => requestConnectionRemoval(connectionId, 'connected', person, item)} busy={busyId === id} />
+                })}
+              </div>
+            </section>
+            {actionError && <p className="activity-action-error" role="alert">{actionError}</p>}
           </div>
         </section>
         <section className="activity-feed-panel" aria-label="Activity" aria-busy={loading}>
@@ -268,6 +324,7 @@ function ActivityPage() {
           </div>
         </section>
       </div>
+      {confirmation && <ConnectionConfirmDialog confirmation={confirmation} busy={busyId === confirmation.connectionId} onCancel={() => setConfirmation(null)} onConfirm={confirmConnectionRemoval} />}
     </main>
   )
 }
