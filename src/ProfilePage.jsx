@@ -85,7 +85,7 @@ function ProfilePage({ username: viewedUsername = '' }) {
   const [connectionError, setConnectionError] = useState('')
 
   useEffect(() => {
-    if (!isPublicProfile && !loading && profile.user?.username === profileCacheKey) {
+    if (!isPublicProfile && !loading && profile.user?.username) {
       saveProfileSnapshot(profileCacheKey, profile)
     }
   }, [isPublicProfile, loading, profile, profileCacheKey])

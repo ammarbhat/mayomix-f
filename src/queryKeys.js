@@ -17,7 +17,12 @@ export function getTokenScope(token) {
     if (!encodedPayload) return null
     const normalized = encodedPayload.replace(/-/g, '+').replace(/_/g, '/')
     const payload = JSON.parse(atob(normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=')))
-    return typeof payload.sub === 'string' && payload.sub ? payload.sub : null
+    // FastAPI now puts the numeric user ID in `sub`; keep cache scopes stable
+    // across numeric and string representations of that ID.
+    if ((typeof payload.sub === 'string' && payload.sub.trim()) || (typeof payload.sub === 'number' && Number.isFinite(payload.sub))) {
+      return String(payload.sub)
+    }
+    return null
   } catch {
     return null
   }
