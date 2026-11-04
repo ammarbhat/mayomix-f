@@ -3,7 +3,9 @@ import { describeApiQuery, getTokenScope, queryKeys, QUERY_FRESHNESS } from './q
 import { getMusicBrainzCacheItem, saveMusicBrainzCacheItem } from './musicBrainzCache.js'
 import { clearProfileSnapshot } from './profileSnapshotCache.js'
 
-const API_ROOT = '/api'
+const API_ROOT = (import.meta.env?.VITE_API_BASE_URL || (
+  import.meta.env?.DEV ? '/api' : 'https://mayomix.onrender.com'
+)).replace(/\/$/, '')
 const TOKEN_KEY = 'mayomix.access_token'
 const TOKEN_TYPE_KEY = 'mayomix.token_type'
 const USE_LOCAL_ARTWORK_PROXY = Boolean(import.meta.env?.DEV || (
