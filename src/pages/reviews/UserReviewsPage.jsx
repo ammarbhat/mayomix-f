@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-import { apiRequest, getAlbumDetails, getStoredToken, getUserReviews, normalizeArtworkUrl } from './api.js'
-import AppHeader from './AppHeader.jsx'
-import RatingVinyls from './RatingVinyls.jsx'
-import MetadataBuffering from './MetadataBuffering.jsx'
-import ReviewActions from './ReviewActions.jsx'
+import { useParams } from 'react-router'
+import { apiRequest, getAlbumDetails, getStoredToken, getUserReviews, normalizeArtworkUrl } from '../../api/api.js'
+import AppHeader from '../../components/layout/AppHeader.jsx'
+import RatingVinyls from '../../components/ratings/RatingVinyls.jsx'
+import MetadataBuffering from '../../components/feedback/MetadataBuffering.jsx'
+import ReviewActions from '../../components/reviews/ReviewActions.jsx'
 import './UserReviewsPage.css'
 
 function getAlbumTitle(mbid, ...values) {
@@ -56,7 +57,8 @@ function UserReviewCard({ review, canEdit, token, onSaved, onDeleted }) {
   )
 }
 
-function UserReviewsPage({ username }) {
+function UserReviewsPage() {
+  const { username = '' } = useParams()
   const [reviews, setReviews] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')

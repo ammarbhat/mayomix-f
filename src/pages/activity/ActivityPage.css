@@ -143,6 +143,7 @@
     height: 59px;
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 9px;
     padding: 0;
     border: 0;
@@ -157,20 +158,18 @@
   .activity-connections-toggle > span:first-child { flex: 1; }
   .activity-connections-count { font-size: 23px; font-weight: 400; }
   .activity-connections-toggle .activity-connections-count { display: none; }
-  .activity-connections-chevron { width: 15px; height: 15px; margin: -7px 2px 0 1px; border-right: 1.5px solid #555; border-bottom: 1.5px solid #555; transform: rotate(45deg); transition: transform .18s ease; }
-  .activity-connections-panel.is-expanded { margin-bottom: 10px; padding: 7px 14px 14px; }
-  .activity-connections-panel.is-expanded { height: min(84dvh, 700px); min-height: 430px; }
-  .activity-connections-panel.is-expanded .activity-connections-toggle { height: 40px; justify-content: center; border-bottom: 1px solid #444; font-size: 22px; }
-  .activity-connections-panel.is-expanded .activity-connections-toggle > span:first-child { flex: none; }
-  .activity-connections-panel.is-expanded .activity-connections-toggle::after { width: 0; content: ''; }
-  .activity-connections-panel.is-expanded .activity-connections-count,
-  .activity-connections-panel.is-expanded .activity-connections-chevron { display: none; }
-  .activity-connections-panel.is-expanded .activity-connections-content { min-height: 0; flex: 1; display: flex; flex-direction: column; }
+  .activity-connections-chevron { width: 15px; height: 15px; flex: 0 0 15px; margin: -7px 2px 0 1px; border-right: 1.5px solid #555; border-bottom: 1.5px solid #555; transform: rotate(45deg); transition: transform 242ms ease; }
+  .activity-connections-panel { height: auto; }
+  .activity-connections-panel.is-expanded { min-height: 30dvh; max-height: min(84dvh, 700px); gap: 8px; margin-bottom: 10px; padding: 14px; }
+  .activity-connections-panel.is-expanded .activity-connections-toggle { height: 40px; justify-content: space-between; border-bottom: 1px solid #444; font-size: 22px; }
+  .activity-connections-panel.is-expanded .activity-connections-chevron { transform: rotate(225deg); }
+  .activity-connections-panel.is-expanded .activity-connections-count { display: none; }
+  .activity-connections-panel.is-expanded .activity-connections-content { min-height: 0; flex: 1; display: flex; flex-direction: column; gap: 8px; }
   .activity-connections-panel:not(.is-expanded) .activity-connections-content { display: none; }
-  .connection-tabs { flex: 0 0 40px; margin-bottom: 6px; }
+  .connection-tabs { flex: 0 0 40px; margin: 0; }
   .connection-tabs button { min-height: 32px; font-size: 14px; }
   .connection-group { min-height: 0; flex: 1; }
-  .connection-list { min-height: 0; flex: 1; gap: 12px; overflow-x: hidden; overflow-y: auto; padding: 21px 18px; border: 0; border-radius: 17px; background: #5d5d5d; }
+  .connection-list { min-height: 0; max-height: min(calc(84dvh - 130px), 520px); flex: 1; gap: 12px; overflow-x: hidden; overflow-y: auto; padding: 21px 18px; border: 0; border-radius: 17px; background: #5d5d5d; }
   .activity-connection-card { min-height: 73px; padding: 8px 12px; border-radius: 16px; background: #d8d8d8; color: #252525; }
   .activity-person { gap: 12px; }
   .activity-person > img { width: 46px; height: 46px; flex-basis: 46px; }

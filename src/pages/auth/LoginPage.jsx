@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { signIn, signUp } from './api.js'
-import { GENRES } from './genreOptions.js'
+import { Link } from 'react-router'
+import { signIn, signUp } from '../../api/api.js'
+import { GENRES } from '../../data/genreOptions.js'
 import './LoginPage.css'
 
 function LoginPage() {
@@ -61,10 +62,10 @@ function LoginPage() {
       <section className="login-art" aria-label="mayomix">
         <img className="login-record" src="/images/vinyl-photo.jpg" alt="Vinyl record" />
         <div className="login-art-shade" />
-        <a className="login-brand" href="/" aria-label="MayoMix home">
+        <Link className="login-brand" to="/" aria-label="MayoMix home">
           <img src="/images/mayomix-logo.png" alt="" />
           <span>mayomix</span>
-        </a>
+        </Link>
       </section>
 
       <section className="login-panel">

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { apiRequest } from './api.js'
+import { apiRequest } from '../../api/api.js'
 import './ReviewActions.css'
 
 function ReviewActions({ review, token, onSaved, onDeleted }) {

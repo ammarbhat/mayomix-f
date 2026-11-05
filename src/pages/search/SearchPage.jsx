@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router'
 import {
   apiRequest,
   clearStoredToken,
@@ -10,11 +11,11 @@ import {
   itemDetails,
   searchAlbums,
   searchUsers,
-} from './api.js'
-import RatingVinyls from './RatingVinyls.jsx'
-import ReviewActions from './ReviewActions.jsx'
-import AppHeader from './AppHeader.jsx'
-import MetadataBuffering from './MetadataBuffering.jsx'
+} from '../../api/api.js'
+import RatingVinyls from '../../components/ratings/RatingVinyls.jsx'
+import ReviewActions from '../../components/reviews/ReviewActions.jsx'
+import AppHeader from '../../components/layout/AppHeader.jsx'
+import MetadataBuffering from '../../components/feedback/MetadataBuffering.jsx'
 import './SearchPage.css'
 
 const emptyLibrary = { likedSongs: [], reviews: [] }
@@ -136,14 +137,14 @@ function AlbumResult({ album }) {
   const title = album.title || album.name || 'Unknown album'
   const artist = displayArtist(album) || 'Unknown artist'
   return (
-    <a className="search-result-card album-result-card" href={album.mbid ? `/albums/${encodeURIComponent(album.mbid)}` : undefined}>
+    <Link className="search-result-card album-result-card" to={album.mbid ? `/albums/${encodeURIComponent(album.mbid)}` : '/'} onClick={(event) => { if (!album.mbid) event.preventDefault() }}>
       <Artwork item={album} alt={`${title} cover`} />
       <div className="search-result-copy">
         <h3 title={title}>{title}</h3>
         <p title={artist}>{artist}</p>
         {album.year && <span className="album-year">{album.year}</span>}
       </div>
-    </a>
+    </Link>
   )
 }
 
@@ -168,7 +169,7 @@ function UserResult({ user, token }) {
       ? '/images/connection-pending.png'
       : '/images/connection-plus.png'
   return (
-    <a className="search-result-card user-result-card" href={username ? `/users/${encodeURIComponent(username)}` : undefined}>
+    <Link className="search-result-card user-result-card" to={username ? `/users/${encodeURIComponent(username)}` : '/'} onClick={(event) => { if (!username) event.preventDefault() }}>
       <div className="user-artwork">
         <img src={image || '/images/profile-default.png'} alt={`${name}'s profile`} onError={(event) => { event.currentTarget.src = '/images/profile-default.png' }} />
       </div>
@@ -177,7 +178,7 @@ function UserResult({ user, token }) {
         {username && <p title={`@${username}`}>@{username}</p>}
       </div>
       <span className="user-state-icon" aria-hidden="true"><img src={stateImage} alt="" /></span>
-    </a>
+    </Link>
   )
 }
 

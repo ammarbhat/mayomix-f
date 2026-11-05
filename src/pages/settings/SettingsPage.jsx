@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import AppHeader from './AppHeader.jsx'
-import EditProfilePage from './EditProfilePage.jsx'
-import { apiRequest, changePassword, changeUsername, clearStoredToken, getAppDocument, getStoredToken } from './api.js'
+import { Link, useLocation } from 'react-router'
+import AppHeader from '../../components/layout/AppHeader.jsx'
+import EditProfilePage from '../profile/EditProfilePage.jsx'
+import { apiRequest, changePassword, changeUsername, clearStoredToken, getAppDocument, getStoredToken } from '../../api/api.js'
 import './SettingsPage.css'
 
 const accountSections = [
@@ -22,8 +23,8 @@ const appSections = [
   { id: 'feedback', label: 'Feedback' },
 ]
 
-function selectedSection() {
-  const slug = window.location.pathname.replace(/\/$/, '').split('/').pop()
+function selectedSection(pathname) {
+  const slug = pathname.replace(/\/$/, '').split('/').pop()
   return [...accountSections, ...appSections].some((section) => section.id === slug) ? slug : 'account'
 }
 
@@ -451,8 +452,9 @@ function DeleteAccount({ token, onConfirmOpenChange }) {
 
 function SettingsPage() {
   const token = getStoredToken()
-  const [active, setActive] = useState(selectedSection)
-  const [isSettingsHome, setIsSettingsHome] = useState(() => window.location.pathname.replace(/\/$/, '') === '/settings')
+  const { pathname } = useLocation()
+  const active = selectedSection(pathname)
+  const isSettingsHome = pathname.replace(/\/$/, '') === '/settings'
   const [logoutOpen, setLogoutOpen] = useState(false)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const title = useMemo(() => [...accountSections, ...appSections].find((section) => section.id === active)?.label || 'Account Information', [active])
@@ -461,15 +463,6 @@ function SettingsPage() {
     if (!token) window.location.replace('/login')
   }, [token])
 
-  useEffect(() => {
-    function syncSection() {
-      setActive(selectedSection())
-      setIsSettingsHome(window.location.pathname.replace(/\/$/, '') === '/settings')
-    }
-    window.addEventListener('popstate', syncSection)
-    return () => window.removeEventListener('popstate', syncSection)
-  }, [])
-
   function confirmLogOut() {
     clearStoredToken()
     window.location.replace('/login')
@@ -477,7 +470,7 @@ function SettingsPage() {
 
   function sectionLink(section) {
     if (section.id === 'github') return <a key={section.id} className="settings-nav-link" href="https://github.com/ammarbhat/mayomix" target="_blank" rel="noreferrer">{section.label}</a>
-    return <a key={section.id} className={`settings-nav-link${active === section.id ? ' is-active' : ''}`} href={`/settings/${section.id}`} aria-current={active === section.id ? 'page' : undefined} onClick={() => { setActive(section.id); setIsSettingsHome(false) }}>{section.label}</a>
+    return <Link key={section.id} className={`settings-nav-link${active === section.id ? ' is-active' : ''}`} to={`/settings/${section.id}`} aria-current={active === section.id ? 'page' : undefined}>{section.label}</Link>
   }
 
   if (!token) return null
@@ -485,7 +478,7 @@ function SettingsPage() {
     <AppHeader />
     <section className="settings-shell" aria-label="Settings">
       <aside className="settings-sidebar">
-        <h1><a className="settings-mobile-back" href="/profile" aria-label="Back to profile"><span aria-hidden="true" /></a><span>Settings</span></h1>
+        <h1><Link className="settings-mobile-back" to="/profile" aria-label="Back to profile"><span aria-hidden="true" /></Link><span>Settings</span></h1>
         <div className="settings-sidebar-content">
           <h2>Account</h2>
           <nav className="settings-nav-group" aria-label="Account settings">
@@ -500,7 +493,7 @@ function SettingsPage() {
       </aside>
       <section className="settings-main" aria-labelledby="settings-page-title">
         <header className="settings-main-heading">
-          <a className="settings-mobile-back settings-detail-back" href="/settings" aria-label="Back to settings" onClick={() => { setActive('account'); setIsSettingsHome(true) }}><span aria-hidden="true" /></a>
+          <Link className="settings-mobile-back settings-detail-back" to="/settings" aria-label="Back to settings"><span aria-hidden="true" /></Link>
           <h2 id="settings-page-title">{title}</h2>
         </header>
         <div className={`settings-content settings-content-${active}`}>

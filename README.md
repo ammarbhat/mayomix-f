@@ -85,8 +85,15 @@ There is no production API URL configured in this repository. For a deployed fro
 ## Project layout
 
 ```text
-src/          React pages, shared components, API helpers, and styles
-public/       Static images and service worker
-tests/        Node tests for API and MusicBrainz caching helpers
-vite.config.js Vite development/preview configuration and local proxies
+src/
+  app/                    App entry point, route setup, and query-client setup
+  api/                    Backend API client and metadata cache helpers
+  components/             Shared layout, feedback, rating, and review UI
+  data/                    Shared static options
+  pages/                   Route-level pages grouped by domain with local styles
+  styles/                  Global and tablet-wide styles
+  assets/                  Source-imported visual assets
+public/                   Static images and service worker
+tests/                    Node tests for API and MusicBrainz caching helpers
+vite.config.js            Vite development/preview configuration and proxies
 ```

@@ -1,4 +1,4 @@
-import { itemDetails } from './api.js'
+import { itemDetails } from '../../api/api.js'
 import './RatingVinyls.css'
 
 function RatingVinyls({ rating, item, size = 'medium', className = '' }) {

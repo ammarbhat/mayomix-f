@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import AppHeader from './AppHeader.jsx'
-import { apiRequest, clearStoredToken, getMyTasteList, getStoredToken, normalizeArtworkUrl, searchAlbums, searchArtists } from './api.js'
-import { GENRES } from './genreOptions.js'
+import AppHeader from '../../components/layout/AppHeader.jsx'
+import { apiRequest, clearStoredToken, getMyTasteList, getStoredToken, normalizeArtworkUrl, searchAlbums, searchArtists } from '../../api/api.js'
+import { GENRES } from '../../data/genreOptions.js'
 import './EditProfilePage.css'
 
 const blank = { name: '', username: '', bio: '', pfp_link: '' }

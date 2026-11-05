@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { acceptConnectionRequest, apiRequest, clearStoredToken, deleteConnection, getActivity, getAlbumDetails, getConnections, getPendingConnections, getSentConnections, getStoredToken, normalizeArtworkUrl } from './api.js'
-import AppHeader from './AppHeader.jsx'
-import RatingVinyls from './RatingVinyls.jsx'
-import MetadataBuffering from './MetadataBuffering.jsx'
+import { Link } from 'react-router'
+import { acceptConnectionRequest, apiRequest, clearStoredToken, deleteConnection, getActivity, getAlbumDetails, getConnections, getPendingConnections, getSentConnections, getStoredToken, normalizeArtworkUrl } from '../../api/api.js'
+import AppHeader from '../../components/layout/AppHeader.jsx'
+import RatingVinyls from '../../components/ratings/RatingVinyls.jsx'
+import MetadataBuffering from '../../components/feedback/MetadataBuffering.jsx'
 import './ActivityPage.css'
 
 function connectionPerson(connection, incoming) {
@@ -37,13 +38,13 @@ function ConnectionCard({ connection, incoming, section, onAccept, onDelete, bus
   const connectionId = connection.con_id ?? connection.connection_id ?? connection.id
   return (
     <article className="activity-connection-card">
-      <a className="activity-person" href={person.username.startsWith('user-') ? undefined : `/users/${encodeURIComponent(person.username)}`}>
+      <Link className="activity-person" to={person.username.startsWith('user-') ? '/' : `/users/${encodeURIComponent(person.username)}`} onClick={(event) => { if (person.username.startsWith('user-')) event.preventDefault() }}>
         <img src={person.image || '/images/profile-default.png'} alt="" onError={(event) => { event.currentTarget.src = '/images/profile-default.png' }} />
         <span className="activity-person-copy">
           <strong title={person.name}>{person.name}</strong>
           <span title={`@${person.username}`}>@{person.username}</span>
         </span>
-      </a>
+      </Link>
       <div className="activity-connection-actions">
         {incoming && <button type="button" aria-label={`Accept ${person.username}'s request`} disabled={busy || connectionId == null} onClick={() => onAccept(connectionId)}><img src="/images/connection-accept.png" alt="" /></button>}
         <button type="button" aria-label={`${section === 'requests' ? 'Decline' : section === 'sent' ? 'Cancel' : 'Disconnect'} ${person.username}${section === 'connected' ? '' : "'s request"}`} disabled={busy || connectionId == null} onClick={() => onDelete(connectionId, person, connection)}><img src="/images/connection-decline.png" alt="" /></button>
@@ -144,10 +145,10 @@ function ActivityReviewCard({ review, token }) {
   return (
     <article className="activity-entry" ref={cardRef}>
       <header className="activity-entry-header">
-        <a className="activity-author" href={username ? `/users/${encodeURIComponent(username)}` : undefined}>
+        <Link className="activity-author" to={username ? `/users/${encodeURIComponent(username)}` : '/'} onClick={(event) => { if (!username) event.preventDefault() }}>
           <img src={owner.pfp_link || owner.profile_image || authorProfile?.pfp_link || review.pfp_link || '/images/profile-default.png'} alt="" onError={(event) => { event.currentTarget.src = '/images/profile-default.png' }} />
           <span><strong>{name || authorProfile?.name || authorLabel}</strong>{username && <small>@{username}</small>}</span>
-        </a>
+        </Link>
         <time>{date}</time>
       </header>
       <article className="activity-review-card">
@@ -280,11 +281,12 @@ function ActivityPage() {
       <div className="activity-workspace">
         <section className={`activity-connections-panel${connectionsExpanded ? ' is-expanded' : ''}`} aria-label="Connections">
           <h1>Connections</h1>
-          <button className="activity-connections-toggle" type="button" aria-expanded={connectionsExpanded} onClick={() => setConnectionsExpanded((expanded) => !expanded)}>
+          <button className="activity-connections-toggle" type="button" aria-expanded={connectionsExpanded} aria-controls="mobile-connections-content" onClick={() => setConnectionsExpanded((expanded) => !expanded)}>
             <span>Connections</span>
-            {!connectionsExpanded && <><span className="activity-connections-count">({pending.length})</span><span className="activity-connections-chevron" aria-hidden="true" /></>}
+            {!connectionsExpanded && <span className="activity-connections-count">({pending.length})</span>}
+            <span className="activity-connections-chevron" aria-hidden="true" />
           </button>
-          <div className={`activity-connections-content${connectionsExpanded ? ' is-expanded' : ''}`}>
+          <div id="mobile-connections-content" className={`activity-connections-content${connectionsExpanded ? ' is-expanded' : ''}`}>
             <div className="connection-tabs" role="group" aria-label="Connection lists">
               {[['requests', 'Requests'], ['sent', 'Sent'], ['connected', 'Connected']].map(([tab, label]) => <button key={tab} id={`connection-tab-${tab}`} className={activeConnectionTab === tab ? 'is-active' : ''} type="button" aria-pressed={activeConnectionTab === tab} aria-controls="connection-tab-panel" onClick={() => setActiveConnectionTab(tab)}>{label}</button>)}
             </div>

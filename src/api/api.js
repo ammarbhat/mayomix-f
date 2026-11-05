@@ -1,7 +1,7 @@
-import { queryClient, clearPrivateQueriesExcept } from './queryClient.js'
-import { describeApiQuery, getTokenScope, queryKeys, QUERY_FRESHNESS } from './queryKeys.js'
+import { queryClient, clearPrivateQueriesExcept } from '../app/queryClient.js'
+import { describeApiQuery, getTokenScope, queryKeys, QUERY_FRESHNESS } from '../app/queryKeys.js'
 import { getMusicBrainzCacheItem, saveMusicBrainzCacheItem } from './musicBrainzCache.js'
-import { clearProfileSnapshot } from './profileSnapshotCache.js'
+import { clearProfileSnapshot } from '../pages/profile/profileSnapshotCache.js'
 
 const API_ROOT = (import.meta.env?.VITE_API_BASE_URL || (
   import.meta.env?.DEV ? '/api' : 'https://mayomix.onrender.com'

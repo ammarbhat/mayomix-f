@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import AppHeader from './AppHeader.jsx'
-import RatingVinyls from './RatingVinyls.jsx'
-import MetadataBuffering from './MetadataBuffering.jsx'
-import { addTasteItem, apiRequest, clearStoredToken, getMyTasteList, getStoredToken, getUserReviews, itemDetails, removeTasteItem, searchAlbums, searchSongs, updateTasteItem } from './api.js'
+import AppHeader from '../../components/layout/AppHeader.jsx'
+import RatingVinyls from '../../components/ratings/RatingVinyls.jsx'
+import MetadataBuffering from '../../components/feedback/MetadataBuffering.jsx'
+import { addTasteItem, apiRequest, clearStoredToken, getMyTasteList, getStoredToken, getUserReviews, itemDetails, removeTasteItem, searchAlbums, searchSongs, updateTasteItem } from '../../api/api.js'
 import './TastePage.css'
 
 const sections = [

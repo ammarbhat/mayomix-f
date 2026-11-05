@@ -6,7 +6,7 @@ import {
   MUSICBRAINZ_CACHE_TTL,
   readMusicBrainzCache,
   saveMusicBrainzCacheItem,
-} from '../src/musicBrainzCache.js'
+} from '../src/api/musicBrainzCache.js'
 
 function createStorage(initial = {}) {
   const values = new Map(Object.entries(initial))

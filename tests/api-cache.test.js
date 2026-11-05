@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict'
 import { afterEach, beforeEach, test } from 'node:test'
-import { apiRequest, clearStoredToken, getAlbumDetails, signIn } from '../src/api.js'
-import { queryClient } from '../src/queryClient.js'
-import { describeApiQuery, QUERY_FRESHNESS } from '../src/queryKeys.js'
+import { apiRequest, clearStoredToken, getAlbumDetails, signIn } from '../src/api/api.js'
+import { queryClient } from '../src/app/queryClient.js'
+import { describeApiQuery, QUERY_FRESHNESS } from '../src/app/queryKeys.js'
 
 const originalFetch = globalThis.fetch
 const originalDateNow = Date.now

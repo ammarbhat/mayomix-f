@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
-import AppHeader from './AppHeader.jsx'
-import { apiRequest, clearStoredToken, createAlbumReview, getAlbumDetails, getAlbumReviews, getStoredToken, getUserReviews, getAlbumTracklist, itemDetails } from './api.js'
-import RatingVinyls from './RatingVinyls.jsx'
-import MetadataBuffering from './MetadataBuffering.jsx'
-import ReviewActions from './ReviewActions.jsx'
+import { useParams } from 'react-router'
+import AppHeader from '../../components/layout/AppHeader.jsx'
+import { apiRequest, clearStoredToken, createAlbumReview, getAlbumDetails, getAlbumReviews, getStoredToken, getUserReviews, getAlbumTracklist, itemDetails } from '../../api/api.js'
+import RatingVinyls from '../../components/ratings/RatingVinyls.jsx'
+import MetadataBuffering from '../../components/feedback/MetadataBuffering.jsx'
+import ReviewActions from '../../components/reviews/ReviewActions.jsx'
 import './AlbumPage.css'
 
-function AlbumPage({ mbid }) {
+function AlbumPage() {
+  const { mbid } = useParams()
   const token = getStoredToken()
   const [album, setAlbum] = useState(null)
   const [reviews, setReviews] = useState([])

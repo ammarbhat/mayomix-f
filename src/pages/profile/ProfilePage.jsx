@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
-import { apiRequest, cacheProfileArtwork, clearStoredToken, getConnectionStatus, getStoredToken, getTasteList, itemDetails, normalizeArtworkUrl, normalizeUserResponse, sendConnectionRequest } from './api.js'
-import { getTokenScope } from './queryKeys.js'
+import { Link, useParams } from 'react-router'
+import { apiRequest, cacheProfileArtwork, clearStoredToken, getConnectionStatus, getStoredToken, getTasteList, itemDetails, normalizeArtworkUrl, normalizeUserResponse, sendConnectionRequest } from '../../api/api.js'
+import { getTokenScope } from '../../app/queryKeys.js'
 import { getProfileSnapshot, saveProfileSnapshot } from './profileSnapshotCache.js'
-import RatingVinyls from './RatingVinyls.jsx'
-import MetadataBuffering from './MetadataBuffering.jsx'
-import AppHeader from './AppHeader.jsx'
+import RatingVinyls from '../../components/ratings/RatingVinyls.jsx'
+import MetadataBuffering from '../../components/feedback/MetadataBuffering.jsx'
+import AppHeader from '../../components/layout/AppHeader.jsx'
 import './ProfilePage.css'
 
 const emptyProfile = { user: null, userId: null, topAlbums: [], songs: [], rotationAlbums: [], genres: [], artists: [] }
@@ -57,14 +58,14 @@ function MediaSection({ id, title, items, loading, type = 'artwork' }) {
               ? `${type === 'song' ? 'Song' : 'Album'} details unavailable`
               : item.title || (type === 'song' ? 'Unknown song' : 'Untitled')
           return (
-            <a className="media-card" key={item.mbid || `${item.title}-${index}`} href={type === 'top-album' && item.mbid ? `/albums/${encodeURIComponent(item.mbid)}` : undefined}>
+            <Link className="media-card" key={item.mbid || `${item.title}-${index}`} to={type === 'top-album' && item.mbid ? `/albums/${encodeURIComponent(item.mbid)}` : '/'} onClick={(event) => { if (type !== 'top-album' || !item.mbid) event.preventDefault() }}>
               <Artwork item={item} kind={type === 'song' ? 'song' : 'album'} />
               <div className="media-copy">
                 <h3 title={titleIsMbid ? undefined : displayTitle}>{displayTitle}</h3>
                 {type === 'song' && <p title={item.artist}>{item.artist || item.album || ''}</p>}
               </div>
               {(type === 'top-album' || type === 'rotation') ? <RatingVinyls item={entry} size="large" /> : null}
-            </a>
+            </Link>
           )
         })}
         <PlaceholderCards count={Math.max(0, 3 - items.length)} className={`${type}-placeholder`} />
@@ -73,7 +74,8 @@ function MediaSection({ id, title, items, loading, type = 'artwork' }) {
   )
 }
 
-function ProfilePage({ username: viewedUsername = '' }) {
+function ProfilePage() {
+  const { username: viewedUsername = '' } = useParams()
   const isPublicProfile = Boolean(viewedUsername)
   const token = getStoredToken()
   const profileCacheKey = isPublicProfile ? viewedUsername : getTokenScope(token)
@@ -232,7 +234,7 @@ function ProfilePage({ username: viewedUsername = '' }) {
                 <div className="identity-copy">
                   <h1>{loading && !user.name ? <span className="text-skeleton name-skeleton" aria-label="Loading profile" /> : user.name || 'Your profile'}</h1>
                   <p className="identity-handle">{loading && !user.username ? <span className="text-skeleton handle-skeleton" aria-label="Loading username" /> : `@${handle}`}</p>
-                  {!isPublicProfile && <div className="profile-edit-actions"><a href="/taste">Edit Display</a><a href="/settings">Settings</a></div>}
+                  {!isPublicProfile && <div className="profile-edit-actions"><Link to="/taste">Edit Display</Link><Link to="/settings">Settings</Link></div>}
                   {isPublicProfile && <div className="connection-area">
                     <ConnectionButton status={connectionStatus} loading={connectionBusy || loading} onClick={connect} />
                     {connectionError && <p className="connection-error" role="alert">{connectionError}</p>}
@@ -264,7 +266,7 @@ function ProfilePage({ username: viewedUsername = '' }) {
             </section>
           </aside>
 
-          <a className="public-reviews-link" href={`/users/${encodeURIComponent(user.username || viewedUsername || handle)}/reviews`}>Reviews</a>
+          <Link className="public-reviews-link" to={`/users/${encodeURIComponent(user.username || viewedUsername || handle)}/reviews`}>Reviews</Link>
 
           <div className="listening-panel">
             {(loading && !profile.user) ? <div className="profile-metadata-loading"><MetadataBuffering label="Loading profile music details" /></div> : <>
