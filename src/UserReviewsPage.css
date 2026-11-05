@@ -39,7 +39,7 @@
 }
 
 .user-reviews-heading h1 { margin: 0; color: #222; font-size: 30px; line-height: 1.25; font-weight: 500; }
-.user-reviews-grid { min-height: 0; flex: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; align-items: start; gap: 18px 24px; overflow-y: auto; overscroll-behavior: contain; }
+.user-reviews-grid { min-height: 0; flex: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; align-items: start; gap: 18px 24px; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; }
 .user-review-card { position: relative; min-width: 0; padding: 14px 17px 16px; border-radius: 17px; background: #d9d9d9; color: #212121; }
 .user-review-actions { position: absolute; z-index: 2; top: 8px; right: 11px; }
 .user-review-actions summary { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 50%; cursor: pointer; list-style: none; }
