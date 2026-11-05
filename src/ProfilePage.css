@@ -420,6 +420,7 @@
 @keyframes profile-art-spin { to { transform: rotate(360deg); } }
 
 @media (max-width: 780px) {
+  .profile-page { overflow-x: clip; }
   .profile-wrap { padding: 20px 14px 32px; }
   .listening-panel { margin-top: 22px; gap: 24px; }
   .public-profile-page .public-identity-panel { min-height: 0; }

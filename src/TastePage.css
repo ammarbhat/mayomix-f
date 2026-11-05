@@ -80,6 +80,7 @@
   .taste-result-art { width: 78px; height: 78px; flex-basis: 78px; }
 }
 @media (max-width: 820px) {
+  .taste-page { overflow-x: clip; }
   .taste-workspace { width: min(100% - 32px, 560px); min-height: auto; grid-template-columns: 1fr; gap: 0; padding: 10px 0 calc(92px + env(safe-area-inset-bottom)); }
   .taste-workspace > .taste-search-panel { display: none; }
   .taste-search-panel,.taste-editor-panel { min-height: auto; }
