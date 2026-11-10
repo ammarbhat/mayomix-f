@@ -240,96 +240,32 @@ export function itemDetails(entry) {
   }
 }
 
-const MUSICBRAINZ_ROOT = 'https://musicbrainz.org/ws/2'
-let musicBrainzQueue = Promise.resolve()
-let lastMusicBrainzRequest = 0
-
-function requestMusicBrainz(path) {
-  const request = musicBrainzQueue.then(async () => {
-    const wait = Math.max(0, 1100 - (Date.now() - lastMusicBrainzRequest))
-    if (wait) await new Promise((resolve) => setTimeout(resolve, wait))
-    lastMusicBrainzRequest = Date.now()
-    const response = await fetch(`${MUSICBRAINZ_ROOT}/${path}`, {
-      headers: { Accept: 'application/json' },
-    })
-    if (!response.ok) throw new Error(`MusicBrainz request failed (${response.status})`)
-    return response.json()
-  })
-  musicBrainzQueue = request.catch(() => {})
-  return request
-}
-
-function artistCreditName(credits = []) {
-  return credits.map((credit) => `${credit.name || credit.artist?.name || ''}${credit.joinphrase || ''}`).join('').trim()
-}
-
 function cachedItem(key) {
   return getMusicBrainzCacheItem(key)
 }
 
-function getMusicBrainzMetadata(kind, mbid) {
+function getMusicBrainzMetadata(kind, mbid, token) {
   return queryClient.fetchQuery({
     queryKey: ['musicbrainz', 'metadata', kind, mbid],
-    queryFn: () => kind === 'recording' ? lookupSong(mbid) : kind === 'artist' ? lookupArtist(mbid) : lookupAlbum(mbid),
+    queryFn: async () => {
+      if (kind === 'release-group') {
+        const payload = await apiRequest(`/albums/${encodeURIComponent(mbid)}`, { token })
+        return { ...itemDetails(payload), mbid }
+      }
+
+      const category = kind === 'recording' ? 'songs' : 'artists'
+      const query = new URLSearchParams({ query: mbid, limit: '1' })
+      const payload = await apiRequest(`/search/${category}?${query}`, { token })
+      const candidates = listFromPayload(payload).map((entry) => {
+        const item = itemDetails(entry)
+        return { ...item, mbid: item.mbid || item.id || item.recording?.id || item.artist?.id || '' }
+      })
+      const match = candidates.find((entry) => entry.mbid === mbid) || candidates[0]
+      if (!match) throw new Error(`No ${category} metadata found for ${mbid}`)
+      return match
+    },
     staleTime: QUERY_FRESHNESS.albumMetadata,
   })
-}
-
-async function lookupAlbum(mbid) {
-  try {
-    const releaseGroup = await requestMusicBrainz(`release-group/${encodeURIComponent(mbid)}?inc=artist-credits&fmt=json`)
-    return {
-      title: releaseGroup.title,
-      artist: artistCreditName(releaseGroup['artist-credit']),
-      image: `https://coverartarchive.org/release-group/${encodeURIComponent(mbid)}/front-250`,
-    }
-  } catch {
-    const release = await requestMusicBrainz(`release/${encodeURIComponent(mbid)}?inc=artist-credits&fmt=json`)
-    const releaseGroupId = release['release-group']?.id
-    return {
-      title: release.title,
-      artist: artistCreditName(release['artist-credit']),
-      image: releaseGroupId
-        ? `https://coverartarchive.org/release-group/${releaseGroupId}/front-250`
-        : `https://coverartarchive.org/release/${encodeURIComponent(mbid)}/front-250`,
-    }
-  }
-}
-
-async function lookupSong(mbid) {
-  const recording = await requestMusicBrainz(`recording/${encodeURIComponent(mbid)}?inc=artist-credits+releases&fmt=json`)
-  const release = recording.releases?.find((entry) => entry['release-group']?.id) || recording.releases?.[0]
-  const releaseGroupId = release?.['release-group']?.id
-  return {
-    title: recording.title,
-    artist: artistCreditName(recording['artist-credit']),
-    album: release?.title || '',
-    image: releaseGroupId
-      ? `https://coverartarchive.org/release-group/${releaseGroupId}/front-250`
-      : release?.id
-        ? `https://coverartarchive.org/release/${release.id}/front-250`
-        : '',
-  }
-}
-
-async function lookupArtist(mbid) {
-  const artist = await requestMusicBrainz(`artist/${encodeURIComponent(mbid)}?fmt=json`)
-  return { title: artist.name }
-}
-
-async function serviceMetadata(item, kind, token) {
-  if (!token) return null
-  try {
-    if (kind === 'release-group') {
-      return await apiRequest(`/albums/${encodeURIComponent(item.mbid)}`, { token })
-    }
-    const category = kind === 'recording' ? 'songs' : 'artists'
-    const payload = await apiRequest(`/search/${category}?${new URLSearchParams({ query: item.mbid, limit: '1' })}`, { token })
-    const candidates = listFromPayload(payload).map(itemDetails)
-    return candidates.find((candidate) => candidate.mbid === item.mbid) || candidates[0] || null
-  } catch {
-    return null
-  }
 }
 
 async function enrichMusicItem(item, kind, token) {
@@ -347,22 +283,7 @@ async function enrichMusicItem(item, kind, token) {
     metadataLoaded: true,
   }
   try {
-    const serviceResult = await serviceMetadata(item, kind, token)
-    const serviceItem = serviceResult ? itemDetails(serviceResult) : null
-    let metadata
-    if (serviceItem && (serviceItem.title !== item.mbid || serviceItem.image)) {
-      metadata = serviceItem
-      if (!serviceItem.image && kind !== 'artist') {
-        try {
-          const musicBrainzData = await getMusicBrainzMetadata(kind, item.mbid)
-          metadata = { ...musicBrainzData, ...serviceItem, image: serviceItem.image || musicBrainzData.image }
-        } catch {
-          // Keep the app API metadata and let the artwork placeholder show.
-        }
-      }
-    } else {
-      metadata = await getMusicBrainzMetadata(kind, item.mbid)
-    }
+    const metadata = await getMusicBrainzMetadata(kind, item.mbid, token)
     const enriched = { ...item, ...metadata, id: item.id, rank: item.rank, liked: item.liked, mbid: item.mbid, metadataLoading: false, metadataLoaded: true }
     saveMusicBrainzCacheItem(key, enriched)
     return enriched
@@ -549,20 +470,8 @@ export function getAlbumDetails(mbid, token) {
     queryKey: ['album', mbid, 'metadata'],
     staleTime: QUERY_FRESHNESS.albumMetadata,
     queryFn: async ({ signal }) => {
-      try {
-        const payload = await performApiRequest(`/albums/${encodeURIComponent(mbid)}`, token, { signal })
-        return itemDetails(payload)
-      } catch (error) {
-        if (signal.aborted || error.name === 'AbortError') throw error
-        // Keep the album view usable if the backend metadata route fails.
-        try {
-          const fallback = { ...await getMusicBrainzMetadata('release-group', mbid), mbid }
-          saveMusicBrainzCacheItem(`release-group:${mbid}`, fallback)
-          return fallback
-        } catch {
-          throw error
-        }
-      }
+      const payload = await performApiRequest(`/albums/${encodeURIComponent(mbid)}`, token, { signal })
+      return { ...itemDetails(payload), mbid }
     },
   })
 }
@@ -591,14 +500,11 @@ export async function getAlbumTracklist(mbid, album) {
     staleTime: QUERY_FRESHNESS.albumMetadata,
     queryFn: async () => {
       const releases = album?.releases || album?.meta?.releases || []
-      let releaseId = releases.find((release) => release.id)?.id
-      if (!releaseId) {
-        const group = await requestMusicBrainz(`release-group/${encodeURIComponent(mbid)}?inc=releases&fmt=json`)
-        releaseId = group.releases?.find((release) => release.id)?.id
-      }
+      const releaseId = releases.find((release) => release.id)?.id
       if (!releaseId) return []
-      const release = await requestMusicBrainz(`release/${encodeURIComponent(releaseId)}?inc=recordings&fmt=json`)
-      return (release.media || []).flatMap((medium) => medium.tracks || [])
+
+      const payload = await apiRequest(`/albums/${encodeURIComponent(releaseId)}/tracklist`)
+      return Array.isArray(payload) ? payload : []
     },
   })
 }

@@ -28,6 +28,7 @@ function AlbumPage() {
   useEffect(() => {
     if (!token) { window.location.replace('/login'); return undefined }
     let cancelled = false
+    let tracklistPending = false
     async function load() {
       setLoading(true)
       setTracklistLoading(true)
@@ -47,6 +48,15 @@ function AlbumPage() {
         if (cancelled) return
         setAlbum(details)
         setLoading(false)
+        tracklistPending = true
+        getAlbumTracklist(mbid, details)
+          .catch(() => [])
+          .then((tracklist) => {
+            if (!cancelled) setAlbum((current) => ({ ...current, tracks: tracklist }))
+          })
+          .finally(() => {
+            if (!cancelled) setTracklistLoading(false)
+          })
         if (reviewsResult.status === 'fulfilled') {
           setReviews(reviewsResult.value)
           setReviewsError('')
@@ -80,10 +90,6 @@ function AlbumPage() {
         } else {
           setReviewCheck('error')
         }
-        const tracklist = await getAlbumTracklist(mbid, details).catch(() => [])
-        if (cancelled) return
-        setAlbum((current) => ({ ...current, tracks: tracklist }))
-        setTracklistLoading(false)
       } catch (requestError) {
         if (!cancelled) {
           if (/401|unauthorized|unauthenticated|not authenticated|credentials/i.test(requestError.message)) {
@@ -91,7 +97,12 @@ function AlbumPage() {
             window.location.replace('/login')
           } else setError(requestError.message || 'Could not load this album.')
         }
-      } finally { if (!cancelled) { setLoading(false); setTracklistLoading(false) } }
+      } finally {
+        if (!cancelled) {
+          setLoading(false)
+          if (!tracklistPending) setTracklistLoading(false)
+        }
+      }
     }
     load()
     return () => { cancelled = true }
