@@ -465,10 +465,10 @@ export async function sendConnectionRequest(token, userId, username) {
   })
 }
 
-export function getAlbumDetails(mbid, token) {
+export function getAlbumDetails(mbid, token, { forceRefresh = false } = {}) {
   return queryClient.fetchQuery({
     queryKey: ['album', mbid, 'metadata'],
-    staleTime: QUERY_FRESHNESS.albumMetadata,
+    staleTime: forceRefresh ? 0 : QUERY_FRESHNESS.albumMetadata,
     queryFn: async ({ signal }) => {
       const payload = await performApiRequest(`/albums/${encodeURIComponent(mbid)}`, token, { signal })
       return { ...itemDetails(payload), mbid }

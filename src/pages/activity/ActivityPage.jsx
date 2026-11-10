@@ -96,18 +96,19 @@ function getAlbumTitle(mbid, ...values) {
 }
 
 function ActivityReviewCard({ review, token }) {
-  const cardRef = useRef(null)
-  const [album, setAlbum] = useState(review.album || review.album_info || null)
-  const [albumLookupComplete, setAlbumLookupComplete] = useState(Boolean(review.metadataLookupComplete))
+  const initialAlbum = review.album || review.album_info || review.metadata || null
+  const mbid = review.album_mbid || review.mbid || initialAlbum?.mbid || initialAlbum?.id || ''
+  const hasInitialTitle = Boolean(getAlbumTitle(mbid, initialAlbum?.title, review.album_title, review.title))
+  const [album, setAlbum] = useState(initialAlbum)
+  const [albumTitleLookup, setAlbumTitleLookup] = useState(hasInitialTitle ? 'complete' : mbid ? 'loading' : 'failed')
   const owner = review.user || review.reviewer || review.owner || review.author || {}
-  const mbid = review.album_mbid || review.mbid || album?.mbid || album?.id || ''
   const username = review.username || review.owner_username || review.reviewer_username || review.user_username || owner.username || review.handle || ''
   const name = review.display_name || review.reviewer_name || review.user_name || owner.name || owner.display_name || review.name || ''
   const authorLabel = name || (username ? `@${username}` : 'MayoMix listener')
   const [authorProfile, setAuthorProfile] = useState(null)
   const date = formatActivityDate(review.create_date || review.created_at || review.review_date || review.date)
   const titleValue = getAlbumTitle(mbid, album?.title, review.album_title, review.title)
-  const title = titleValue || 'Album review'
+  const title = titleValue || (albumTitleLookup === 'loading' ? 'Loading album title…' : 'Album title')
   const artist = album?.artist || review.artist || review.artist_name || ''
   const image = normalizeArtworkUrl(album?.image || album?.cover_url || review.cover_url || (mbid ? `https://coverartarchive.org/release-group/${encodeURIComponent(mbid)}/front-250` : ''))
   const text = review.review_str || review.review_text || review.text || review.review || ''
@@ -122,28 +123,35 @@ function ActivityReviewCard({ review, token }) {
   }, [name, owner.pfp_link, username])
 
   useEffect(() => {
-    if (!mbid || review.metadataLookupComplete || albumLookupComplete || (titleValue && artist)) return undefined
+    if (!mbid || hasInitialTitle) return undefined
     let cancelled = false
-    const load = () => getAlbumDetails(mbid, token).then((details) => {
-      if (!cancelled && (details.title || details.artist)) setAlbum(details)
-    }).catch(() => {}).finally(() => { if (!cancelled) setAlbumLookupComplete(true) })
-    const node = cardRef.current
-    if (!node || !('IntersectionObserver' in window)) {
-      load()
-      return () => { cancelled = true }
-    }
-    const observer = new IntersectionObserver((entries) => {
-      if (entries.some((entry) => entry.isIntersecting)) {
-        observer.disconnect()
-        load()
+    async function loadTitle() {
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        if (cancelled) return
+        try {
+          const details = await getAlbumDetails(mbid, token, { forceRefresh: true })
+          const resolvedTitle = getAlbumTitle(mbid, details.title, details.name)
+          if (cancelled) return
+          if (details && (details.title || details.artist || details.image)) {
+            setAlbum((current) => ({ ...current, ...details }))
+          }
+          if (resolvedTitle) {
+            setAlbumTitleLookup('complete')
+            return
+          }
+        } catch {
+          if (cancelled) return
+        }
+        if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)))
       }
-    }, { rootMargin: '160px' })
-    observer.observe(node)
-    return () => { cancelled = true; observer.disconnect() }
-  }, [album?.artist, album?.title, albumLookupComplete, artist, mbid, review.artist, review.artist_name, review.metadataLookupComplete, titleValue, token])
+      if (!cancelled) setAlbumTitleLookup('failed')
+    }
+    loadTitle()
+    return () => { cancelled = true }
+  }, [hasInitialTitle, mbid, token])
 
   return (
-    <article className="activity-entry" ref={cardRef}>
+    <article className="activity-entry">
       <header className="activity-entry-header">
         <Link className="activity-author" to={username ? `/users/${encodeURIComponent(username)}` : '/'} onClick={(event) => { if (!username) event.preventDefault() }}>
           <img src={owner.pfp_link || owner.profile_image || authorProfile?.pfp_link || review.pfp_link || '/images/profile-default.png'} alt="" onError={(event) => { event.currentTarget.src = '/images/profile-default.png' }} />
@@ -151,13 +159,17 @@ function ActivityReviewCard({ review, token }) {
         </Link>
         <time>{date}</time>
       </header>
-      <article className="activity-review-card">
+      <article className="activity-review-card" aria-busy={albumTitleLookup === 'loading'}>
         <div className="activity-album-top">
           <div className="activity-album-art">
             {image && <img src={image} alt={`${title} cover`} loading="lazy" onError={(event) => event.currentTarget.remove()} />}
           </div>
           <div className="activity-album-meta">
-            <h3 title={title}>{title}</h3>
+            <h3 title={title}>
+              {albumTitleLookup === 'loading'
+                ? <span className="activity-title-loading"><span>Loading album title…</span><MetadataBuffering label="Loading album title" /></span>
+                : title}
+            </h3>
             {artist && <p title={artist}>{artist}</p>}
             <RatingVinyls className="activity-rating" rating={review.rating} />
           </div>
@@ -177,8 +189,6 @@ function ActivityPage() {
   const [activeConnectionTab, setActiveConnectionTab] = useState('requests')
   const [connectionsExpanded, setConnectionsExpanded] = useState(true)
   const [activity, setActivity] = useState([])
-  const [resolvedActivity, setResolvedActivity] = useState([])
-  const [activityMetadataLoading, setActivityMetadataLoading] = useState(false)
   const [pendingError, setPendingError] = useState('')
   const [sentError, setSentError] = useState('')
   const [connectionsError, setConnectionsError] = useState('')
@@ -212,24 +222,7 @@ function ActivityPage() {
         if (connectionsResult.status === 'fulfilled') setConnections(connectionsResult.value)
         else setConnectionsError(connectionsResult.reason?.message || 'Connections could not be loaded.')
         if (feedResult.status === 'fulfilled') {
-          const reviews = feedResult.value
-          setActivity(reviews)
-          setActivityMetadataLoading(reviews.length > 0)
-          Promise.all(reviews.map(async (review) => {
-            const album = review.album || review.album_info || {}
-            const mbid = review.album_mbid || review.mbid || album.mbid || album.id || ''
-            const title = getAlbumTitle(mbid, album.title, review.album_title, review.title)
-            const artist = album.artist || review.artist || review.artist_name
-            if (!mbid || (title && artist)) return { ...review, metadataLookupComplete: true }
-            try {
-              const details = await getAlbumDetails(mbid, token)
-              const resolvedTitle = getAlbumTitle(mbid, details.title, details.name)
-              return { ...review, album: { ...album, ...details }, metadataLookupComplete: Boolean(resolvedTitle) }
-            } catch {
-              return { ...review, metadataLookupComplete: false }
-            }
-          })).then((enriched) => { if (!cancelled) setResolvedActivity(enriched) })
-            .finally(() => { if (!cancelled) setActivityMetadataLoading(false) })
+          setActivity(feedResult.value)
         } else setError(feedResult.reason?.message || 'Activity could not be loaded.')
       })
       .finally(() => { if (!cancelled) setLoading(false) })
@@ -319,10 +312,10 @@ function ActivityPage() {
         <section className="activity-feed-panel" aria-label="Activity" aria-busy={loading}>
           <h1><button className="activity-tab" type="button" onClick={returnToActivityTop}>Activity</button></h1>
           <div className="activity-feed">
-            {(loading || activityMetadataLoading) && <div className="activity-metadata-loading"><MetadataBuffering label="Loading activity details" /></div>}
+            {loading && <div className="activity-metadata-loading"><MetadataBuffering label="Loading activity" /></div>}
             {error && !loading && <p className="activity-empty is-error" role="alert">{error}</p>}
-            {!loading && !activityMetadataLoading && !error && activity.length === 0 && <p className="activity-empty">Your connections’ reviews will appear here.</p>}
-            {!loading && !activityMetadataLoading && resolvedActivity.map((review, index) => <ActivityReviewCard key={review.id || review.review_id || `${review.mbid}-${index}`} review={review} token={token} />)}
+            {!loading && !error && activity.length === 0 && <p className="activity-empty">Your connections’ reviews will appear here.</p>}
+            {!loading && !error && activity.map((review, index) => <ActivityReviewCard key={review.id || review.review_id || `${review.mbid}-${index}`} review={review} token={token} />)}
           </div>
         </section>
       </div>
