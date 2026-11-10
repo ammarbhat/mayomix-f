@@ -178,13 +178,14 @@
   .search-tabs button { font-size: 13px; }
   .search-tabs button.is-active::after { bottom: 4px; }
   .search-results { width: 100%; gap: 5px; padding: 0 0 10px; }
+  .user-search-results { display: flex; flex-direction: column; }
   .search-result-card { min-height: 71px; height: 71px; gap: 10px; padding: 6px; border-radius: 12px; }
   .search-result-card .search-artwork,
   .user-artwork { width: 58px; height: 58px; flex-basis: 58px; border-radius: 8px; }
   .search-result-copy h3 { font-size: 14px; }
   .search-result-copy p,
   .album-year { margin-top: 2px; font-size: 11px; }
-  .user-result-card { height: 76px; min-height: 76px; padding: 7px 10px; }
+  .user-result-card { height: 76px; min-height: 76px; flex: 0 0 76px; padding: 7px 10px; }
   .user-result-card .user-artwork { border-radius: 50%; }
   .user-result-card .search-result-copy h3 { font-size: 16px; }
   .user-result-card .search-result-copy p { font-size: 12px; }

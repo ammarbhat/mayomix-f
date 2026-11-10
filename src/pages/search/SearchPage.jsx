@@ -321,7 +321,7 @@ function SearchPage() {
               <button type="button" role="tab" aria-selected={activeSearchTab === 'albums'} className={activeSearchTab === 'albums' ? 'is-active' : ''} onClick={() => selectSearchTab('albums')}>Albums</button>
               <button type="button" role="tab" aria-selected={activeSearchTab === 'users'} className={activeSearchTab === 'users' ? 'is-active' : ''} onClick={() => selectSearchTab('users')}>Users</button>
             </div>
-            <div className="search-results" role="tabpanel">
+            <div className={`search-results${activeSearchTab === 'users' ? ' user-search-results' : ''}`} role="tabpanel">
               {!submittedQuery && <p className="search-hint">Search for albums or people</p>}
               {searchLoading && <p className="search-message" role="status">Searching…</p>}
               {searchError && !searchLoading && <p className="search-message is-error" role="alert">{searchError}</p>}
