@@ -8,8 +8,10 @@ import '../styles/tablet.css'
 import { queryClient } from './queryClient.js'
 import { API_ROOT } from '../api/api.js'
 
-// This is here because, when it was added, the app was hosted on a free service that needs about 50 seconds to start the backend after a period of inactivity.
-void fetch(`${API_ROOT}/health`).catch(() => {})
+// Wake the backend on every page load; the free host can take about 50 seconds to start.
+void fetch(`${API_ROOT}/health`, { cache: 'no-store' }).catch((error) => {
+  console.error('Unable to reach the API health endpoint.', error)
+})
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/service-worker.js').catch((error) => {
