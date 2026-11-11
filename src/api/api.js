@@ -516,7 +516,12 @@ export async function getAlbumTracklist(mbid, album) {
       if (!releaseId) return []
 
       const payload = await apiRequest(`/albums/${encodeURIComponent(releaseId)}/tracklist`)
-      return Array.isArray(payload) ? payload : []
+      if (Array.isArray(payload)) return payload
+      if (!Array.isArray(payload?.media)) return []
+
+      return payload.media.flatMap((medium) => (
+        Array.isArray(medium.tracks) ? medium.tracks : []
+      ))
     },
   })
 }
