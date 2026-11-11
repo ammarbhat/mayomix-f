@@ -469,7 +469,8 @@ export function getAlbumDetails(mbid, token, { forceRefresh = false } = {}) {
   const cacheKey = `release-group:${mbid}`
   const cached = forceRefresh ? null : getMusicBrainzCacheItem(cacheKey)
   const cachedTitle = typeof cached?.title === 'string' ? cached.title.trim() : ''
-  if (cachedTitle && cachedTitle !== mbid && !/^album\s+review$/i.test(cachedTitle)) {
+  const cachedHasReleaseList = Array.isArray(cached?.releases) || Array.isArray(cached?.meta?.releases)
+  if (cachedTitle && cachedTitle !== mbid && !/^album\s+review$/i.test(cachedTitle) && cachedHasReleaseList) {
     return Promise.resolve({ ...itemDetails(cached), mbid })
   }
 
@@ -508,14 +509,14 @@ export async function cacheProfileArtwork(username, imageUrls) {
 
 export async function getAlbumTracklist(mbid, album) {
   return queryClient.fetchQuery({
-    queryKey: ['album', mbid, 'tracklist'],
+    queryKey: ['album', mbid, 'tracklist-v2'],
     staleTime: QUERY_FRESHNESS.albumMetadata,
     queryFn: async () => {
       const releases = album?.releases || album?.meta?.releases || []
       const releaseId = releases.find((release) => release.id)?.id
       if (!releaseId) return []
 
-      const payload = await apiRequest(`/albums/${encodeURIComponent(releaseId)}/tracklist`)
+      const payload = await apiRequest(`/albums/${encodeURIComponent(releaseId)}/tracklist`, { cache: false })
       if (Array.isArray(payload)) return payload
       if (!Array.isArray(payload?.media)) return []
 
