@@ -101,6 +101,7 @@ function ActivityReviewCard({ review, token }) {
   const hasInitialTitle = Boolean(getAlbumTitle(mbid, initialAlbum?.title, review.album_title, review.title))
   const [album, setAlbum] = useState(initialAlbum)
   const [albumTitleLookup, setAlbumTitleLookup] = useState(hasInitialTitle ? 'complete' : mbid ? 'loading' : 'failed')
+  const albumTitleLoading = albumTitleLookup === 'loading'
   const owner = review.user || review.reviewer || review.owner || review.author || {}
   const username = review.username || review.owner_username || review.reviewer_username || review.user_username || owner.username || review.handle || ''
   const name = review.display_name || review.reviewer_name || review.user_name || owner.name || owner.display_name || review.name || ''
@@ -108,7 +109,7 @@ function ActivityReviewCard({ review, token }) {
   const [authorProfile, setAuthorProfile] = useState(null)
   const date = formatActivityDate(review.create_date || review.created_at || review.review_date || review.date)
   const titleValue = getAlbumTitle(mbid, album?.title, review.album_title, review.title)
-  const title = titleValue || (albumTitleLookup === 'loading' ? 'Loading album title…' : 'Album title')
+  const title = titleValue || (albumTitleLoading ? '' : 'Album title')
   const artist = album?.artist || review.artist || review.artist_name || ''
   const image = normalizeArtworkUrl(album?.image || album?.cover_url || review.cover_url || (mbid ? `https://coverartarchive.org/release-group/${encodeURIComponent(mbid)}/front-250` : ''))
   const text = review.review_str || review.review_text || review.text || review.review || ''
@@ -129,7 +130,7 @@ function ActivityReviewCard({ review, token }) {
       for (let attempt = 0; attempt < 3; attempt += 1) {
         if (cancelled) return
         try {
-          const details = await getAlbumDetails(mbid, token, { forceRefresh: true })
+          const details = await getAlbumDetails(mbid, token)
           const resolvedTitle = getAlbumTitle(mbid, details.title, details.name)
           if (cancelled) return
           if (details && (details.title || details.artist || details.image)) {
@@ -159,23 +160,20 @@ function ActivityReviewCard({ review, token }) {
         </Link>
         <time>{date}</time>
       </header>
-      <article className="activity-review-card" aria-busy={albumTitleLookup === 'loading'}>
+      <article className={`activity-review-card${albumTitleLoading ? ' is-buffering' : ''}`} aria-busy={albumTitleLoading}>
         <div className="activity-album-top">
           <div className="activity-album-art">
-            {image && <img src={image} alt={`${title} cover`} loading="lazy" onError={(event) => event.currentTarget.remove()} />}
+            {image && <img src={image} alt={`${title || 'Album'} cover`} loading="lazy" onError={(event) => event.currentTarget.remove()} />}
           </div>
           <div className="activity-album-meta">
-            <h3 title={title}>
-              {albumTitleLookup === 'loading'
-                ? <span className="activity-title-loading"><span>Loading album title…</span><MetadataBuffering label="Loading album title" /></span>
-                : title}
-            </h3>
+            <h3 title={title || undefined}>{title}</h3>
             {artist && <p title={artist}>{artist}</p>}
             <RatingVinyls className="activity-rating" rating={review.rating} />
           </div>
         </div>
         <div className="activity-review-divider" />
         <p className="activity-review-text">{text}</p>
+        {albumTitleLoading && <div className="activity-review-buffering"><MetadataBuffering label="Loading album details" /></div>}
       </article>
     </article>
   )

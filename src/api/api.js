@@ -466,12 +466,24 @@ export async function sendConnectionRequest(token, userId, username) {
 }
 
 export function getAlbumDetails(mbid, token, { forceRefresh = false } = {}) {
+  const cacheKey = `release-group:${mbid}`
+  const cached = forceRefresh ? null : getMusicBrainzCacheItem(cacheKey)
+  const cachedTitle = typeof cached?.title === 'string' ? cached.title.trim() : ''
+  if (cachedTitle && cachedTitle !== mbid && !/^album\s+review$/i.test(cachedTitle)) {
+    return Promise.resolve({ ...itemDetails(cached), mbid })
+  }
+
   return queryClient.fetchQuery({
     queryKey: ['album', mbid, 'metadata'],
     staleTime: forceRefresh ? 0 : QUERY_FRESHNESS.albumMetadata,
     queryFn: async ({ signal }) => {
       const payload = await performApiRequest(`/albums/${encodeURIComponent(mbid)}`, token, { signal })
-      return { ...itemDetails(payload), mbid }
+      const details = { ...itemDetails(payload), mbid }
+      const title = typeof details.title === 'string' ? details.title.trim() : ''
+      if (title && title !== mbid && !/^album\s+review$/i.test(title)) {
+        saveMusicBrainzCacheItem(cacheKey, details)
+      }
+      return details
     },
   })
 }
