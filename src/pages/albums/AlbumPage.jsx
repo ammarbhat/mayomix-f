@@ -143,8 +143,14 @@ function AlbumPage() {
 
   const details = itemDetails(album || {})
   const title = details.title && details.title !== mbid ? details.title : 'Album'
-  const artistCredits = album?.['artist-credit'] || []
-  const artist = details.artist || (Array.isArray(artistCredits) ? artistCredits.map((credit) => `${credit.name || credit.artist?.name || ''}${credit.joinphrase || ''}`).join('').trim() : '')
+  const artistCredits = album?.['artist-credit'] || album?.artist_credit || album?.meta?.['artist-credit'] || album?.meta?.artist_credit || details['artist-credit'] || details.artist_credit || []
+  const creditedArtist = Array.isArray(artistCredits)
+    ? artistCredits.map((credit) => {
+        if (typeof credit === 'string') return credit
+        return `${credit?.name || credit?.artist?.name || ''}${credit?.joinphrase || ''}`
+      }).join('').trim()
+    : ''
+  const artist = (typeof details.artist === 'string' ? details.artist : details.artist?.name) || creditedArtist
   const year = album?.['first-release-date']?.slice(0, 4) || album?.year || ''
   const genre = album?.genres?.[0]?.name || 'Pop'
   const tracks = album?.tracks || album?.tracklist || album?.media?.flatMap((medium) => medium.tracks || []) || []
