@@ -516,7 +516,7 @@ function TastePage() {
     return Boolean(details.metadataLoading || (details.mbid && details.title === details.mbid && !details.metadataLoaded))
   })
   return <main className="taste-page">
-    <AppHeader />
+    <AppHeader mobileTitle="Display" mobileBackTo="/profile" hideMobileNavigation />
     <div className="taste-workspace" aria-busy={loading}>
       <SearchPanel token={token} draft={draft} ratings={ratings} onAdd={addItem} />
       <section className="taste-editor-panel" aria-label="Current taste">

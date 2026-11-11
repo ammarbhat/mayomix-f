@@ -63,12 +63,12 @@
 .taste-clear-button:disabled,.taste-save-button:disabled { color: #737373; cursor: not-allowed; opacity: .62; }
 .taste-inline-error,.taste-success { margin: 0; font-size: 13px; line-height: 1.4; }
 .taste-success { color: #356641; text-align: center; }
-.taste-dialog { width: min(440px, calc(100vw - 36px)); padding: 24px; border: 1px solid #bbb; border-radius: 16px; background: #f4f4f4; color: #222; box-shadow: 0 16px 54px #0005; }
+.taste-dialog { width: min(380px, calc(100vw - 48px)); padding: 20px; border: 1px solid #bbb; border-radius: 14px; background: #f4f4f4; color: #222; box-shadow: 0 16px 54px #0005; }
 .taste-dialog::backdrop { background: #0008; }
-.taste-dialog h2 { margin: 0; font-size: 20px; font-weight: 600; }
-.taste-dialog p { margin: 10px 0 22px; color: #585858; font-size: 14px; line-height: 1.5; }
-.taste-dialog-actions { display: flex; justify-content: flex-end; gap: 9px; }
-.taste-dialog-actions button { min-height: 40px; padding: 8px 14px; border: 1px solid #999; border-radius: 999px; background: #eee; color: #222; cursor: pointer; }
+.taste-dialog h2 { margin: 0; font-size: 18px; font-weight: 600; }
+.taste-dialog p { margin: 8px 0 16px; color: #585858; font-size: 13px; line-height: 1.45; }
+.taste-dialog-actions { display: flex; justify-content: flex-end; gap: 7px; }
+.taste-dialog-actions button { min-height: 36px; padding: 6px 12px; border: 1px solid #999; border-radius: 999px; background: #eee; color: #222; cursor: pointer; }
 .taste-dialog-actions button.is-danger { border-color: #db8788; background: #ed9a9b; color: #fff; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; clip-path: inset(50%); }
 .taste-page button:focus-visible,.taste-page input:focus-visible { outline: 2px solid #151515; outline-offset: 3px; }
@@ -117,6 +117,9 @@
   .taste-inline-search .taste-result-copy p { font-size: 10px; }
   .taste-inline-search .taste-add-wrap { flex-basis: 40px; }
   .taste-inline-search .taste-add-button { width: 36px; height: 36px; border: 1px solid #111; font-size: 28px; }
+}
+@media (max-width: 760px) {
+  .taste-workspace { padding-top: 10px; }
 }
 @media (max-width: 400px) {
   .taste-workspace { width: calc(100% - 20px); }

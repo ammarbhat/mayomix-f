@@ -30,10 +30,10 @@
 .review-actions-dialog-buttons button:disabled { opacity: .6; cursor: wait; }
 .review-actions-cancel { border: 1px solid #aaa; background: #ddd; color: #8b4247; box-shadow: 0 2px 4px #0002; }
 .review-actions-post { border: 0; background: #a5a5a5; color: #171717; }
-.review-actions-dialog.is-confirm { width: min(520px, calc(100vw - 28px)); border-radius: 17px; }
-.review-actions-confirm { padding: 35px 34px 24px; }
-.review-actions-confirm > p:first-child { margin: 0 0 22px; color: #606060; text-align: center; font-size: 19px; }
-.review-actions-dialog-buttons .review-actions-yes, .review-actions-dialog-buttons .review-actions-no { width: 50%; min-height: 66px; font-size: 28px; }
+.review-actions-dialog.is-confirm { width: min(420px, calc(100vw - 40px)); border-radius: 15px; }
+.review-actions-confirm { padding: 28px 26px 20px; }
+.review-actions-confirm > p:first-child { margin: 0 0 18px; color: #606060; text-align: center; font-size: 17px; }
+.review-actions-dialog-buttons .review-actions-yes, .review-actions-dialog-buttons .review-actions-no { width: 50%; min-height: 54px; font-size: 22px; }
 .review-actions-dialog-buttons .review-actions-yes { border: 1px solid #aaa; background: #ddd; color: #9d4d53; box-shadow: 0 2px 4px #0002; }
 .review-actions-dialog-buttons .review-actions-no { border: 0; background: #a5a5a5; color: #111; }
 .review-actions-error { margin: 14px 0 0; color: #a52828; font-size: 14px; }
@@ -49,7 +49,8 @@
   .review-actions-vinyl { width: 38px; height: 38px; }
   .review-actions-dialog-buttons { width: 100%; }
   .review-actions-dialog-buttons button { min-width: 0; min-height: 46px; flex: 1; padding: 8px 10px; font-size: 15px; }
-  .review-actions-confirm { padding: 28px 18px 18px; }
-  .review-actions-confirm > p:first-child { font-size: 16px; }
-  .review-actions-dialog-buttons .review-actions-yes, .review-actions-dialog-buttons .review-actions-no { min-height: 54px; font-size: 21px; }
+  .review-actions-dialog.is-confirm { width: calc(100vw - 36px); }
+  .review-actions-confirm { padding: 22px 14px 14px; }
+  .review-actions-confirm > p:first-child { font-size: 15px; }
+  .review-actions-dialog-buttons .review-actions-yes, .review-actions-dialog-buttons .review-actions-no { min-height: 44px; font-size: 18px; }
 }

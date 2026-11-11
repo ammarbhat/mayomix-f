@@ -1,3 +1,9 @@
+html:has(.profile-page) {
+  scrollbar-width: none;
+}
+
+html:has(.profile-page)::-webkit-scrollbar { display: none; }
+
 .profile-page {
   --profile-gutter: clamp(16px, 4vw, 56px);
   min-height: 100vh;
