@@ -149,13 +149,11 @@
 @media (max-width: 760px) {
   .settings-mobile-back { display: none; }
   .settings-page.is-mobile-settings-home,
-  .settings-page.is-mobile-settings-detail { min-height: 100dvh; padding-bottom: 0; background: #151515; }
+  .settings-page.is-mobile-settings-detail { min-height: 100dvh; padding-bottom: calc(82px + env(safe-area-inset-bottom)); background: #151515; }
   .settings-page.is-mobile-settings-home .settings-shell,
   .settings-page.is-mobile-settings-detail .settings-shell { min-height: 100dvh; background: #151515; }
   .settings-page.is-mobile-settings-home .app-header,
-  .settings-page.is-mobile-settings-home .mobile-bottom-nav,
-  .settings-page.is-mobile-settings-detail .app-header,
-  .settings-page.is-mobile-settings-detail .mobile-bottom-nav { display: none; }
+  .settings-page.is-mobile-settings-detail .app-header { display: none; }
   .settings-page.is-mobile-settings-home .settings-main { display: none; }
   .settings-page.is-mobile-settings-detail .settings-sidebar { display: none; }
   .settings-page.is-mobile-settings-home .settings-sidebar { border: 0; }

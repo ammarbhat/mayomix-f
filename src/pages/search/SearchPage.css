@@ -146,6 +146,7 @@
 @media (max-width: 760px) {
   .search-page { position: relative; background: #606060; }
   .search-workspace { position: relative; z-index: 1; width: 100%; padding: 20px 9px var(--search-mobile-nav-space); }
+  .search-workspace.is-expanded { padding-bottom: 0; }
   .search-workspace:not(.is-expanded)::before { position: fixed; z-index: -1; top: 0; right: 0; left: 0; height: 119px; background: #292929; content: ''; }
   .main-search-form { width: 100%; height: 41px; margin: 0 0 8px; border-radius: 10px; }
   .main-search-form input { padding: 0 45px; text-align: center; font-size: 16px; }
@@ -171,20 +172,20 @@
   .album-review-card .review-divider { grid-column: 1 / -1; grid-row: 2; margin: 0; }
   .album-review-card .review-text { grid-column: 1 / -1; grid-row: 3; align-self: start; margin: 0 4px; font-size: 12px; line-height: 1.25; }
   .album-review-card .review-rating { grid-column: 1 / -1; grid-row: 4; margin: 0 3px; --rating-vinyl-size: 21px; --rating-vinyl-gap: 3px; }
-  .expanded-search-panel { margin: 0 -9px; padding: 0 15px var(--search-mobile-nav-space); border-radius: 10px 10px 0 0; background: #dedede; }
+  .expanded-search-panel { flex: 1 1 0; margin: 0 -9px; padding: 0 12px 10px; border-radius: 10px 10px 0 0; background: #dedede; }
   .is-expanded .main-search-form { height: 39px; margin-bottom: 8px; border-radius: 10px; }
   .is-expanded .main-search-form input { text-align: left; }
-  .search-tabs { min-height: 35px; margin: -8px 0 15px; padding: 0; border-radius: 9px; background: #7d7d7d; }
+  .search-tabs { min-height: 44px; margin: -8px 0 12px; padding: 0; border-radius: 10px; background: #7d7d7d; }
   .search-tabs button { font-size: 13px; }
   .search-tabs button.is-active::after { bottom: 4px; }
-  .search-results { width: 100%; gap: 5px; padding: 0 0 10px; }
+  .search-results { width: 100%; min-height: 0; flex: 1 1 0; gap: 8px; padding: 0 0 calc(var(--search-mobile-nav-space) + 8px); overflow-x: hidden; overflow-y: auto; overscroll-behavior-y: contain; -webkit-overflow-scrolling: touch; scroll-padding-block-end: var(--search-mobile-nav-space); touch-action: pan-y; }
   .user-search-results { display: flex; flex-direction: column; }
-  .search-result-card { min-height: 71px; height: 71px; gap: 10px; padding: 6px; border-radius: 12px; }
+  .search-result-card { min-height: 78px; height: 78px; flex: 0 0 78px; gap: 12px; padding: 7px; border-radius: 14px; }
   .search-result-card .search-artwork,
-  .user-artwork { width: 58px; height: 58px; flex-basis: 58px; border-radius: 8px; }
-  .search-result-copy h3 { font-size: 14px; }
+  .user-artwork { width: 62px; height: 62px; flex-basis: 62px; border-radius: 9px; }
+  .search-result-copy h3 { font-size: 15px; }
   .search-result-copy p,
-  .album-year { margin-top: 2px; font-size: 11px; }
+  .album-year { margin-top: 2px; font-size: 12px; }
   .user-result-card { height: 76px; min-height: 76px; flex: 0 0 76px; padding: 7px 10px; }
   .user-result-card .user-artwork { border-radius: 50%; }
   .user-result-card .search-result-copy h3 { font-size: 16px; }
@@ -196,11 +197,11 @@
 
 @media (max-width: 380px) {
   .search-workspace { padding-right: 7px; padding-left: 7px; }
-  .expanded-search-panel { margin-right: -7px; margin-left: -7px; }
+  .expanded-search-panel { margin-right: -7px; margin-left: -7px; padding-right: 10px; padding-left: 10px; }
   .search-artwork { width: 65px; height: 65px; flex-basis: 65px; }
   .liked-song-card { gap: 8px; }
   .search-result-card .search-artwork,
-  .user-artwork { width: 54px; height: 54px; flex-basis: 54px; }
+  .user-artwork { width: 58px; height: 58px; flex-basis: 58px; }
   .user-state-icon { width: 34px; height: 34px; flex-basis: 34px; }
 }
 

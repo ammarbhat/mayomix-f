@@ -475,7 +475,7 @@ function SettingsPage() {
 
   if (!token) return null
   return <main className={`settings-page${isSettingsHome ? ' is-mobile-settings-home' : ' is-mobile-settings-detail'}`} inert={logoutOpen || deleteConfirmOpen}>
-    <AppHeader />
+    <AppHeader alwaysShowMobileNavigation />
     <section className="settings-shell" aria-label="Settings">
       <aside className="settings-sidebar">
         <h1><Link className="settings-mobile-back" to="/profile" aria-label="Back to profile"><span aria-hidden="true" /></Link><span>Settings</span></h1>

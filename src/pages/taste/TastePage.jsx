@@ -250,7 +250,7 @@ function ClearDialog({ onCancel, onConfirm }) {
   </dialog>
 }
 
-function LeaveDialog({ onStay, onLeave }) {
+function LeaveDialog({ onStay, onLeave, onSaveAndLeave, saving }) {
   const dialogRef = useRef(null)
   useEffect(() => {
     const dialog = dialogRef.current
@@ -259,9 +259,13 @@ function LeaveDialog({ onStay, onLeave }) {
     return () => { if (dialog.open) dialog.close() }
   }, [])
   return <dialog className="taste-dialog" ref={dialogRef} aria-labelledby="taste-leave-title" aria-describedby="taste-leave-description" onCancel={(event) => { event.preventDefault(); onStay() }}>
-    <h2 id="taste-leave-title">Leave without saving?</h2>
-    <p id="taste-leave-description">Your staged changes will be lost if you leave this page.</p>
-    <div className="taste-dialog-actions"><button type="button" onClick={onStay}>Stay here</button><button type="button" className="is-danger" onClick={onLeave}>Leave page</button></div>
+    <h2 id="taste-leave-title">Save changes before leaving?</h2>
+    <p id="taste-leave-description">Save your staged changes, leave without saving, or stay on this page.</p>
+    <div className="taste-dialog-actions is-leave-actions">
+      <button type="button" className="is-save" onClick={onSaveAndLeave} disabled={saving}>{saving ? 'Saving…' : 'Save and leave'}</button>
+      <button type="button" onClick={onStay} autoFocus>Stay here</button>
+      <button type="button" className="is-danger" onClick={onLeave} disabled={saving}>Leave without saving</button>
+    </div>
   </dialog>
 }
 
@@ -456,7 +460,7 @@ function TastePage() {
   }
 
   async function save() {
-    if (!dirty || saving) return
+    if (!dirty || saving) return false
     setSaving(true)
     setSaveError('')
     setNotice('')
@@ -499,6 +503,7 @@ function TastePage() {
       clearAllRequestedRef.current = false
     }
     setSaving(false)
+    return failed.length === 0
   }
 
   function confirmLeave() {
@@ -510,13 +515,19 @@ function TastePage() {
     }
   }
 
+  async function saveAndLeave() {
+    if (saving) return
+    setLeaveOpen(false)
+    if (await save()) confirmLeave()
+  }
+
   if (!token) return null
   const tasteMetadataPending = Object.values(draft).flat().some((item) => {
     const details = itemDetails(item)
     return Boolean(details.metadataLoading || (details.mbid && details.title === details.mbid && !details.metadataLoaded))
   })
   return <main className="taste-page">
-    <AppHeader mobileTitle="Display" mobileBackTo="/profile" hideMobileNavigation />
+    <AppHeader mobileTitle="Display" mobileBackTo="/profile" alwaysShowMobileNavigation />
     <div className="taste-workspace" aria-busy={loading}>
       <SearchPanel token={token} draft={draft} ratings={ratings} onAdd={addItem} />
       <section className="taste-editor-panel" aria-label="Current taste">
@@ -533,7 +544,7 @@ function TastePage() {
       </section>
     </div>
     {clearOpen && <ClearDialog onCancel={() => setClearOpen(false)} onConfirm={() => { clearAllRequestedRef.current = true; setDraft(emptyTaste()); setClearOpen(false); setNotice(''); setSaveError('') }} />}
-    {leaveOpen && <LeaveDialog onStay={() => setLeaveOpen(false)} onLeave={confirmLeave} />}
+    {leaveOpen && <LeaveDialog onStay={() => setLeaveOpen(false)} onLeave={confirmLeave} onSaveAndLeave={saveAndLeave} saving={saving} />}
   </main>
 }
 

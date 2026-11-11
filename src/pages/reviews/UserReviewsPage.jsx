@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router'
+import { Link, useParams } from 'react-router'
 import { apiRequest, getAlbumDetails, getStoredToken, getUserReviews, normalizeArtworkUrl } from '../../api/api.js'
 import AppHeader from '../../components/layout/AppHeader.jsx'
 import RatingVinyls from '../../components/ratings/RatingVinyls.jsx'
@@ -111,7 +111,12 @@ function UserReviewsPage() {
       <AppHeader />
       <div className="user-reviews-wrap">
         <section className="user-reviews-board" aria-busy={loading} aria-label={`${username}'s reviews`}>
-          <header className="user-reviews-heading"><h1>Reviews</h1></header>
+          <header className="user-reviews-heading">
+            <Link className="user-reviews-back" to={`/users/${encodeURIComponent(username)}`} aria-label={`Back to ${username}'s profile`}>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18 9 12l6-6" /></svg>
+            </Link>
+            <h1>Reviews</h1>
+          </header>
           {loading && <div className="user-reviews-metadata-loading"><MetadataBuffering label="Loading review details" /></div>}
           {error && !loading && <p className="user-reviews-message is-error" role="alert">{error}</p>}
           {!loading && !error && reviews.length === 0 && <p className="user-reviews-message">No reviews yet.</p>}

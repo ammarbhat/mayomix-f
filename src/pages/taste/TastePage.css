@@ -68,8 +68,11 @@
 .taste-dialog h2 { margin: 0; font-size: 18px; font-weight: 600; }
 .taste-dialog p { margin: 8px 0 16px; color: #585858; font-size: 13px; line-height: 1.45; }
 .taste-dialog-actions { display: flex; justify-content: flex-end; gap: 7px; }
+.taste-dialog-actions.is-leave-actions { display: grid; grid-template-columns: 1fr 1fr; }
+.taste-dialog-actions.is-leave-actions .is-save { grid-column: 1 / -1; border-color: #555; background: #292929; color: #fff; }
 .taste-dialog-actions button { min-height: 36px; padding: 6px 12px; border: 1px solid #999; border-radius: 999px; background: #eee; color: #222; cursor: pointer; }
 .taste-dialog-actions button.is-danger { border-color: #db8788; background: #ed9a9b; color: #fff; }
+.taste-dialog-actions button:disabled { cursor: wait; opacity: .65; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; clip-path: inset(50%); }
 .taste-page button:focus-visible,.taste-page input:focus-visible { outline: 2px solid #151515; outline-offset: 3px; }
 .taste-dialog button:focus-visible { outline-color: #111; }

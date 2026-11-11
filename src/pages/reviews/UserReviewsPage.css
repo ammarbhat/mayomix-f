@@ -30,6 +30,7 @@
 }
 
 .user-reviews-heading {
+  position: relative;
   width: min(100%, 775px);
   flex: 0 0 auto;
   margin: 0 auto clamp(16px, 4vh, 40px);
@@ -39,6 +40,8 @@
 }
 
 .user-reviews-heading h1 { margin: 0; color: #222; font-size: 30px; line-height: 1.25; font-weight: 500; }
+.user-reviews-back { display: none; }
+.user-reviews-back:focus-visible { outline: 2px solid #111; outline-offset: 2px; }
 .user-reviews-grid { min-height: 0; flex: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; align-items: start; gap: 18px 24px; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; }
 .user-review-card { position: relative; min-width: 0; padding: 14px 17px 16px; border-radius: 17px; background: #d9d9d9; color: #212121; }
 .user-review-actions { position: absolute; z-index: 2; top: 8px; right: 11px; }
@@ -108,6 +111,8 @@
   .user-reviews-board { padding: 18px 14px 14px; border-radius: 14px; }
   .user-reviews-heading { margin-bottom: 18px; }
   .user-reviews-heading h1 { font-size: 25px; }
+  .user-reviews-back { position: absolute; top: 0; left: 0; width: 36px; height: 32px; display: grid; place-items: center; color: #222; }
+  .user-reviews-back svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
   .user-reviews-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; padding-right: 2px; }
   .user-review-card { padding: 11px 12px 13px; border-radius: 13px; }
   .user-review-dialog { width: calc(100vw - 20px); max-height: calc(100dvh - 24px); border-radius: 15px; }
