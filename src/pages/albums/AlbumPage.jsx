@@ -152,7 +152,7 @@ function AlbumPage() {
     : ''
   const artist = (typeof details.artist === 'string' ? details.artist : details.artist?.name) || creditedArtist
   const year = album?.['first-release-date']?.slice(0, 4) || album?.year || ''
-  const genre = album?.genres?.[0]?.name || 'Pop'
+  const genre = (album?.genres?.[0]?.name || 'Pop').replace(/\b[a-z]/g, (letter) => letter.toUpperCase())
   const tracks = album?.tracks || album?.tracklist || album?.media?.flatMap((medium) => medium.tracks || []) || []
   const displayedReviews = [...reviews]
   if (ownReview && !displayedReviews.some((review) => String(review.id || review.review_id) === String(ownReview.id || ownReview.review_id))) displayedReviews.push(ownReview)

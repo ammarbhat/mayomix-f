@@ -229,6 +229,22 @@
 .album-post-notice { color: #ddd; }
 .album-review-toggle:focus-visible,.composer-close:focus-visible,.composer-post:focus-visible { outline: 2px solid #111; outline-offset: 3px; }
 
+@media (min-width: 761px) {
+  .album-board {
+    height: calc(100dvh - 112px);
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  .album-left-column { min-height: 0; }
+
+  .album-track-heading {
+    margin-top: 20px;
+    font-size: 24px;
+  }
+
+  .album-track-panel li { font-size: 14px; }
+}
+
 @media (max-width: 760px) {
   .album-page-wrap { padding: 12px 12px calc(66px + env(safe-area-inset-bottom)); }
   .album-board { display: flex; min-height: 0; flex-direction: column; gap: 6px; padding: 0; border: 0; border-radius: 0; background: transparent; }
