@@ -140,6 +140,8 @@ html:has(.profile-page)::-webkit-scrollbar { display: none; }
 }
 
 .profile-edit-actions a:hover { background: #5c390a; }
+.profile-edit-actions a:last-child { background: rgb(0 0 0 / 80%); color: #fff; }
+.profile-edit-actions a:last-child:hover { background: rgb(0 0 0 / 90%); }
 
 .identity-panel .identity-bio {
   min-height: clamp(64px, 9vh, 88px);
