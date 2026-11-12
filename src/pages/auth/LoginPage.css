@@ -71,7 +71,7 @@
   .login-form label,
   .login-genres-label { margin-bottom: 8px; font-size: 12px; font-weight: 500; }
   .login-form > input,
-  .password-field input { height: 40px; border-color: #aaa; background: rgba(255,255,255,.68); font-size: 13px; }
+  .password-field input { height: 40px; border-color: #aaa; background: rgba(255,255,255,.68); font-size: 16px; }
   .password-field button { height: 40px; }
   .password-title { margin-top: 16px !important; }
   .login-submit { height: 44px; }
