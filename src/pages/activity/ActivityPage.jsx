@@ -185,7 +185,7 @@ function ActivityPage() {
   const [sent, setSent] = useState([])
   const [connections, setConnections] = useState([])
   const [activeConnectionTab, setActiveConnectionTab] = useState('requests')
-  const [connectionsExpanded, setConnectionsExpanded] = useState(true)
+  const [connectionsExpanded, setConnectionsExpanded] = useState(false)
   const [activity, setActivity] = useState([])
   const [pendingError, setPendingError] = useState('')
   const [sentError, setSentError] = useState('')

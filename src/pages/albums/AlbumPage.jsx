@@ -156,14 +156,15 @@ function AlbumPage() {
   const tracks = album?.tracks || album?.tracklist || album?.media?.flatMap((medium) => medium.tracks || []) || []
   const displayedReviews = [...reviews]
   if (ownReview && !displayedReviews.some((review) => String(review.id || review.review_id) === String(ownReview.id || ownReview.review_id))) displayedReviews.push(ownReview)
+  const albumMetadataLoading = loading || tracklistLoading
 
   return <main className="album-page">
       <AppHeader />
     <div className="album-page-wrap">
-      <section className="album-board" aria-busy={loading}>
+      <section className="album-board" aria-busy={albumMetadataLoading}>
+        {albumMetadataLoading ? <div className="album-page-loading"><MetadataBuffering label="Loading album and track details" /></div> : <>
         {error && <p className="album-page-message is-error" role="alert">{error}</p>}
         <section className="album-left-column" aria-label={`${title} album details`}>
-          {(loading || tracklistLoading) ? <div className="album-metadata-loading"><MetadataBuffering label="Loading album and track details" /></div> : <>
           <div className="album-summary">
             <div className="album-cover">{details.image && <img src={details.image} alt={`${title} cover`} onError={(event) => event.currentTarget.remove()} />}</div>
             <h1>{title}</h1>
@@ -176,7 +177,6 @@ function AlbumPage() {
             <span className="album-down-mark" aria-hidden="true">⌄</span>
           </div>
           {reviewCheck === 'available' && <button className="album-review-toggle album-review-toggle-mobile" type="button" aria-label={composerOpen ? 'Close review composer' : 'Write an album review'} aria-expanded={composerOpen} onClick={() => { setComposerOpen((open) => !open); setNotice('') }}>Reviews</button>}
-          </>}
         </section>
         {reviewCheck === 'available' && composerOpen && <form className="album-review-composer" onSubmit={submitReview}>
             <button className="composer-close" type="button" aria-label="Close review composer" onClick={() => setComposerOpen(false)}>×</button>
@@ -212,6 +212,7 @@ function AlbumPage() {
             <RatingVinyls className="album-review-rating" size="small" rating={review.rating} />
           </article>}) : !loading && !error ? <p className="album-empty-reviews">No reviews yet. Start the conversation.</p> : null}
         </section>
+        </>}
       </section>
     </div>
   </main>
