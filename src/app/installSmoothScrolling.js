@@ -1,6 +1,6 @@
-const SCROLL_SMOOTHING = 140
-const WHEEL_SCALE = 0.8
-const TOUCH_SCALE = 0.72
+const SCROLL_SMOOTHING = 70
+const WHEEL_SCALE = 1
+const TOUCH_SCALE = 0.92
 
 function getScrollTop(element, root) {
   return element === root ? window.scrollY : element.scrollTop
