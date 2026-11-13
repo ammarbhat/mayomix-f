@@ -1,6 +1,5 @@
 const SCROLL_SMOOTHING = 35
 const WHEEL_SCALE = 0.95
-const TOUCH_SCALE = 0.96
 
 function getScrollTop(element, root) {
   return element === root ? window.scrollY : element.scrollTop
@@ -58,7 +57,6 @@ export function installSmoothScrolling() {
   const root = document.scrollingElement || document.documentElement
   const animations = new WeakMap()
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
-  let touchSession = null
 
   function animate(element, animation, time) {
     if (!element.isConnected && element !== root) {
@@ -122,83 +120,8 @@ export function installSmoothScrolling() {
     if (addScrollDelta(element, delta) && event.cancelable) event.preventDefault()
   }
 
-  function handleTouchStart(event) {
-    if (reducedMotion.matches || event.touches.length !== 1) {
-      touchSession = null
-      return
-    }
-    const target = event.target instanceof Element ? event.target : null
-    if (target?.closest('input, textarea, select, [contenteditable="true"]')) {
-      touchSession = null
-      return
-    }
-    for (let element = target; element && element !== document.documentElement; element = element.parentElement) {
-      if (window.getComputedStyle(element).touchAction === 'none') {
-        touchSession = null
-        return
-      }
-    }
-    const touch = event.touches[0]
-    touchSession = {
-      identifier: touch.identifier,
-      startX: touch.clientX,
-      startY: touch.clientY,
-      lastY: touch.clientY,
-      axis: null,
-      didPreventDefault: false,
-    }
-  }
-
-  function handleTouchMove(event) {
-    if (reducedMotion.matches || !touchSession) return
-    if (event.touches.length !== 1 || event.touches[0].identifier !== touchSession.identifier) {
-      touchSession = null
-      return
-    }
-
-    const touch = event.touches[0]
-    const totalX = touch.clientX - touchSession.startX
-    const totalY = touch.clientY - touchSession.startY
-    if (!touchSession.axis) {
-      if (Math.max(Math.abs(totalX), Math.abs(totalY)) < 8) return
-      if (Math.abs(totalX) > Math.abs(totalY)) {
-        touchSession.axis = 'horizontal'
-        return
-      }
-      touchSession.axis = 'vertical'
-    }
-    if (touchSession.axis !== 'vertical') return
-
-    const delta = (touchSession.lastY - touch.clientY) * TOUCH_SCALE
-    touchSession.lastY = touch.clientY
-    if (Math.abs(delta) < 0.25) return
-
-    const element = findScrollTarget(event.target, delta, root, animations)
-    if (!element) {
-      if (touchSession.didPreventDefault && event.cancelable) event.preventDefault()
-      return
-    }
-
-    if (addScrollDelta(element, delta)) {
-      touchSession.didPreventDefault = true
-      if (event.cancelable) event.preventDefault()
-    }
-  }
-
-  function handleTouchEnd() {
-    touchSession = null
-  }
-
   window.addEventListener('wheel', handleWheel, { passive: false })
-  window.addEventListener('touchstart', handleTouchStart, { passive: true })
-  window.addEventListener('touchmove', handleTouchMove, { passive: false })
-  window.addEventListener('touchend', handleTouchEnd, { passive: true })
-  window.addEventListener('touchcancel', handleTouchEnd, { passive: true })
   return () => {
     window.removeEventListener('wheel', handleWheel)
-    window.removeEventListener('touchstart', handleTouchStart)
-    window.removeEventListener('touchmove', handleTouchMove)
-    window.removeEventListener('touchend', handleTouchEnd)
-    window.removeEventListener('touchcancel', handleTouchEnd)
   }
 }
