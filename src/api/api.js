@@ -527,9 +527,9 @@ export async function getAlbumTracklist(mbid, album) {
   })
 }
 
-export async function searchUsers(username) {
+export async function searchUsers(username, token) {
   const query = new URLSearchParams({ username })
-  const payload = await apiRequest(`/users/search?${query}`)
+  const payload = await apiRequest(`/users/search?${query}`, { token })
   return listFromPayload(payload).map(normalizeUserResponse)
 }
 

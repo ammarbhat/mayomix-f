@@ -268,7 +268,7 @@ function SearchPage() {
     setSearchError('')
     setResults([])
     try {
-      const found = tab === 'users' ? await searchUsers(term) : await searchAlbums(term, token)
+      const found = tab === 'users' ? await searchUsers(term, token) : await searchAlbums(term, token)
       setResults(found)
     } catch (error) {
       if (/401|unauthorized|unauthenticated|not authenticated|credentials/i.test(error.message)) {
