@@ -1,6 +1,6 @@
-const SCROLL_SMOOTHING = 70
-const WHEEL_SCALE = 1
-const TOUCH_SCALE = 0.92
+const SCROLL_SMOOTHING = 35
+const WHEEL_SCALE = 0.95
+const TOUCH_SCALE = 0.96
 
 function getScrollTop(element, root) {
   return element === root ? window.scrollY : element.scrollTop
@@ -10,6 +10,20 @@ function getMaxScroll(element, root) {
   return element === root
     ? Math.max(0, root.scrollHeight - window.innerHeight)
     : Math.max(0, element.scrollHeight - element.clientHeight)
+}
+
+function suspendCssSmoothing(element) {
+  const original = {
+    value: element.style.getPropertyValue('scroll-behavior'),
+    priority: element.style.getPropertyPriority('scroll-behavior'),
+  }
+  element.style.setProperty('scroll-behavior', 'auto', 'important')
+  return original
+}
+
+function restoreCssSmoothing(element, original) {
+  if (original.value) element.style.setProperty('scroll-behavior', original.value, original.priority)
+  else element.style.removeProperty('scroll-behavior')
 }
 
 function canScroll(element, delta, root, animations) {
@@ -49,6 +63,7 @@ export function installSmoothScrolling() {
   function animate(element, animation, time) {
     if (!element.isConnected && element !== root) {
       cancelAnimationFrame(animation.frame)
+      restoreCssSmoothing(element, animation.originalScrollBehavior)
       animations.delete(element)
       return
     }
@@ -57,6 +72,7 @@ export function installSmoothScrolling() {
     const distance = animation.target - current
     if (Math.abs(distance) < 0.5) {
       element.scrollTop = animation.target
+      restoreCssSmoothing(element, animation.originalScrollBehavior)
       animations.delete(element)
       return
     }
@@ -72,7 +88,12 @@ export function installSmoothScrolling() {
     const current = getScrollTop(element, root)
     let animation = animations.get(element)
     if (!animation) {
-      animation = { target: current, lastFrame: performance.now(), frame: 0 }
+      animation = {
+        target: current,
+        lastFrame: performance.now(),
+        frame: 0,
+        originalScrollBehavior: suspendCssSmoothing(element),
+      }
       animations.set(element, animation)
     }
 
