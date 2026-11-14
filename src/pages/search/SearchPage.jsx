@@ -173,6 +173,7 @@ function UserResult({ user, token }) {
 function SearchPage() {
   const token = getStoredToken()
   const inputRef = useRef(null)
+  const searchRequestRef = useRef(0)
   const [topAlbums, setTopAlbums] = useState([])
   const [topAlbumsLoading, setTopAlbumsLoading] = useState(true)
   const [topAlbumsError, setTopAlbumsError] = useState('')
@@ -221,11 +222,13 @@ function SearchPage() {
   }, [expanded])
 
   const runSearch = useCallback(async (value = query, tab = activeSearchTab) => {
+    const requestId = ++searchRequestRef.current
     const term = value.trim()
     if (!term) {
       setSubmittedQuery('')
       setResults([])
       setSearchError('')
+      setSearchLoading(false)
       return
     }
     setSubmittedQuery(term)
@@ -234,16 +237,16 @@ function SearchPage() {
     setResults([])
     try {
       const found = tab === 'users' ? await searchUsers(term, token) : await searchAlbums(term, token)
-      setResults(found)
+      if (requestId === searchRequestRef.current) setResults(found)
     } catch (error) {
       if (/401|unauthorized|unauthenticated|not authenticated|credentials/i.test(error.message)) {
         clearStoredToken()
         window.location.replace('/login')
         return
       }
-      setSearchError(error.message || 'Search could not be completed.')
+      if (requestId === searchRequestRef.current) setSearchError(error.message || 'Search could not be completed.')
     } finally {
-      setSearchLoading(false)
+      if (requestId === searchRequestRef.current) setSearchLoading(false)
     }
   }, [activeSearchTab, query, token])
 
@@ -262,6 +265,17 @@ function SearchPage() {
     requestAnimationFrame(() => inputRef.current?.focus())
   }
 
+  function closeSearch() {
+    searchRequestRef.current += 1
+    setExpanded(false)
+    setQuery('')
+    setSubmittedQuery('')
+    setResults([])
+    setSearchError('')
+    setSearchLoading(false)
+    inputRef.current?.blur()
+  }
+
   return (
     <main className="search-page">
       <AppHeader />
@@ -276,7 +290,7 @@ function SearchPage() {
             onChange={(event) => setQuery(event.target.value)}
           />
           <button className="submit-search" type="submit" aria-label="Search"><SearchIcon /></button>
-          <button className="close-search" type="button" aria-label="Close search" aria-hidden={!expanded} tabIndex={expanded ? 0 : -1} onClick={() => { setExpanded(false); inputRef.current?.blur() }}><CloseIcon /></button>
+          <button className="close-search" type="button" aria-label="Clear and close search" aria-hidden={!expanded} tabIndex={expanded ? 0 : -1} onClick={closeSearch}><CloseIcon /></button>
         </form>
 
         <div className={`search-content-stage${expanded ? ' is-expanded' : ''}`}>
