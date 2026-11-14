@@ -17,6 +17,10 @@ function SearchIcon() {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="7.2" /><path d="m16.2 16.2 5 5" /></svg>
 }
 
+function CloseIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 4 16 16M20 4 4 20" /></svg>
+}
+
 function displayArtist(item) {
   const details = itemDetails(item)
   if (details.artist) return details.artist
@@ -262,7 +266,7 @@ function SearchPage() {
     <main className="search-page">
       <AppHeader />
       <section className={`search-workspace${expanded ? ' is-expanded' : ''}`}>
-        <form className="main-search-form" onClick={() => { if (!expanded) expandSearch() }} onSubmit={handleSubmit}>
+        <form className={`main-search-form${expanded ? ' is-expanded' : ''}`} onClick={() => { if (!expanded) expandSearch() }} onSubmit={handleSubmit}>
           <input
             ref={inputRef}
             aria-label="Search albums and users"
@@ -272,16 +276,16 @@ function SearchPage() {
             onChange={(event) => setQuery(event.target.value)}
           />
           <button className="submit-search" type="submit" aria-label="Search"><SearchIcon /></button>
+          <button className="close-search" type="button" aria-label="Close search" aria-hidden={!expanded} tabIndex={expanded ? 0 : -1} onClick={() => { setExpanded(false); inputRef.current?.blur() }}><CloseIcon /></button>
         </form>
 
-        {expanded ? (
-          <section className="expanded-search-panel" aria-label="Search results" aria-busy={searchLoading}>
-            <div className="search-tabs" role="tablist" aria-label="Search category">
+        <div className={`search-content-stage${expanded ? ' is-expanded' : ''}`}>
+          <section className="expanded-search-panel" aria-label="Search results" aria-busy={searchLoading} aria-hidden={!expanded}>
+            <div className={`search-tabs${activeSearchTab === 'users' ? ' is-users-active' : ''}`} role="tablist" aria-label="Search category">
               <button type="button" role="tab" aria-selected={activeSearchTab === 'albums'} className={activeSearchTab === 'albums' ? 'is-active' : ''} onClick={() => selectSearchTab('albums')}>Albums</button>
               <button type="button" role="tab" aria-selected={activeSearchTab === 'users'} className={activeSearchTab === 'users' ? 'is-active' : ''} onClick={() => selectSearchTab('users')}>Users</button>
             </div>
             <div className={`search-results${activeSearchTab === 'users' ? ' user-search-results' : ''}`} role="tabpanel">
-              {!submittedQuery && <p className="search-hint">Search for albums or people</p>}
               {searchLoading && <p className="search-message" role="status">Searching…</p>}
               {searchError && !searchLoading && <p className="search-message is-error" role="alert">{searchError}</p>}
               {!searchLoading && !searchError && submittedQuery && results.length === 0 && <p className="search-message" role="status">No {activeSearchTab} found for “{submittedQuery}”.</p>}
@@ -290,8 +294,7 @@ function SearchPage() {
                 : <AlbumResult key={result.mbid || result.id || index} album={result} />)}
             </div>
           </section>
-        ) : (
-          <section className="top-rated-board" aria-label="Top rated albums on Mayomix" aria-busy={topAlbumsLoading}>
+          <section className="top-rated-board" aria-label="Top rated albums on Mayomix" aria-busy={topAlbumsLoading} aria-hidden={expanded} inert={expanded}>
             <h1>Top rated albums on Mayomix</h1>
             <div className="top-rated-list">
               {topAlbumsLoading && <p className="search-message" role="status">Loading top rated albums…</p>}
@@ -302,7 +305,7 @@ function SearchPage() {
               ))}
             </div>
           </section>
-        )}
+        </div>
       </section>
     </main>
   )
