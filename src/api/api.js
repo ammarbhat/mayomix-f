@@ -403,6 +403,12 @@ export async function getAlbumReviews(mbid, token) {
   }
 }
 
+export async function getTopRatedAlbums(token, limit = 13, offset = 0) {
+  const query = new URLSearchParams({ limit: String(limit), offset: String(offset) })
+  const payload = await apiRequest(`/top-rated/albums?${query}`, { token })
+  return listFromPayload(payload).filter((entry) => entry && typeof entry === 'object')
+}
+
 export async function createAlbumReview(mbid, reviewStr, rating, token) {
   return apiRequest('/users/me/reviews', {
     method: 'POST',

@@ -1,31 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router'
 import {
-  apiRequest,
   clearStoredToken,
   getConnectionStatus,
   getAlbumDetails,
-  getLikedSongs,
+  getTopRatedAlbums,
   getStoredToken,
-  getUserReviews,
   itemDetails,
   searchAlbums,
   searchUsers,
 } from '../../api/api.js'
-import RatingVinyls from '../../components/ratings/RatingVinyls.jsx'
-import ReviewActions from '../../components/reviews/ReviewActions.jsx'
 import AppHeader from '../../components/layout/AppHeader.jsx'
-import MetadataBuffering from '../../components/feedback/MetadataBuffering.jsx'
 import './SearchPage.css'
-
-const emptyLibrary = { likedSongs: [], reviews: [] }
 
 function SearchIcon() {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="7.2" /><path d="m16.2 16.2 5 5" /></svg>
-}
-
-function HeartIcon() {
-  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 8.8c0 5-8.8 11-8.8 11s-8.8-6-8.8-11A4.8 4.8 0 0 1 12 6.2a4.8 4.8 0 0 1 8.8 2.6Z" /></svg>
 }
 
 function displayArtist(item) {
@@ -64,45 +53,18 @@ function Artwork({ item, alt }) {
   )
 }
 
-function Rating({ review }) {
-  const rating = Number(review.rating ?? review.score ?? review.value)
-  if (!Number.isFinite(rating)) return null
-  return <RatingVinyls className="review-rating" size="small" rating={rating} />
-}
-
-function LikedSongCard({ item }) {
-  const details = itemDetails(item)
-  const title = details.title || item?.song_title || item?.recording?.title || 'Unknown song'
-  const artist = displayArtist(item) || 'Unknown artist'
-  return (
-    <article className="liked-song-card">
-      <Artwork item={item} alt={`${title} artwork`} />
-      <div className="liked-song-copy">
-        <h3 title={title}>{title}</h3>
-        <p title={artist}>{artist}</p>
-      </div>
-      <span className="liked-heart" aria-label="Liked song"><HeartIcon /></span>
-    </article>
-  )
-}
-
-function ReviewCard({ review, token, onSaved, onDeleted }) {
+function TopRatedAlbumCard({ entry, rank, token }) {
   const cardRef = useRef(null)
-  const [resolvedAlbum, setResolvedAlbum] = useState(null)
-  const [metadataComplete, setMetadataComplete] = useState(Boolean(review.metadataLookupComplete))
-  const album = resolvedAlbum || review.album || review.album_info || review.metadata || {}
-  const mbid = review.album_mbid || review.mbid || album.mbid || ''
-  const titleValue = [album.title, review.album_title, review.title].find((value) => value && value !== mbid) || ''
-  const title = titleValue || 'Album review'
-  const artist = album.artist || review.artist || review.artist_name || ''
-  const text = review.review_str || review.review_text || review.text || review.review || review.body || ''
+  const [album, setAlbum] = useState(null)
+  const [metadataLoading, setMetadataLoading] = useState(true)
+  const mbid = entry.mbid
 
   useEffect(() => {
-    if (!mbid || review.metadataLookupComplete || metadataComplete || (titleValue && artist)) return undefined
+    if (!mbid) return undefined
     let cancelled = false
-    const load = () => getAlbumDetails(mbid, getStoredToken()).then((details) => {
-      if (!cancelled && (details.title || details.artist)) setResolvedAlbum(details)
-    }).catch(() => {}).finally(() => { if (!cancelled) setMetadataComplete(true) })
+    const load = () => getAlbumDetails(mbid, token).then((details) => {
+      if (!cancelled) setAlbum(details)
+    }).catch(() => {}).finally(() => { if (!cancelled) setMetadataLoading(false) })
     const node = cardRef.current
     if (!node || !('IntersectionObserver' in window)) {
       load()
@@ -116,20 +78,42 @@ function ReviewCard({ review, token, onSaved, onDeleted }) {
     }, { rootMargin: '180px' })
     observer.observe(node)
     return () => { cancelled = true; observer.disconnect() }
-  }, [album.artist, album.title, artist, metadataComplete, mbid, review.metadataLookupComplete, titleValue])
+  }, [mbid, token])
+
+  const details = itemDetails(album || {})
+  const title = details.title || (mbid && metadataLoading ? 'Loading album…' : 'Album details unavailable')
+  const artist = displayArtist(details)
+  const rating = Number(entry.avg_rating) / 2
+  const reviewCount = Number(entry.count)
+  const formattedRating = Number.isFinite(rating)
+    ? Number.isInteger(rating) ? String(rating) : rating.toFixed(1)
+    : '—'
+  const formattedCount = Number.isFinite(reviewCount)
+    ? new Intl.NumberFormat(undefined, { notation: 'compact', maximumFractionDigits: 1 }).format(reviewCount)
+    : '—'
 
   return (
-    <article className="album-review-card" ref={cardRef}>
-      <ReviewActions review={review} token={token} onSaved={onSaved} onDeleted={onDeleted} />
-      <Artwork item={{ ...album, image: album.image || review.cover_url || review.image }} alt={`${title} cover`} />
-      <div className="review-copy">
-        <h3 title={title}>{title}</h3>
-        {artist && <p className="review-artist" title={artist}>{artist}</p>}
-      </div>
-      <div className="review-divider" />
-      {text && <p className="review-text">{text}</p>}
-      <Rating review={review} />
-    </article>
+    <div className="top-rated-row" ref={cardRef}>
+      <span className="top-rated-rank" aria-label={`Rank ${rank}`}>{rank}</span>
+      <Link className="top-rated-card" to={`/albums/${encodeURIComponent(mbid)}`} onClick={(event) => { if (!mbid) event.preventDefault() }}>
+        <Artwork item={details} alt={`${title} cover`} />
+        <div className="top-rated-copy">
+          <h3 title={title}>{title}</h3>
+          {artist && <p title={artist}>{artist}</p>}
+        </div>
+        <div className="top-rated-stat" aria-label={`Average rating ${Number.isFinite(rating) ? formattedRating : 'unavailable'} out of 5`}>
+          <span className="top-rated-stat-label">Rating</span>
+          <span className="top-rated-rating-value">
+            {formattedRating}
+            <img src="/images/vinyl.png" alt="" />
+          </span>
+        </div>
+        <div className="top-rated-stat" aria-label={`${Number.isFinite(reviewCount) ? reviewCount : 'Unknown'} reviews`}>
+          <span className="top-rated-stat-label">Review Count</span>
+          <span className="top-rated-count">{formattedCount}</span>
+        </div>
+      </Link>
+    </div>
   )
 }
 
@@ -185,10 +169,9 @@ function UserResult({ user, token }) {
 function SearchPage() {
   const token = getStoredToken()
   const inputRef = useRef(null)
-  const [library, setLibrary] = useState(emptyLibrary)
-  const [libraryLoading, setLibraryLoading] = useState(true)
-  const [libraryError, setLibraryError] = useState('')
-  const [activeLibraryTab, setActiveLibraryTab] = useState('liked')
+  const [topAlbums, setTopAlbums] = useState([])
+  const [topAlbumsLoading, setTopAlbumsLoading] = useState(true)
+  const [topAlbumsError, setTopAlbumsError] = useState('')
   const [expanded, setExpanded] = useState(false)
   const [query, setQuery] = useState('')
   const [submittedQuery, setSubmittedQuery] = useState('')
@@ -204,45 +187,23 @@ function SearchPage() {
     }
 
     let cancelled = false
-    async function loadLibrary() {
+    async function loadTopAlbums() {
       try {
-        const me = await apiRequest('/users/me', { token })
-        let enrichedLikedSongs = null
-        const [likedSongs, reviews] = await Promise.all([
-          getLikedSongs(token, (items) => {
-            enrichedLikedSongs = items
-            if (!cancelled) setLibrary((current) => ({ ...current, likedSongs: items }))
-          }),
-          getUserReviews(me.username, token),
-        ])
+        const albums = await getTopRatedAlbums(token)
         if (cancelled) return
-        const reviewItems = reviews.slice(0, 12)
-        const enrichedReviews = await Promise.all(reviewItems.map(async (review) => {
-          const album = review.album || review.album_info || review.metadata || {}
-          const mbid = review.album_mbid || review.mbid || album.mbid || album.id
-          const hasTitle = album.title || review.album_title || review.title
-          const hasArtist = album.artist || review.artist || review.artist_name
-          if (!mbid || (hasTitle && hasArtist)) return { ...review, metadataLookupComplete: true }
-          try {
-            const metadata = await getAlbumDetails(mbid, token)
-            return { ...review, album: { ...album, ...metadata }, metadataLookupComplete: true }
-          } catch {
-            return { ...review, metadataLookupComplete: true }
-          }
-        }))
-        if (!cancelled) setLibrary({ likedSongs: enrichedLikedSongs || likedSongs, reviews: enrichedReviews })
+        setTopAlbums(albums)
       } catch (error) {
         if (!cancelled) {
           if (/401|unauthorized|unauthenticated|not authenticated|credentials/i.test(error.message)) {
             clearStoredToken()
             window.location.replace('/login')
-          } else setLibraryError(error.message || 'Could not load your music.')
+          } else setTopAlbumsError(error.message || 'Could not load top rated albums.')
         }
       } finally {
-        if (!cancelled) setLibraryLoading(false)
+        if (!cancelled) setTopAlbumsLoading(false)
       }
     }
-    loadLibrary()
+    loadTopAlbums()
     return () => { cancelled = true }
   }, [token])
 
@@ -297,8 +258,6 @@ function SearchPage() {
     requestAnimationFrame(() => inputRef.current?.focus())
   }
 
-  const visibleLibraryItems = activeLibraryTab === 'liked' ? library.likedSongs : library.reviews
-
   return (
     <main className="search-page">
       <AppHeader />
@@ -332,24 +291,15 @@ function SearchPage() {
             </div>
           </section>
         ) : (
-          <section className="library-board" aria-label="Your music" aria-busy={libraryLoading}>
-            <div className="library-tabs" role="tablist" aria-label="Your music collections">
-              <button type="button" role="tab" aria-selected={activeLibraryTab === 'liked'} className={activeLibraryTab === 'liked' ? 'is-active' : ''} onClick={() => setActiveLibraryTab('liked')}>Liked songs</button>
-              <button type="button" role="tab" aria-selected={activeLibraryTab === 'reviews'} className={activeLibraryTab === 'reviews' ? 'is-active' : ''} onClick={() => setActiveLibraryTab('reviews')}>Album reviews</button>
-            </div>
-            <div className={`library-grid${activeLibraryTab === 'reviews' ? ' reviews-library-grid' : ''}`} role="tabpanel">
-              {libraryLoading && <div className="library-metadata-loading"><MetadataBuffering label="Loading your music details" /></div>}
-              {libraryError && !libraryLoading && <p className="search-message is-error" role="alert">{libraryError}</p>}
-              {!libraryLoading && !libraryError && visibleLibraryItems.length === 0 && <p className="search-message empty-library">{activeLibraryTab === 'liked' ? 'Your liked songs will appear here.' : 'Your album reviews will appear here.'}</p>}
-              {!libraryLoading && visibleLibraryItems.map((item, index) => activeLibraryTab === 'liked'
-                ? <LikedSongCard item={item} key={item.mbid || item.id || index} />
-                : <ReviewCard
-                  review={item}
-                  token={token}
-                  key={item.id || item.review_id || item.album_mbid || index}
-                  onSaved={(updated) => setLibrary((current) => ({ ...current, reviews: current.reviews.map((review) => String(review.id || review.review_id) === String(updated.id || updated.review_id) ? updated : review) }))}
-                  onDeleted={(removed) => setLibrary((current) => ({ ...current, reviews: current.reviews.filter((review) => String(review.id || review.review_id) !== String(removed.id || removed.review_id)) }))}
-                />)}
+          <section className="top-rated-board" aria-label="Top rated albums on Mayomix" aria-busy={topAlbumsLoading}>
+            <h1>Top rated albums on Mayomix</h1>
+            <div className="top-rated-list">
+              {topAlbumsLoading && <p className="search-message" role="status">Loading top rated albums…</p>}
+              {topAlbumsError && !topAlbumsLoading && <p className="search-message is-error" role="alert">{topAlbumsError}</p>}
+              {!topAlbumsLoading && !topAlbumsError && topAlbums.length === 0 && <p className="search-message" role="status">No album ratings yet.</p>}
+              {!topAlbumsLoading && !topAlbumsError && topAlbums.map((entry, index) => (
+                <TopRatedAlbumCard key={entry.mbid || index} entry={entry} rank={index + 1} token={token} />
+              ))}
             </div>
           </section>
         )}
