@@ -6,6 +6,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  overscroll-behavior: none;
   color: #f4f4f4;
   background: #606060;
 }
@@ -58,8 +59,8 @@
 }
 
 .top-rated-board { width: min(100%, 972px); align-self: center; padding: 16px 34px 22px; border-radius: 15px; background: #d8d8d8; color: #626262; }
-.top-rated-board h1 { flex: 0 0 auto; margin: 0; padding: 0 0 21px; border-bottom: 1px solid #262626; color: #626262; text-align: center; font-size: 32px; font-weight: 400; line-height: 1.25; }
-.top-rated-list { min-height: 0; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 14px; overflow-x: hidden; overflow-y: auto; padding: 34px 0 16px; overscroll-behavior: contain; scrollbar-width: none; -ms-overflow-style: none; }
+.top-rated-board h1 { flex: 0 0 auto; margin: 0; padding: 0 0 21px; border-bottom: 1px solid #262626; color: rgba(0, 0, 0, .9); text-align: center; font-size: 32px; font-weight: 400; line-height: 1.25; }
+.top-rated-list { min-height: 0; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 14px; overflow-x: hidden; overflow-y: auto; padding: 34px 0 16px; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; scrollbar-width: none; -ms-overflow-style: none; }
 .top-rated-row { position: relative; width: min(100%, 650px); min-height: 118px; flex: 0 0 118px; display: flex; align-items: stretch; }
 .top-rated-rank { position: absolute; z-index: 1; top: 0; bottom: 0; left: 0; width: 36px; display: grid; place-items: center; color: #f4f4f4; font-size: 24px; pointer-events: none; }
 .top-rated-card { width: 100%; min-width: 0; flex: 1; display: grid; grid-template-columns: 90px minmax(125px, 1fr) 150px 150px; align-items: center; gap: 12px 16px; padding: 12px 16px 12px 34px; border-radius: 12px; background: #b86b70; color: #202020; text-decoration: none; }
@@ -109,7 +110,7 @@
 }
 
 @media (max-width: 760px) {
-  .search-page { position: relative; background: #a0a0a0; }
+  .search-page { position: fixed; inset: 0; width: 100%; height: 100vh; height: 100dvh; background: #a0a0a0; }
   .search-workspace { position: relative; z-index: 1; width: 100%; padding: 20px 9px var(--search-mobile-nav-space); }
   .search-workspace.is-expanded { padding-bottom: 0; }
   .search-workspace:not(.is-expanded)::before { position: fixed; z-index: -1; top: 0; right: 0; left: 0; height: 79px; background: #292929; content: ''; }
