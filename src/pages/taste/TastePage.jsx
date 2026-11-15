@@ -125,7 +125,7 @@ function SearchPanel({ token, draft, ratings, onAdd, mobileTargetSection, onClos
   }
 
   return (
-    <section className={`taste-search-panel${mobileTargetSection ? ' taste-inline-search' : ''}`} aria-label={mobileTargetSection ? `Search ${mobileTargetSection.kind === 'album' ? 'albums' : 'songs'} for ${mobileTargetSection.title}` : 'Find music'}>
+    <section className={`taste-search-panel${mobileTargetSection ? ` taste-inline-search${mobileTargetSection.kind === 'album' ? ' taste-inline-search-albums' : ''}` : ''}`} aria-label={mobileTargetSection ? `Search ${mobileTargetSection.kind === 'album' ? 'albums' : 'songs'} for ${mobileTargetSection.title}` : 'Find music'}>
       <form className="taste-search-form" onSubmit={submit}>
         <label className="visually-hidden" htmlFor={inputId}>Search {mode === 'album' ? 'albums' : 'songs'}</label>
         <input id={inputId} ref={inputRef} value={query} onChange={(event) => setQuery(event.target.value)} placeholder={mobileTargetSection ? `Search ${mode === 'album' ? 'albums' : 'songs'}` : 'Search music'} autoComplete="off" />
@@ -482,6 +482,8 @@ function TastePage() {
 
   async function save() {
     if (!dirty || saving) return false
+    const draftAtStart = cloneTaste(draft)
+    const savedAfterSave = cloneTaste(saved)
     setSaving(true)
     setSaveError('')
     setNotice('')
@@ -496,6 +498,7 @@ function TastePage() {
           targetItems = clearAllRequestedRef.current
             ? draft[section.key]
             : [...currentItems, ...draft[section.key].filter((item) => !currentItems.some((entry) => identity(entry) === identity(item)))]
+          savedAfterSave[section.key] = currentItems
           setDraft((current) => ({ ...current, [section.key]: targetItems }))
           setSaved((current) => ({ ...current, [section.key]: currentItems }))
           delete remainingLoadFailures[section.key]
@@ -504,12 +507,17 @@ function TastePage() {
         await replaceSection(section, currentItems, targetItems, token)
         const fresh = await getMyTasteList(username, section.key, token)
         const normalized = fresh.map((item, index) => ({ ...itemDetails(item), mbid: item.mbid || item.recording_mbid, id: item.id, rank: Number(item.rank) || index + 1, liked: Boolean(item.liked) })).sort((a, b) => a.rank - b.rank)
+        if (!sameTaste({ [section.key]: targetItems }, { [section.key]: normalized })) {
+          throw new Error('The saved list did not match your changes. Your draft is still here.')
+        }
+        savedAfterSave[section.key] = normalized
         setSaved((current) => ({ ...current, [section.key]: normalized }))
       } catch (error) {
         failed.push(`${section.title}: ${error.message || 'save failed'}`)
         try {
           const fresh = await getMyTasteList(username, section.key, token)
           const normalized = fresh.map((item, index) => ({ ...itemDetails(item), mbid: item.mbid || item.recording_mbid, id: item.id, rank: Number(item.rank) || index + 1, liked: Boolean(item.liked) })).sort((a, b) => a.rank - b.rank)
+          savedAfterSave[section.key] = normalized
           setSaved((current) => ({ ...current, [section.key]: normalized }))
           delete remainingLoadFailures[section.key]
         } catch { /* keep the last known baseline when refresh is unavailable */ }
@@ -518,6 +526,8 @@ function TastePage() {
     setLoadFailures(remainingLoadFailures)
     if (failed.length) setSaveError(`Some changes did not save. ${failed.join(' · ')}. Your draft is still here.`)
     else {
+      setSaved(savedAfterSave)
+      setDraft((current) => sameTaste(current, draftAtStart) ? cloneTaste(savedAfterSave) : current)
       setNotice('Taste saved.')
       const unresolved = Object.entries(remainingLoadFailures).map(([key, message]) => `${sections.find((section) => section.key === key)?.title}: ${message}`)
       setLoadError(unresolved.length ? `Could not load some lists. ${unresolved.join(' · ')}` : '')

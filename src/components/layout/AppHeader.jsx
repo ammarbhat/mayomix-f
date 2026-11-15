@@ -4,10 +4,27 @@ import './AppHeader.css'
 
 function AppHeader({ mobileTitle, mobileBackTo = '/profile', hideMobileNavigation = false, alwaysShowMobileNavigation = false }) {
   const [isMobileNavHidden, setIsMobileNavHidden] = useState(false)
+  const [isTextEntryFocused, setIsTextEntryFocused] = useState(false)
   const mobileNavRef = useRef(null)
   const path = useLocation().pathname.replace(/\/$/, '') || '/'
   const active = path === '/activity' ? 'activity' : path === '/search' ? 'search' : 'profile'
-  const shouldHideMobileNavigation = isMobileNavHidden && !alwaysShowMobileNavigation
+  const shouldHideMobileNavigation = isTextEntryFocused || (isMobileNavHidden && !alwaysShowMobileNavigation)
+
+  useEffect(() => {
+    const isTextEntry = (element) => element instanceof HTMLElement
+      && element.matches('input, textarea, [contenteditable="true"]')
+      && !element.readOnly
+      && !element.disabled
+    const handleFocusIn = (event) => setIsTextEntryFocused(isTextEntry(event.target))
+    const handleFocusOut = (event) => setIsTextEntryFocused(isTextEntry(event.relatedTarget))
+
+    document.addEventListener('focusin', handleFocusIn)
+    document.addEventListener('focusout', handleFocusOut)
+    return () => {
+      document.removeEventListener('focusin', handleFocusIn)
+      document.removeEventListener('focusout', handleFocusOut)
+    }
+  }, [])
 
   useEffect(() => {
     if (alwaysShowMobileNavigation) return undefined

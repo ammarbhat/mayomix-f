@@ -116,6 +116,7 @@
   .taste-inline-search .taste-search-hint { display: none; }
   .taste-inline-search .taste-search-message { padding: 8px 4px; font-size: 12px; }
   .taste-inline-search .taste-result-card { min-height: 76px; gap: 9px; padding: 7px; border-radius: 15px; }
+  .taste-inline-search-albums .taste-result-card { width: calc(100% - 24px); box-sizing: border-box; justify-self: center; background: #606060; }
   .taste-inline-search .taste-result-art { width: 60px; height: 60px; flex-basis: 60px; border-radius: 10px; }
   .taste-inline-search .taste-result-copy h3 { font-size: 12px; }
   .taste-inline-search .taste-result-copy p { font-size: 10px; }
