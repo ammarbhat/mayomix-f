@@ -26,10 +26,31 @@ function SearchIcon() {
 
 function ResultCard({ item, draft, ratings, options, onAdd, targetCategory }) {
   const [open, setOpen] = useState(false)
+  const [openUpward, setOpenUpward] = useState(false)
   const mbid = identity(item)
   const title = item.title || 'Untitled'
   const artist = item.artist || item.album || 'Unknown artist'
   const alreadyInEveryOption = options.every(({ key }) => draft[key].some((entry) => identity(entry) === mbid))
+
+  function toggleAddMenu(event) {
+    if (open) {
+      setOpen(false)
+      return
+    }
+    const button = event.currentTarget
+    const results = button.closest('.taste-results')
+    if (results) {
+      const bounds = results.getBoundingClientRect()
+      const buttonBounds = button.getBoundingClientRect()
+      const menuHeight = options.length * 42 + 2
+      const below = bounds.bottom - buttonBounds.bottom
+      const above = buttonBounds.top - bounds.top
+      setOpenUpward(below < menuHeight + 8 && above > below)
+    } else {
+      setOpenUpward(false)
+    }
+    setOpen(true)
+  }
 
   return <article className="taste-result-card">
     <div className="taste-result-art">
@@ -43,8 +64,8 @@ function ResultCard({ item, draft, ratings, options, onAdd, targetCategory }) {
     </div>
     <div className="taste-add-wrap">
       {targetCategory ? <button type="button" className="taste-add-button" aria-label={`Add ${title} to ${targetCategory}`} disabled={!mbid || draft[targetCategory].some((entry) => identity(entry) === mbid) || draft[targetCategory].length >= sections.find(({ key }) => key === targetCategory).max} onClick={() => onAdd(targetCategory, item)}>+</button> : <>
-        <button type="button" className="taste-add-button" aria-label={`Add ${title}`} aria-expanded={open} aria-haspopup="menu" disabled={!mbid || alreadyInEveryOption} onClick={() => setOpen((current) => !current)}>{alreadyInEveryOption ? '✓' : '+'}</button>
-        {open && <div className="taste-add-menu" role="menu" aria-label={`Add ${title} to`}>
+        <button type="button" className="taste-add-button" aria-label={`Add ${title}`} aria-expanded={open} aria-haspopup="menu" disabled={!mbid || alreadyInEveryOption} onClick={toggleAddMenu}>{alreadyInEveryOption ? '✓' : '+'}</button>
+        {open && <div className={`taste-add-menu${openUpward ? ' opens-upward' : ''}`} role="menu" aria-label={`Add ${title} to`}>
         {options.map((section) => {
           const full = draft[section.key].length >= section.max
           const duplicate = draft[section.key].some((entry) => identity(entry) === mbid)
