@@ -471,23 +471,29 @@ export async function sendConnectionRequest(token, userId, username) {
   })
 }
 
-export function getAlbumDetails(mbid, token, { forceRefresh = false } = {}) {
+export function getAlbumDetails(mbid, token, { requireTitle = false } = {}) {
   const cacheKey = `release-group:${mbid}`
-  const cached = forceRefresh ? null : getMusicBrainzCacheItem(cacheKey)
+  const cached = getMusicBrainzCacheItem(cacheKey)
   const cachedTitle = typeof cached?.title === 'string' ? cached.title.trim() : ''
   const cachedHasReleaseList = Array.isArray(cached?.releases) || Array.isArray(cached?.meta?.releases)
-  if (cachedTitle && cachedTitle !== mbid && !/^album\s+review$/i.test(cachedTitle) && cachedHasReleaseList) {
+  const hasUsableTitle = cachedTitle && cachedTitle !== mbid && !/^album(?:\s+(?:review|title))?$/i.test(cachedTitle)
+  if (hasUsableTitle && (requireTitle || cachedHasReleaseList)) {
     return Promise.resolve({ ...itemDetails(cached), mbid })
   }
 
   return queryClient.fetchQuery({
-    queryKey: ['album', mbid, 'metadata'],
-    staleTime: forceRefresh ? 0 : QUERY_FRESHNESS.albumMetadata,
+    queryKey: requireTitle ? ['album', mbid, 'metadata', 'title'] : ['album', mbid, 'metadata'],
+    staleTime: QUERY_FRESHNESS.albumMetadata,
+    retry: false,
     queryFn: async ({ signal }) => {
       const payload = await performApiRequest(`/albums/${encodeURIComponent(mbid)}`, token, { signal })
       const details = { ...itemDetails(payload), mbid }
       const title = typeof details.title === 'string' ? details.title.trim() : ''
-      if (title && title !== mbid && !/^album\s+review$/i.test(title)) {
+      const hasUsableTitle = title && title !== mbid && !/^album(?:\s+(?:review|title))?$/i.test(title)
+      if (requireTitle && !hasUsableTitle) {
+        throw new Error(`Album title is not available yet for ${mbid}`)
+      }
+      if (hasUsableTitle) {
         saveMusicBrainzCacheItem(cacheKey, details)
       }
       return details

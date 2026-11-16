@@ -92,7 +92,7 @@ function getAlbumTitle(mbid, ...values) {
   return values.find((value) => typeof value === 'string'
     && value.trim()
     && value.trim() !== mbid
-    && !/^album\s+review$/i.test(value.trim())) || ''
+    && !/^album(?:\s+(?:review|title))?$/i.test(value.trim())) || ''
 }
 
 function ActivityReviewCard({ review, token }) {
@@ -127,10 +127,10 @@ function ActivityReviewCard({ review, token }) {
     if (!mbid || hasInitialTitle) return undefined
     let cancelled = false
     async function loadTitle() {
-      for (let attempt = 0; attempt < 3; attempt += 1) {
-        if (cancelled) return
+      let attempt = 0
+      while (!cancelled) {
         try {
-          const details = await getAlbumDetails(mbid, token)
+          const details = await getAlbumDetails(mbid, token, { requireTitle: true })
           const resolvedTitle = getAlbumTitle(mbid, details.title, details.name)
           if (cancelled) return
           if (details && (details.title || details.artist || details.image)) {
@@ -143,9 +143,10 @@ function ActivityReviewCard({ review, token }) {
         } catch {
           if (cancelled) return
         }
-        if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)))
+        attempt += 1
+        const retryDelay = Math.min(1_000 * (2 ** Math.min(attempt - 1, 5)), 30_000)
+        await new Promise((resolve) => setTimeout(resolve, retryDelay))
       }
-      if (!cancelled) setAlbumTitleLookup('failed')
     }
     loadTitle()
     return () => { cancelled = true }
