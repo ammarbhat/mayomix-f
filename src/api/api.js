@@ -61,9 +61,15 @@ function queryKeysForMutation(path, token, body, context = {}) {
   } else if (parts[0] === 'users' && parts[1] === 'me' && parts[2] === 'taste' && parts.length === 3) {
     const category = url.searchParams.get('category')
     keys.push(category ? queryKeys.user(scope).concat('taste', category) : queryKeys.user(scope).concat('taste'))
+    queryClient.getQueryCache().findAll({
+      predicate: (query) => query.queryKey[0] === 'user' && query.queryKey[2] === 'taste',
+    }).forEach((query) => keys.push(query.queryKey))
     keys.push(queryKeys.privateLikedTaste(scope))
   } else if (parts[0] === 'users' && parts[1] === 'me' && parts[2] === 'taste' && parts.length === 4) {
     keys.push(queryKeys.user(scope).concat('taste'))
+    queryClient.getQueryCache().findAll({
+      predicate: (query) => query.queryKey[0] === 'user' && query.queryKey[2] === 'taste',
+    }).forEach((query) => keys.push(query.queryKey))
     keys.push(queryKeys.privateLikedTaste(scope))
   } else if (parts[0] === 'users' && parts[1] === 'me' && parts.length === 2) {
     keys.push(queryKeys.privateAccount(scope).concat('me'))
@@ -292,9 +298,9 @@ async function enrichMusicItem(item, kind, token) {
   }
 }
 
-export async function getTasteList(username, category, token, onEnriched) {
+export async function getTasteList(username, category, token, onEnriched, { cache = true } = {}) {
   const query = new URLSearchParams({ category })
-  const payload = await apiRequest(`/users/${encodeURIComponent(username)}/taste?${query}`, { token })
+  const payload = await apiRequest(`/users/${encodeURIComponent(username)}/taste?${query}`, { token, cache })
   const items = listFromPayload(payload).map((entry) => {
     const item = itemDetails(entry)
     return {
@@ -342,9 +348,9 @@ export async function getTasteList(username, category, token, onEnriched) {
   return items
 }
 
-export async function getMyTasteList(username, category, token, onEnriched) {
+export async function getMyTasteList(username, category, token, onEnriched, options) {
   try {
-    return await getTasteList(username, category, token, onEnriched)
+    return await getTasteList(username, category, token, onEnriched, options)
   } catch (error) {
     if (error.status === 404 || /404|not found/i.test(error.message)) return []
     throw error

@@ -505,7 +505,7 @@ function TastePage() {
         }
         if (sameTaste({ [section.key]: currentItems }, { [section.key]: targetItems })) continue
         await replaceSection(section, currentItems, targetItems, token)
-        const fresh = await getMyTasteList(username, section.key, token)
+        const fresh = await getMyTasteList(username, section.key, token, undefined, { cache: false })
         const normalized = fresh.map((item, index) => ({ ...itemDetails(item), mbid: item.mbid || item.recording_mbid, id: item.id, rank: Number(item.rank) || index + 1, liked: Boolean(item.liked) })).sort((a, b) => a.rank - b.rank)
         if (!sameTaste({ [section.key]: targetItems }, { [section.key]: normalized })) {
           throw new Error('The saved list did not match your changes. Your draft is still here.')
@@ -515,7 +515,7 @@ function TastePage() {
       } catch (error) {
         failed.push(`${section.title}: ${error.message || 'save failed'}`)
         try {
-          const fresh = await getMyTasteList(username, section.key, token)
+          const fresh = await getMyTasteList(username, section.key, token, undefined, { cache: false })
           const normalized = fresh.map((item, index) => ({ ...itemDetails(item), mbid: item.mbid || item.recording_mbid, id: item.id, rank: Number(item.rank) || index + 1, liked: Boolean(item.liked) })).sort((a, b) => a.rank - b.rank)
           savedAfterSave[section.key] = normalized
           setSaved((current) => ({ ...current, [section.key]: normalized }))

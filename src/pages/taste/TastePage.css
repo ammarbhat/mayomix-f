@@ -111,6 +111,7 @@
   .taste-inline-search .taste-search-form input { padding: 0 4px; text-align: left; font-size: 16px; }
   .taste-inline-search .taste-search-submit { right: 38px; width: 34px; height: 34px; }
   .taste-inline-search .taste-search-submit svg { width: 21px; height: 21px; }
+  .taste-inline-search .taste-search-clear { right: 76px; }
   .taste-inline-search .taste-inline-search-close { position: absolute; top: -7px; right: -7px; width: 26px; height: 26px; display: grid; place-items: center; padding: 0 0 2px; border: 1px solid #fff; border-radius: 50%; background: #ee9b9d; color: #fff; font-size: 22px; line-height: 1; }
   .taste-inline-search .taste-results { flex: none; max-height: 210px; gap: 7px; overflow-y: auto; padding: 0; }
   .taste-inline-search .taste-search-hint { display: none; }
