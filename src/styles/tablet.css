@@ -72,7 +72,7 @@
   .search-page { height: 100dvh; min-height: 0; position: static; }
   .search-workspace { width: min(100% - 40px, 1120px); padding: 14px 0 18px; }
   .search-workspace:not(.is-expanded)::before { display: none; }
-  .main-search-form { width: min(100%, 920px); height: 52px; }
+  .main-search-form { width: min(100%, 972px); height: 52px; }
   .main-search-form input { font-size: 18px; }
   .submit-search { right: 6px; width: 44px; }
   .submit-search svg { width: 27px; height: 27px; }
