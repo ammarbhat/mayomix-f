@@ -100,10 +100,12 @@ function TopRatedAlbumCard({ entry, rank, token }) {
     <div className="top-rated-row" ref={cardRef}>
       <span className="top-rated-rank" aria-label={`Rank ${rank}`}>{rank}</span>
       <Link className="top-rated-card" to={`/albums/${encodeURIComponent(mbid)}`} onClick={(event) => { if (!mbid) event.preventDefault() }}>
-        <Artwork item={details} alt={`${title} cover`} />
-        <div className="top-rated-copy">
-          <h3 title={title}>{title}</h3>
-          {artist && <p title={artist}>{artist}</p>}
+        <div className="top-rated-main">
+          <Artwork item={details} alt={`${title} cover`} />
+          <div className="top-rated-copy">
+            <h3 title={title}>{title}</h3>
+            {artist && <p title={artist}>{artist}</p>}
+          </div>
         </div>
         <div className="top-rated-stat" aria-label={`Average rating ${Number.isFinite(rating) ? formattedRating : 'unavailable'} out of 5`}>
           <span className="top-rated-stat-label">Rating</span>
@@ -258,11 +260,7 @@ function SearchPage() {
   function handleSubmit(event) {
     event.preventDefault()
     runSearch(query)
-  }
-
-  function expandSearch() {
-    setExpanded(true)
-    requestAnimationFrame(() => inputRef.current?.focus())
+    if (window.matchMedia('(max-width: 760px)').matches) inputRef.current?.blur()
   }
 
   function closeSearch() {
@@ -278,9 +276,9 @@ function SearchPage() {
 
   return (
     <main className="search-page">
-      <AppHeader />
+      <AppHeader alwaysShowMobileNavigation />
       <section className={`search-workspace${expanded ? ' is-expanded' : ''}`}>
-        <form className={`main-search-form${expanded ? ' is-expanded' : ''}`} onClick={() => { if (!expanded) expandSearch() }} onSubmit={handleSubmit}>
+        <form className={`main-search-form${expanded ? ' is-expanded' : ''}`} onSubmit={handleSubmit}>
           <input
             ref={inputRef}
             aria-label="Search albums and users"
@@ -294,7 +292,7 @@ function SearchPage() {
         </form>
 
         <div className={`search-content-stage${expanded ? ' is-expanded' : ''}`}>
-          <section className="expanded-search-panel" aria-label="Search results" aria-busy={searchLoading} aria-hidden={!expanded}>
+          <section className="expanded-search-panel" aria-label="Search results" aria-busy={searchLoading} aria-hidden={!expanded} inert={!expanded}>
             <div className={`search-tabs${activeSearchTab === 'users' ? ' is-users-active' : ''}`} role="tablist" aria-label="Search category">
               <button type="button" role="tab" aria-selected={activeSearchTab === 'albums'} className={activeSearchTab === 'albums' ? 'is-active' : ''} onClick={() => selectSearchTab('albums')}>Albums</button>
               <button type="button" role="tab" aria-selected={activeSearchTab === 'users'} className={activeSearchTab === 'users' ? 'is-active' : ''} onClick={() => selectSearchTab('users')}>Users</button>
