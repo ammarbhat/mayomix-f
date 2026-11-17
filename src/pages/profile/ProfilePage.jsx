@@ -62,7 +62,6 @@ function MediaSection({ id, title, items, loading, type = 'artwork' }) {
               <Artwork item={item} kind={type === 'song' ? 'song' : 'album'} />
               <div className="media-copy">
                 <h3 title={titleIsMbid ? undefined : displayTitle}>{displayTitle}</h3>
-                {type === 'song' && <p title={item.artist}>{item.artist || item.album || ''}</p>}
               </div>
               {(type === 'top-album' || type === 'rotation') ? <RatingVinyls item={entry} size="large" /> : null}
             </Link>
