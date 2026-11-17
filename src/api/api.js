@@ -128,7 +128,7 @@ export function apiRequest(path, { token, cache = true, invalidationContext, ...
       return value
     })
   }
-  if (!cache) return performApiRequest(path, token, options)
+  if (!cache) return performApiRequest(path, token, { ...options, cache: 'no-store' })
   const query = describeApiQuery(path, token)
   if (query.queryKey[0] === 'private' && !getTokenScope(token)) return performApiRequest(path, token, options)
   return queryClient.fetchQuery({
@@ -251,6 +251,27 @@ function cachedItem(key) {
 }
 
 function getMusicBrainzMetadata(kind, mbid, token) {
+  if (kind === 'recording') {
+    return apiRequest(`/recordings/${encodeURIComponent(mbid)}`, { token, cache: false })
+      .then((payload) => {
+        const details = itemDetails(payload)
+        const song = payload?.meta || payload
+        const credits = song?.['artist-credit'] || song?.artist_credit || []
+        const artist = Array.isArray(credits)
+          ? credits.map((credit) => typeof credit === 'string'
+            ? credit
+            : `${credit?.name || credit?.artist?.name || ''}${credit?.joinphrase || ''}`).join('').trim()
+          : String(credits || '')
+        const release = song?.releases?.[0]
+        return {
+          ...details,
+          artist: details.artist || artist,
+          album: details.album || release?.title || release?.['release-group']?.title || '',
+          mbid,
+        }
+      })
+  }
+
   return queryClient.fetchQuery({
     queryKey: ['musicbrainz', 'metadata', kind, mbid],
     queryFn: async () => {
@@ -276,7 +297,7 @@ function getMusicBrainzMetadata(kind, mbid, token) {
 
 async function enrichMusicItem(item, kind, token) {
   if (!item.mbid) return { ...item, metadataLoading: false, metadataLoaded: true }
-  const key = `${kind}:${item.mbid}`
+  const key = `${kind === 'recording' ? 'recording-v2' : kind}:${item.mbid}`
   const cached = cachedItem(key)
   if (cached) return {
     ...cached,
@@ -359,10 +380,11 @@ export async function getMyTasteList(username, category, token, onEnriched, opti
 
 export function addTasteItem(category, item, rank, token) {
   const query = new URLSearchParams({ category })
+  const mbid = category === 'rotation_song' ? item.recording_mbid || item.mbid : item.mbid
   return apiRequest(`/users/me/taste?${query}`, {
     method: 'POST', token,
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ mbid: item.mbid, rank, liked: Boolean(item.liked) }),
+    body: JSON.stringify({ mbid, rank, liked: Boolean(item.liked) }),
   })
 }
 
@@ -603,12 +625,13 @@ export async function searchSongs(queryText, limit = 10) {
     const artist = Array.isArray(artistCredits)
       ? artistCredits.map((credit) => `${credit.name || credit.artist?.name || ''}${credit.joinphrase || ''}`).join('').trim()
       : String(artistCredits || entry.artist || '')
-    const mbid = entry.mbid || entry.id || entry.recording?.id || ''
     const release = entry.releases?.[0]
+    const recordingMbid = entry.recording_mbid || entry.mbid || entry.id || entry.recording?.id || ''
     const releaseGroupId = release?.['release-group']?.id
     return {
       ...entry,
-      mbid,
+      mbid: recordingMbid,
+      recording_mbid: recordingMbid,
       title: entry.title || entry.name || '',
       artist: entry.artist || artist,
       album: release?.title || '',
