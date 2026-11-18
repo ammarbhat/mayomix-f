@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, useLocation } from 'react-router'
 import AppHeader from '../../components/layout/AppHeader.jsx'
@@ -459,6 +459,15 @@ function SettingsPage() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const title = useMemo(() => [...accountSections, ...appSections].find((section) => section.id === active)?.label || 'Account Information', [active])
 
+  useLayoutEffect(() => {
+    document.documentElement.classList.add('is-settings-route')
+    document.body.classList.add('is-settings-route')
+    return () => {
+      document.documentElement.classList.remove('is-settings-route')
+      document.body.classList.remove('is-settings-route')
+    }
+  }, [])
+
   useEffect(() => {
     if (!token) window.location.replace('/login')
   }, [token])
@@ -474,7 +483,7 @@ function SettingsPage() {
   }
 
   if (!token) return null
-  return <main className={`settings-page${isSettingsHome ? ' is-mobile-settings-home' : ' is-mobile-settings-detail'}`} inert={logoutOpen || deleteConfirmOpen}>
+  return <main className={`settings-page${isSettingsHome ? ' is-mobile-settings-home' : ' is-mobile-settings-detail'}${active === 'edit-profile' ? ' is-mobile-edit-profile' : ''}`} inert={logoutOpen || deleteConfirmOpen}>
     <AppHeader alwaysShowMobileNavigation />
     <section className="settings-shell" aria-label="Settings">
       <aside className="settings-sidebar">
