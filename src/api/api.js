@@ -281,13 +281,14 @@ function getMusicBrainzMetadata(kind, mbid, token) {
       }
 
       const category = kind === 'recording' ? 'songs' : 'artists'
-      const query = new URLSearchParams({ query: mbid, limit: '1' })
-      const payload = await apiRequest(`/search/${category}?${query}`, { token })
-      const candidates = listFromPayload(payload).map((entry) => {
-        const item = itemDetails(entry)
-        return { ...item, mbid: item.mbid || item.id || item.recording?.id || item.artist?.id || '' }
-      })
-      const match = candidates.find((entry) => entry.mbid === mbid) || candidates[0]
+      const candidates = kind === 'artist'
+        ? await searchArtists(`arid:${mbid}`, 1)
+        : await apiRequest(`/search/${category}?${new URLSearchParams({ query: mbid, limit: '1' })}`, { token })
+          .then((payload) => listFromPayload(payload).map((entry) => {
+            const item = itemDetails(entry)
+            return { ...item, mbid: item.mbid || item.id || item.recording?.id || item.artist?.id || '' }
+          }))
+      const match = candidates.find((entry) => entry.mbid?.toLowerCase() === mbid.toLowerCase()) || (kind === 'artist' ? null : candidates[0])
       if (!match) throw new Error(`No ${category} metadata found for ${mbid}`)
       return match
     },
@@ -299,7 +300,7 @@ async function enrichMusicItem(item, kind, token) {
   if (!item.mbid) return { ...item, metadataLoading: false, metadataLoaded: true }
   const key = `${kind === 'recording' ? 'recording-v2' : kind}:${item.mbid}`
   const cached = cachedItem(key)
-  if (cached) return {
+  if (cached && !(kind === 'artist' && cached.title?.toLowerCase() === item.mbid.toLowerCase())) return {
     ...cached,
     ...item,
     title: cached.title || item.title,
