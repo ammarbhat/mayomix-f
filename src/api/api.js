@@ -579,8 +579,8 @@ export function normalizeUserResponse(user) {
   return { ...user, id: user.id ?? user.user_id }
 }
 
-export async function searchAlbums(queryText, token, limit = 15) {
-  const query = new URLSearchParams({ query: queryText, limit: String(limit) })
+export async function searchAlbums(queryText, token, limit = 15, offset = 0) {
+  const query = new URLSearchParams({ query: queryText, limit: String(limit), offset: String(offset) })
   const payload = await apiRequest(`/search/albums?${query}`, { token })
   return listFromPayload(payload).map((entry) => {
     const artistCredits = entry['artist-credit'] || entry.artist_credit || []
@@ -604,8 +604,8 @@ export async function searchAlbums(queryText, token, limit = 15) {
   })
 }
 
-export async function searchArtists(queryText, limit = 6) {
-  const query = new URLSearchParams({ query: queryText, limit: String(limit) })
+export async function searchArtists(queryText, limit = 6, offset = 0) {
+  const query = new URLSearchParams({ query: queryText, limit: String(limit), offset: String(offset) })
   const payload = await apiRequest(`/search/artists?${query}`)
   const artists = Array.isArray(payload?.artists) ? payload.artists : listFromPayload(payload)
   return artists.filter((entry) => entry && typeof entry === 'object').map((entry) => {
@@ -618,8 +618,8 @@ export async function searchArtists(queryText, limit = 6) {
   }).filter((artist) => artist.mbid && artist.title)
 }
 
-export async function searchSongs(queryText, limit = 10) {
-  const query = new URLSearchParams({ query: queryText, limit: String(limit) })
+export async function searchSongs(queryText, limit = 10, offset = 0) {
+  const query = new URLSearchParams({ query: queryText, limit: String(limit), offset: String(offset) })
   const payload = await apiRequest(`/search/songs?${query}`)
   return listFromPayload(payload).map((entry) => {
     const artistCredits = entry['artist-credit'] || entry.artist_credit || []

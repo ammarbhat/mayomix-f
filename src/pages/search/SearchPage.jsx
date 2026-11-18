@@ -11,6 +11,7 @@ import {
   searchUsers,
 } from '../../api/api.js'
 import AppHeader from '../../components/layout/AppHeader.jsx'
+import usePagedMusicSearch from '../../hooks/usePagedMusicSearch.js'
 import './SearchPage.css'
 
 function SearchIcon() {
@@ -176,6 +177,7 @@ function SearchPage() {
   const token = getStoredToken()
   const inputRef = useRef(null)
   const searchRequestRef = useRef(0)
+  const { items: albumResults, loading: albumLoading, loadingMore: albumLoadingMore, error: albumError, hasMore: albumHasMore, resultsRootCallback: albumResultsRoot, sentinelCallback: albumSentinel, search: searchAlbumPages, reset: resetAlbumSearch } = usePagedMusicSearch()
   const [topAlbums, setTopAlbums] = useState([])
   const [topAlbumsLoading, setTopAlbumsLoading] = useState(true)
   const [topAlbumsError, setTopAlbumsError] = useState('')
@@ -183,8 +185,8 @@ function SearchPage() {
   const [query, setQuery] = useState('')
   const [submittedQuery, setSubmittedQuery] = useState('')
   const [activeSearchTab, setActiveSearchTab] = useState('albums')
-  const [results, setResults] = useState([])
-  const [searchLoading, setSearchLoading] = useState(false)
+  const [userResults, setUserResults] = useState([])
+  const [userSearchLoading, setUserSearchLoading] = useState(false)
   const [searchError, setSearchError] = useState('')
 
   useEffect(() => {
@@ -228,18 +230,27 @@ function SearchPage() {
     const term = value.trim()
     if (!term) {
       setSubmittedQuery('')
-      setResults([])
+      setUserResults([])
       setSearchError('')
-      setSearchLoading(false)
+      setUserSearchLoading(false)
+      resetAlbumSearch()
       return
     }
     setSubmittedQuery(term)
-    setSearchLoading(true)
+    if (tab === 'albums') {
+      setUserResults([])
+      resetAlbumSearch()
+      searchAlbumPages(term, (value, offset, limit) => searchAlbums(value, token, limit, offset), 15)
+      setUserSearchLoading(false)
+      setSearchError('')
+      return
+    }
+    setUserSearchLoading(true)
     setSearchError('')
-    setResults([])
+    setUserResults([])
     try {
-      const found = tab === 'users' ? await searchUsers(term, token) : await searchAlbums(term, token)
-      if (requestId === searchRequestRef.current) setResults(found)
+      const found = await searchUsers(term, token)
+      if (requestId === searchRequestRef.current) setUserResults(found)
     } catch (error) {
       if (/401|unauthorized|unauthenticated|not authenticated|credentials/i.test(error.message)) {
         clearStoredToken()
@@ -248,12 +259,13 @@ function SearchPage() {
       }
       if (requestId === searchRequestRef.current) setSearchError(error.message || 'Search could not be completed.')
     } finally {
-      if (requestId === searchRequestRef.current) setSearchLoading(false)
+      if (requestId === searchRequestRef.current) setUserSearchLoading(false)
     }
-  }, [activeSearchTab, query, token])
+  }, [activeSearchTab, query, resetAlbumSearch, searchAlbumPages, token])
 
   function selectSearchTab(tab) {
     setActiveSearchTab(tab)
+    if (tab === 'users') resetAlbumSearch()
     if (submittedQuery) runSearch(submittedQuery, tab)
   }
 
@@ -268,9 +280,10 @@ function SearchPage() {
     setExpanded(false)
     setQuery('')
     setSubmittedQuery('')
-    setResults([])
+    setUserResults([])
     setSearchError('')
-    setSearchLoading(false)
+    setUserSearchLoading(false)
+    resetAlbumSearch()
     inputRef.current?.blur()
   }
 
@@ -285,25 +298,28 @@ function SearchPage() {
             placeholder="Search."
             value={query}
             onFocus={() => setExpanded(true)}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => { searchRequestRef.current += 1; resetAlbumSearch(); setUserResults([]); setUserSearchLoading(false); setSearchError(''); setQuery(event.target.value) }}
           />
           <button className="submit-search" type="submit" aria-label="Search"><SearchIcon /></button>
           <button className="close-search" type="button" aria-label="Clear and close search" aria-hidden={!expanded} tabIndex={expanded ? 0 : -1} onClick={closeSearch}><CloseIcon /></button>
         </form>
 
         <div className={`search-content-stage${expanded ? ' is-expanded' : ''}`}>
-          <section className="expanded-search-panel" aria-label="Search results" aria-busy={searchLoading} aria-hidden={!expanded} inert={!expanded}>
+          <section className="expanded-search-panel" aria-label="Search results" aria-busy={activeSearchTab === 'albums' ? albumLoading || albumLoadingMore : userSearchLoading} aria-hidden={!expanded} inert={!expanded}>
             <div className={`search-tabs${activeSearchTab === 'users' ? ' is-users-active' : ''}`} role="tablist" aria-label="Search category">
               <button type="button" role="tab" aria-selected={activeSearchTab === 'albums'} className={activeSearchTab === 'albums' ? 'is-active' : ''} onClick={() => selectSearchTab('albums')}>Albums</button>
               <button type="button" role="tab" aria-selected={activeSearchTab === 'users'} className={activeSearchTab === 'users' ? 'is-active' : ''} onClick={() => selectSearchTab('users')}>Users</button>
             </div>
-            <div className={`search-results${activeSearchTab === 'users' ? ' user-search-results' : ''}`} role="tabpanel">
-              {searchLoading && <p className="search-message" role="status">Searching…</p>}
-              {searchError && !searchLoading && <p className="search-message is-error" role="alert">{searchError}</p>}
-              {!searchLoading && !searchError && submittedQuery && results.length === 0 && <p className="search-message" role="status">No {activeSearchTab} found for “{submittedQuery}”.</p>}
-              {!searchLoading && results.map((result, index) => activeSearchTab === 'users'
-                ? <UserResult key={result.id || result.user_id || result.username || index} user={result} token={token} />
-                : <AlbumResult key={result.mbid || result.id || index} album={result} />)}
+            <div className={`search-results${activeSearchTab === 'users' ? ' user-search-results' : ''}`} ref={activeSearchTab === 'albums' ? albumResultsRoot : undefined} role="tabpanel">
+              {activeSearchTab === 'albums' && albumLoading && <p className="search-message is-loading" role="status">{albumError || 'Searching albums…'}</p>}
+              {activeSearchTab === 'albums' && !albumLoading && !albumLoadingMore && albumError && <p className="search-message is-error" role="alert">{albumError}</p>}
+              {activeSearchTab === 'albums' && albumLoadingMore && <p className="search-message is-loading" role="status">{albumError || 'Loading more albums…'}</p>}
+              {activeSearchTab === 'users' && userSearchLoading && <p className="search-message is-loading" role="status">Searching…</p>}
+              {activeSearchTab === 'users' && searchError && !userSearchLoading && <p className="search-message is-error" role="alert">{searchError}</p>}
+              {activeSearchTab === 'users' && !userSearchLoading && !searchError && submittedQuery && userResults.length === 0 && <p className="search-message" role="status">No users found for “{submittedQuery}”.</p>}
+              {!albumLoading && activeSearchTab === 'albums' && albumResults.map((result, index) => <AlbumResult key={result.mbid || result.id || index} album={result} />)}
+              {activeSearchTab === 'users' && userResults.map((result, index) => <UserResult key={result.id || result.user_id || result.username || index} user={result} token={token} />)}
+              {activeSearchTab === 'albums' && albumHasMore && <div className="search-page-sentinel" ref={albumSentinel} aria-hidden="true" />}
             </div>
           </section>
           <section className="top-rated-board" aria-label="Top rated albums on Mayomix" aria-busy={topAlbumsLoading} aria-hidden={expanded} inert={expanded}>

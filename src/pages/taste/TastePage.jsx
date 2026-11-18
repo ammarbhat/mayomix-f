@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import AppHeader from '../../components/layout/AppHeader.jsx'
 import RatingVinyls from '../../components/ratings/RatingVinyls.jsx'
 import MetadataBuffering from '../../components/feedback/MetadataBuffering.jsx'
+import usePagedMusicSearch from '../../hooks/usePagedMusicSearch.js'
 import { addTasteItem, apiRequest, clearStoredToken, getMyTasteList, getStoredToken, getUserReviews, itemDetails, removeTasteItem, searchAlbums, searchSongs, updateTasteItem } from '../../api/api.js'
 import './TastePage.css'
 
@@ -82,11 +83,8 @@ function ResultCard({ item, draft, ratings, options, onAdd, targetCategory }) {
 function SearchPanel({ token, draft, ratings, onAdd, mobileTargetSection, onClose }) {
   const [mode, setMode] = useState(mobileTargetSection?.kind || 'album')
   const [query, setQuery] = useState('')
-  const [results, setResults] = useState([])
+  const { items: searchItems, loading: searchLoading, loadingMore: searchLoadingMore, error: searchError, hasMore: searchHasMore, resultsRootCallback: resultsRoot, sentinelCallback: resultsSentinel, search: startMusicSearch, reset: resetMusicSearch } = usePagedMusicSearch()
   const [submitted, setSubmitted] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const requestId = useRef(0)
   const inputRef = useRef(null)
   const inputId = `taste-search-${mobileTargetSection?.key || 'desktop'}`
   const options = useMemo(() => mode === 'album'
@@ -97,31 +95,18 @@ function SearchPanel({ token, draft, ratings, onAdd, mobileTargetSection, onClos
     event?.preventDefault()
     const term = query.trim()
     if (!term) return
-    const id = ++requestId.current
     setSubmitted(true)
-    setLoading(true)
-    setError('')
-    try {
-      const items = mode === 'album' ? await searchAlbums(term, token) : await searchSongs(term)
-      if (requestId.current === id) setResults(items)
-    } catch (requestError) {
-      if (requestId.current === id) {
-        setResults([])
-        setError(requestError.message || 'Search could not be completed. Try again.')
-      }
-    } finally {
-      if (requestId.current === id) setLoading(false)
-    }
+    const fetchPage = mode === 'album'
+      ? (value, offset, limit) => searchAlbums(value, token, limit, offset)
+      : (value, offset, limit) => searchSongs(value, limit, offset)
+    startMusicSearch(term, fetchPage, mode === 'album' ? 15 : 10)
   }
 
   function changeMode(nextMode) {
     if (nextMode === mode) return
-    requestId.current += 1
+    resetMusicSearch()
     setMode(nextMode)
-    setResults([])
     setSubmitted(false)
-    setLoading(false)
-    setError('')
   }
 
   return (
@@ -129,7 +114,7 @@ function SearchPanel({ token, draft, ratings, onAdd, mobileTargetSection, onClos
       <form className="taste-search-form" onSubmit={submit}>
         <label className="visually-hidden" htmlFor={inputId}>Search {mode === 'album' ? 'albums' : 'songs'}</label>
         <input id={inputId} ref={inputRef} value={query} onChange={(event) => setQuery(event.target.value)} placeholder={mobileTargetSection ? `Search ${mode === 'album' ? 'albums' : 'songs'}` : 'Search music'} autoComplete="off" />
-        {query && <button type="button" className="taste-search-clear" aria-label="Clear search" onClick={() => { setQuery(''); setResults([]); setSubmitted(false); setError(''); inputRef.current?.focus() }}>×</button>}
+        {query && <button type="button" className="taste-search-clear" aria-label="Clear search" onClick={() => { setQuery(''); resetMusicSearch(); setSubmitted(false); inputRef.current?.focus() }}>×</button>}
         <button className="taste-search-submit" type="submit" aria-label={`Search ${mode === 'album' ? 'albums' : 'songs'}`} disabled={!query.trim()}><SearchIcon /></button>
         {mobileTargetSection && <button type="button" className="taste-inline-search-close" aria-label="Close search" onClick={onClose}>×</button>}
       </form>
@@ -137,12 +122,14 @@ function SearchPanel({ token, draft, ratings, onAdd, mobileTargetSection, onClos
         <button type="button" className={mode === 'album' ? 'is-active' : ''} aria-pressed={mode === 'album'} onClick={() => changeMode('album')}>Albums</button>
         <button type="button" className={mode === 'song' ? 'is-active' : ''} aria-pressed={mode === 'song'} onClick={() => changeMode('song')}>Songs</button>
       </div>}
-      <div className="taste-results" aria-live="polite" aria-busy={loading}>
-        {loading && <p className="taste-search-message">Searching {mode === 'album' ? 'albums' : 'songs'}…</p>}
-        {!loading && error && <p className="taste-search-message is-error" role="alert">{error}</p>}
-        {!loading && !error && submitted && results.length === 0 && <p className="taste-search-message">No results</p>}
-        {!loading && !error && !submitted && <p className="taste-search-message taste-search-hint">Search by album, song, or artist.</p>}
-        {!loading && results.map((item, index) => <ResultCard key={identity(item) || `${item.title}-${index}`} item={item} draft={draft} ratings={ratings} options={options} onAdd={onAdd} targetCategory={mobileTargetSection?.key} />)}
+      <div className="taste-results" ref={resultsRoot} aria-live="polite" aria-busy={searchLoading || searchLoadingMore}>
+        {searchLoading && <p className="taste-search-message is-loading" role="status">{searchError || `Searching ${mode === 'album' ? 'albums' : 'songs'}…`}</p>}
+        {!searchLoading && !searchLoadingMore && searchError && <p className="taste-search-message is-error" role="alert">{searchError}</p>}
+        {!searchLoading && !searchLoadingMore && !searchError && submitted && searchItems.length === 0 && <p className="taste-search-message" role="status">No results</p>}
+        {!searchLoading && !submitted && <p className="taste-search-message taste-search-hint">Search by album, song, or artist.</p>}
+        {searchItems.map((item, index) => <ResultCard key={identity(item) || `${item.title}-${index}`} item={item} draft={draft} ratings={ratings} options={options} onAdd={onAdd} targetCategory={mobileTargetSection?.key} />)}
+        {searchLoadingMore && <p className="taste-search-message is-loading" role="status">{searchError || 'Loading more results…'}</p>}
+        {searchHasMore && <div className="taste-search-sentinel" ref={resultsSentinel} aria-hidden="true" />}
       </div>
     </section>
   )

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import AppHeader from '../../components/layout/AppHeader.jsx'
 import { apiRequest, clearStoredToken, getMyTasteList, getStoredToken, normalizeArtworkUrl, searchAlbums, searchArtists } from '../../api/api.js'
 import { GENRES } from '../../data/genreOptions.js'
+import usePagedMusicSearch from '../../hooks/usePagedMusicSearch.js'
 import './EditProfilePage.css'
 
 const blank = { name: '', username: '', bio: '', pfp_link: '' }
@@ -66,7 +67,9 @@ function MobileProfileEditor({
   const previousScreen = useRef(screen)
   const {
     query, results, searching, searchError, searched, artistQuery, artistResults,
-    artistSearching, artistError, artistSearched,
+    artistSearching, artistError, artistSearched, albumResultsRoot: albumResultsRef, albumPageSentinel: albumSentinelRef,
+    artistResultsRoot: artistResultsRef, artistPageSentinel: artistSentinelRef,
+    artistLoadingMore, artistHasMore,
   } = searchState
 
   useEffect(() => {
@@ -148,15 +151,17 @@ function MobileProfileEditor({
           <button type="button" aria-label="Search album art" disabled={!query.trim() || searching} onClick={() => searchAlbums(null, 'album')}><SearchIcon /></button>
           {query && <button type="button" className="mobile-subpage-clear" aria-label="Clear search" onClick={clearAlbumQuery}>×</button>}
         </div>
-        <div className="mobile-subpage-results" aria-live="polite" aria-busy={searching}>
-          {searching && <p className="mobile-subpage-state">Searching…</p>}
-          {!searching && searchError && <p className="mobile-subpage-state is-error" role="alert">{searchError}</p>}
-          {!searching && searched && !searchError && !results.length && <p className="mobile-subpage-state">No albums found.</p>}
+        <div className="mobile-subpage-results" ref={albumResultsRef} aria-live="polite" aria-busy={searching || searchState.loadingMore}>
+          {searching && <p className="mobile-subpage-state is-loading" role="status">{searchError || 'Searching…'}</p>}
+          {!searching && !searchState.loadingMore && searchError && <p className="mobile-subpage-state is-error" role="alert">{searchError}</p>}
+          {!searching && !searchState.loadingMore && searched && !searchError && !results.length && <p className="mobile-subpage-state">No albums found.</p>}
           {!searching && results.map((item) => <button type="button" className={`mobile-artwork-result${mobileSelectedArtwork?.mbid === item.mbid ? ' is-selected' : ''}`} key={idOf(item)} onClick={() => { setMobilePicture(item.image || ''); setMobileSelectedArtwork(item) }}>
             <img src={item.image || '/images/profile-default.png'} alt="" onError={(event) => { event.currentTarget.src = '/images/profile-default.png' }} />
             <span><strong>{item.title}</strong><small>{item.artist}</small></span>
             {mobileSelectedArtwork?.mbid === item.mbid && <span className="mobile-artwork-selected" aria-label="Selected">✓</span>}
           </button>)}
+          {searchState.loadingMore && <p className="mobile-subpage-state is-loading" role="status">Loading more results…</p>}
+          {searchState.hasMore && <div ref={albumSentinelRef} aria-hidden="true" />}
         </div>
       </div>}
 
@@ -167,11 +172,13 @@ function MobileProfileEditor({
           <button type="button" aria-label="Search artists" disabled={!artistQuery.trim() || artistSearching} onClick={() => searchArtists(null)}><SearchIcon /></button>
           {artistQuery && <button type="button" className="mobile-subpage-clear" aria-label="Clear search" onClick={clearArtistQuery}>×</button>}
         </div>
-        <div className="mobile-subpage-results mobile-artist-results" aria-live="polite" aria-busy={artistSearching}>
-          {artistSearching && <p className="mobile-subpage-state">Searching…</p>}
-          {!artistSearching && artistError && <p className="mobile-subpage-state is-error" role="alert">{artistError}</p>}
-          {!artistSearching && artistSearched && !artistError && !artistResults.length && <p className="mobile-subpage-state">No artists found.</p>}
+        <div className="mobile-subpage-results mobile-artist-results" ref={artistResultsRef} aria-live="polite" aria-busy={artistSearching || artistLoadingMore}>
+          {artistSearching && <p className="mobile-subpage-state is-loading" role="status">{artistError || 'Searching…'}</p>}
+          {!artistSearching && !artistLoadingMore && artistError && <p className="mobile-subpage-state is-error" role="alert">{artistError}</p>}
+          {!artistSearching && !artistLoadingMore && artistSearched && !artistError && !artistResults.length && <p className="mobile-subpage-state">No artists found.</p>}
           {artistResults.map((item) => <button type="button" key={idOf(item)} disabled={mobileArtists.length >= 3 || mobileArtists.some((entry) => idOf(entry) === idOf(item))} onClick={() => setMobileArtists((items) => [...items, { ...item, category: 'top_artists' }])}>{item.title}</button>)}
+          {artistLoadingMore && <p className="mobile-subpage-state is-loading" role="status">Loading more results…</p>}
+          {artistHasMore && <div ref={artistSentinelRef} aria-hidden="true" />}
         </div>
       </div>}
 
@@ -197,15 +204,11 @@ function EditProfilePage({ embedded = false }) {
   const [notice, setNotice] = useState('')
   const [saving, setSaving] = useState(false)
   const [query, setQuery] = useState('')
-  const [results, setResults] = useState([])
-  const [searching, setSearching] = useState(false)
-  const [searchError, setSearchError] = useState('')
+  const { items: results, loading: searching, error: searchError, loadingMore: albumLoadingMore, hasMore: albumHasMore, resultsRootCallback: albumResultsRoot, sentinelCallback: albumPageSentinel, search: startAlbumSearch, reset: resetAlbumSearch } = usePagedMusicSearch()
   const [searched, setSearched] = useState(false)
   const [genreMenu, setGenreMenu] = useState(false)
   const [artistQuery, setArtistQuery] = useState('')
-  const [artistResults, setArtistResults] = useState([])
-  const [artistSearching, setArtistSearching] = useState(false)
-  const [artistError, setArtistError] = useState('')
+  const { items: artistResults, loading: artistSearching, error: artistError, loadingMore: artistLoadingMore, hasMore: artistHasMore, resultsRootCallback: artistResultsRoot, sentinelCallback: artistPageSentinel, search: startArtistSearch, reset: resetArtistSearch } = usePagedMusicSearch()
   const [artistSearched, setArtistSearched] = useState(false)
   const [mobileScreen, setMobileScreen] = useState('main')
   const [mobileGenres, setMobileGenres] = useState([])
@@ -215,8 +218,6 @@ function EditProfilePage({ embedded = false }) {
   const [baselineProfile, setBaselineProfile] = useState({ ...blank })
   const [baselineGenres, setBaselineGenres] = useState([])
   const [baselineArtists, setBaselineArtists] = useState([])
-  const request = useRef(0)
-  const artistRequest = useRef(0)
   const initialGenres = useRef([])
   const initialArtists = useRef([])
   const initialProfile = useRef({ ...blank })
@@ -280,26 +281,18 @@ function EditProfilePage({ embedded = false }) {
   async function search(event, kind = 'album') {
     event?.preventDefault()
     if (!query.trim()) return
-    const id = ++request.current
-    setSearching(true); setSearchError(''); setSearched(true)
-    try {
-      const found = kind === 'album' ? await searchAlbums(query.trim(), token, 6) : await searchArtists(query.trim(), 6)
-      if (id === request.current) setResults(found)
-    } catch (error) {
-      if (id === request.current) { setResults([]); setSearchError(error.message || 'Search failed. Try again.') }
-    } finally { if (id === request.current) setSearching(false) }
+    setSearched(true)
+    const fetchPage = kind === 'album'
+      ? (value, offset, limit) => searchAlbums(value, token, limit, offset)
+      : (value, offset, limit) => searchArtists(value, limit, offset)
+    startAlbumSearch(query.trim(), fetchPage, 6)
   }
 
   async function searchForArtist(event) {
     event?.preventDefault()
     if (!artistQuery.trim()) return
-    const id = ++artistRequest.current
-    setArtistSearching(true); setArtistError(''); setArtistSearched(true)
-    try {
-      const found = await searchArtists(artistQuery.trim(), 6)
-      if (id === artistRequest.current) setArtistResults(found)
-    } catch (error) { if (id === artistRequest.current) { setArtistResults([]); setArtistError(error.message || 'Artist search failed.') } }
-    finally { if (id === artistRequest.current) setArtistSearching(false) }
+    setArtistSearched(true)
+    startArtistSearch(artistQuery.trim(), (value, offset, limit) => searchArtists(value, limit, offset), 6)
   }
 
   function addGenre(genre) {
@@ -308,12 +301,12 @@ function EditProfilePage({ embedded = false }) {
   }
   function addArtist(item) {
     if (artists.length >= 3 || artists.some((entry) => idOf(entry) === idOf(item))) return
-    setArtists((current) => [...current, { ...item, category: 'top_artists' }]); setArtistQuery(''); setArtistResults([])
+    setArtists((current) => [...current, { ...item, category: 'top_artists' }]); setArtistQuery(''); resetArtistSearch()
   }
 
   function openMobileScreen(screen) {
-    request.current += 1
-    artistRequest.current += 1
+    resetAlbumSearch()
+    resetArtistSearch()
     setMobileScreen(screen)
     setSaveError('')
     setNotice('')
@@ -323,45 +316,33 @@ function EditProfilePage({ embedded = false }) {
       setMobilePicture(profile.pfp_link || '')
       setMobileSelectedArtwork(profile.pfp_link ? { title: 'Current profile picture', image: profile.pfp_link } : null)
       setQuery('')
-      setResults([])
-      setSearching(false)
-      setSearchError('')
+      resetAlbumSearch()
       setSearched(false)
     }
   }
 
   function closeMobileScreen() {
-    request.current += 1
-    artistRequest.current += 1
     setMobileScreen('main')
     setQuery('')
-    setResults([])
+    resetAlbumSearch()
     setSearched(false)
-    setSearchError('')
     setArtistQuery('')
-    setArtistResults([])
+    resetArtistSearch()
     setArtistSearched(false)
-    setArtistError('')
   }
 
   function changeMobileAlbumQuery(value) {
-    request.current += 1
-    setSearching(false)
+    resetAlbumSearch()
     setQuery(value)
     setSearched(false)
-    setResults([])
-    setSearchError('')
   }
 
   function clearMobileAlbumQuery() { changeMobileAlbumQuery('') }
 
   function changeMobileArtistQuery(value) {
-    artistRequest.current += 1
-    setArtistSearching(false)
+    resetArtistSearch()
     setArtistQuery(value)
     setArtistSearched(false)
-    setArtistResults([])
-    setArtistError('')
   }
 
   function clearMobileArtistQuery() { changeMobileArtistQuery('') }
@@ -433,15 +414,17 @@ function EditProfilePage({ embedded = false }) {
         <img className="edit-pfp-preview" src={normalizeArtworkUrl(profile.pfp_link) || '/images/profile-default.png'} alt="Profile picture preview" onError={(event) => { event.currentTarget.src = '/images/profile-default.png' }} />
         <div className="edit-search-wrap">
           <div className="edit-search-form">
-            <input aria-label="Search album art" value={query} onChange={(event) => setQuery(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') search(event, 'album') }} placeholder="Search album art." />
+            <input aria-label="Search album art" value={query} onChange={(event) => { resetAlbumSearch(); setQuery(event.target.value); setSearched(false) }} onKeyDown={(event) => { if (event.key === 'Enter') search(event, 'album') }} placeholder="Search album art." />
             <button type="button" aria-label="Search albums" disabled={!query.trim()} onClick={() => search(null, 'album')}><SearchIcon /></button>
           </div>
-          {(query.trim() || searched) && <div className="edit-search-popover" aria-live="polite" aria-busy={searching}>
-            {searching && <p className="edit-search-state">Searching…</p>}{searchError && <p className="edit-search-state is-error" role="alert">{searchError}</p>}
+          {(query.trim() || searched) && <div className="edit-search-popover" ref={albumResultsRoot} aria-live="polite" aria-busy={searching || albumLoadingMore}>
+            {searching && <p className="edit-search-state is-loading" role="status">{searchError || 'Searching…'}</p>}{!searching && !albumLoadingMore && searchError && <p className="edit-search-state is-error" role="alert">{searchError}</p>}
             {!searching && searched && !searchError && results.length === 0 && <p className="edit-search-state">No albums found.</p>}
-            {!searching && results.map((item) => <button type="button" className="edit-album-result" key={idOf(item)} onClick={() => { setProfile((current) => ({ ...current, pfp_link: item.image || '' })); setResults([]); setQuery(''); setSearched(false) }}>
+            {!searching && results.map((item) => <button type="button" className="edit-album-result" key={idOf(item)} onClick={() => { setProfile((current) => ({ ...current, pfp_link: item.image || '' })); resetAlbumSearch(); setQuery(''); setSearched(false) }}>
               <img src={item.image} alt="" onError={(event) => { event.currentTarget.style.visibility = 'hidden' }} /><span><strong>{item.title}</strong><small>{item.artist}</small></span>
             </button>)}
+            {albumLoadingMore && <p className="edit-search-state is-loading" role="status">Loading more results…</p>}
+            {albumHasMore && <div ref={albumPageSentinel} aria-hidden="true" />}
           </div>}
         </div>
       </section>
@@ -452,8 +435,8 @@ function EditProfilePage({ embedded = false }) {
       </div></section>
       <section className="edit-ranked-section"><h2>Top Artists</h2><div className="edit-ranked-controls"><RankedList title="Top artists" items={artists} onRemove={(index) => setArtists((items) => items.filter((_, i) => i !== index))} onReorder={(from, to) => reorder(setArtists, artists, from, to)} />
         <div className="edit-artist-search-wrap">
-          <div className="edit-artist-search"><input aria-label="Search artists" value={artistQuery} onChange={(event) => { artistRequest.current += 1; setArtistSearching(false); setArtistQuery(event.target.value); setArtistSearched(false); setArtistResults([]) }} onKeyDown={(event) => { if (event.key === 'Enter') searchForArtist(event) }} placeholder="Search Artists" /><button type="button" aria-label="Search artists" disabled={!artistQuery.trim() || artistSearching} onClick={() => searchForArtist(null)}><SearchIcon /></button></div>
-          {artistSearched && <div className="edit-artist-results" aria-live="polite" aria-busy={artistSearching}>{artistSearching && <p>Searching…</p>}{artistError && <p role="alert">{artistError}</p>}{!artistSearching && !artistError && !artistResults.length && <p>No artists found.</p>}{artistResults.map((item) => <button type="button" key={idOf(item)} disabled={artists.length >= 3 || artists.some((entry) => idOf(entry) === idOf(item))} onClick={() => { addArtist(item); setArtistSearched(false) }}>{item.title}</button>)}</div>}
+          <div className="edit-artist-search"><input aria-label="Search artists" value={artistQuery} onChange={(event) => { resetArtistSearch(); setArtistQuery(event.target.value); setArtistSearched(false) }} onKeyDown={(event) => { if (event.key === 'Enter') searchForArtist(event) }} placeholder="Search Artists" /><button type="button" aria-label="Search artists" disabled={!artistQuery.trim() || artistSearching} onClick={() => searchForArtist(null)}><SearchIcon /></button></div>
+          {artistSearched && <div className="edit-artist-results" ref={artistResultsRoot} aria-live="polite" aria-busy={artistSearching || artistLoadingMore}>{artistSearching && <p className="is-loading" role="status">{artistError || 'Searching…'}</p>}{!artistSearching && !artistLoadingMore && artistError && <p role="alert">{artistError}</p>}{!artistSearching && !artistLoadingMore && !artistError && !artistResults.length && <p>No artists found.</p>}{artistResults.map((item) => <button type="button" key={idOf(item)} disabled={artists.length >= 3 || artists.some((entry) => idOf(entry) === idOf(item))} onClick={() => { addArtist(item); setArtistSearched(false) }}>{item.title}</button>)}{artistLoadingMore && <p className="is-loading" role="status">{artistError || 'Loading more results…'}</p>}{artistHasMore && <div ref={artistPageSentinel} aria-hidden="true" />}</div>}
         </div>
       </div></section>
       <div className="edit-profile-actions"><span role={notice ? 'status' : undefined}>{notice}</span><button type="submit" disabled={!loaded || saving || Boolean(loadError)}>{saving ? 'Saving…' : 'Save changes'}</button></div>
@@ -482,7 +465,7 @@ function EditProfilePage({ embedded = false }) {
       clearAlbumQuery={clearMobileAlbumQuery}
       onArtistQueryChange={changeMobileArtistQuery}
       clearArtistQuery={clearMobileArtistQuery}
-      searchState={{ query, results, searching, searchError, searched, artistQuery, artistResults, artistSearching, artistError, artistSearched }}
+      searchState={{ query, results, searching, searchError, searched, loadingMore: albumLoadingMore, hasMore: albumHasMore, albumResultsRef: albumResultsRoot, albumSentinelRef: albumPageSentinel, artistQuery, artistResults, artistSearching, artistError, artistSearched, artistLoadingMore, artistHasMore, artistResultsRef: artistResultsRoot, artistSentinelRef: artistPageSentinel }}
       mobileGenres={mobileGenres}
       setMobileGenres={setMobileGenres}
       mobileArtists={mobileArtists}

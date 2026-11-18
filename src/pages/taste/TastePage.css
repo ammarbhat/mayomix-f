@@ -35,6 +35,10 @@
 .taste-add-menu small { color: #777; }
 .taste-search-message,.taste-loading { margin: 0; padding: 16px 8px; color: #696969; text-align: center; font-size: 14px; }
 .taste-search-message.is-error,.taste-inline-error { color: #9d363a; }
+.taste-search-message.is-loading::before { width: 14px; height: 14px; display: inline-block; margin-right: 8px; border: 2px solid #999; border-top-color: #292929; border-radius: 50%; vertical-align: -3px; content: ''; animation: taste-search-spin .8s linear infinite; }
+@keyframes taste-search-spin { to { transform: rotate(360deg); } }
+.taste-search-sentinel { min-height: 1px; }
+@media (prefers-reduced-motion: reduce) { .taste-search-message.is-loading::before { animation: none; } }
 .taste-editor-panel { display: flex; flex-direction: column; gap: 12px; padding: 16px 18px 22px; }
 .taste-section h2 { margin: 0 0 5px 5px; color: #5b5b5b; font-size: 21px; font-weight: 500; line-height: 1.25; }
 .taste-tray { min-height: 152px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; gap: 9px; padding: 10px; border-radius: 15px; background: #fff; box-shadow: inset 0 2px 4px #0002; }
