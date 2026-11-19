@@ -61,7 +61,7 @@ function Artwork({ item, alt }) {
 function TopRatedAlbumCard({ entry, rank, token }) {
   const cardRef = useRef(null)
   const [album, setAlbum] = useState(null)
-  const [metadataLoading, setMetadataLoading] = useState(true)
+  const [metadataLoading, setMetadataLoading] = useState(Boolean(entry.mbid))
   const mbid = entry.mbid
 
   useEffect(() => {
@@ -100,26 +100,40 @@ function TopRatedAlbumCard({ entry, rank, token }) {
   return (
     <div className="top-rated-row" ref={cardRef}>
       <span className="top-rated-rank" aria-label={`Rank ${rank}`}>{rank}</span>
-      <Link className="top-rated-card" to={`/albums/${encodeURIComponent(mbid)}`} onClick={(event) => { if (!mbid) event.preventDefault() }}>
-        <div className="top-rated-main">
-          <Artwork item={details} alt={`${title} cover`} />
-          <div className="top-rated-copy">
-            <h3 title={title}>{title}</h3>
-            {artist && <p title={artist}>{artist}</p>}
+      {metadataLoading && mbid
+        ? <div className="top-rated-card top-rated-card-loading" role="status" aria-label={`Loading details for top rated album ${rank}`} aria-busy="true">
+            <div className="top-rated-skeleton-main" aria-hidden="true">
+              <span className="top-rated-skeleton top-rated-skeleton-cover" />
+              <span className="top-rated-skeleton-copy">
+                <span className="top-rated-skeleton top-rated-skeleton-title" />
+                <span className="top-rated-skeleton top-rated-skeleton-subtitle" />
+              </span>
+            </div>
+            <span className="top-rated-skeleton top-rated-skeleton-stat top-rated-skeleton-stat-rating" aria-hidden="true" />
+            <span className="top-rated-skeleton top-rated-skeleton-stat top-rated-skeleton-stat-count" aria-hidden="true" />
           </div>
-        </div>
-        <div className="top-rated-stat" aria-label={`Average rating ${Number.isFinite(rating) ? formattedRating : 'unavailable'} out of 5`}>
-          <span className="top-rated-stat-label">Rating</span>
-          <span className="top-rated-rating-value">
-            {formattedRating}
-            <img src="/images/vinyl.png" alt="" />
-          </span>
-        </div>
-        <div className="top-rated-stat" aria-label={`${Number.isFinite(reviewCount) ? reviewCount : 'Unknown'} reviews`}>
-          <span className="top-rated-stat-label">Review Count</span>
-          <span className="top-rated-count">{formattedCount}</span>
-        </div>
-      </Link>
+        : (
+          <Link className="top-rated-card top-rated-card-ready" to={mbid ? `/albums/${encodeURIComponent(mbid)}` : '/'} onClick={(event) => { if (!mbid) event.preventDefault() }}>
+            <div className="top-rated-main">
+              <Artwork item={details} alt={`${title} cover`} />
+              <div className="top-rated-copy">
+                <h3 title={title}>{title}</h3>
+                {artist && <p title={artist}>{artist}</p>}
+              </div>
+            </div>
+            <div className="top-rated-stat" aria-label={`Average rating ${Number.isFinite(rating) ? formattedRating : 'unavailable'} out of 5`}>
+              <span className="top-rated-stat-label">Rating</span>
+              <span className="top-rated-rating-value">
+                {formattedRating}
+                <img src="/images/vinyl.png" alt="" />
+              </span>
+            </div>
+            <div className="top-rated-stat" aria-label={`${Number.isFinite(reviewCount) ? reviewCount : 'Unknown'} reviews`}>
+              <span className="top-rated-stat-label">Review Count</span>
+              <span className="top-rated-count">{formattedCount}</span>
+            </div>
+          </Link>
+        )}
     </div>
   )
 }
