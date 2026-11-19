@@ -86,10 +86,26 @@ function SearchPanel({ token, draft, ratings, onAdd, mobileTargetSection, onClos
   const { items: searchItems, loading: searchLoading, loadingMore: searchLoadingMore, error: searchError, hasMore: searchHasMore, resultsRootCallback: resultsRoot, sentinelCallback: resultsSentinel, search: startMusicSearch, reset: resetMusicSearch } = usePagedMusicSearch()
   const [submitted, setSubmitted] = useState(false)
   const inputRef = useRef(null)
+  const sectionScrollTimeout = useRef(null)
   const inputId = `taste-search-${mobileTargetSection?.key || 'desktop'}`
   const options = useMemo(() => mode === 'album'
     ? sections.slice(0, 2)
     : sections.slice(2), [mode])
+
+  useEffect(() => () => window.clearTimeout(sectionScrollTimeout.current), [])
+
+  function scrollSearchSectionIntoView() {
+    if (!mobileTargetSection || !window.matchMedia('(max-width: 820px)').matches) return
+    const section = inputRef.current?.closest('.taste-section')
+    if (!section) return
+    window.clearTimeout(sectionScrollTimeout.current)
+    sectionScrollTimeout.current = window.setTimeout(() => {
+      section.scrollIntoView({
+        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+        block: 'start',
+      })
+    }, 120)
+  }
 
   async function submit(event) {
     event?.preventDefault()
@@ -113,7 +129,7 @@ function SearchPanel({ token, draft, ratings, onAdd, mobileTargetSection, onClos
     <section className={`taste-search-panel${mobileTargetSection ? ` taste-inline-search${mobileTargetSection.kind === 'album' ? ' taste-inline-search-albums' : ''}` : ''}`} aria-label={mobileTargetSection ? `Search ${mobileTargetSection.kind === 'album' ? 'albums' : 'songs'} for ${mobileTargetSection.title}` : 'Find music'}>
       <form className="taste-search-form" onSubmit={submit}>
         <label className="visually-hidden" htmlFor={inputId}>Search {mode === 'album' ? 'albums' : 'songs'}</label>
-        <input id={inputId} ref={inputRef} value={query} onChange={(event) => setQuery(event.target.value)} placeholder={mobileTargetSection ? `Search ${mode === 'album' ? 'albums' : 'songs'}` : 'Search music'} autoComplete="off" />
+        <input id={inputId} ref={inputRef} value={query} onChange={(event) => setQuery(event.target.value)} onPointerDown={scrollSearchSectionIntoView} onFocus={scrollSearchSectionIntoView} placeholder={mobileTargetSection ? `Search ${mode === 'album' ? 'albums' : 'songs'}` : 'Search music'} autoComplete="off" />
         {query && <button type="button" className="taste-search-clear" aria-label="Clear search" onClick={() => { setQuery(''); resetMusicSearch(); setSubmitted(false); inputRef.current?.focus() }}>×</button>}
         <button className="taste-search-submit" type="submit" aria-label={`Search ${mode === 'album' ? 'albums' : 'songs'}`} disabled={!query.trim()}><SearchIcon /></button>
         {mobileTargetSection && <button type="button" className="taste-inline-search-close" aria-label="Close search" onClick={onClose}>×</button>}
@@ -558,7 +574,7 @@ function TastePage() {
   })
   return <main className="taste-page">
     <AppHeader mobileTitle="Display" mobileBackTo="/profile" alwaysShowMobileNavigation />
-    <div className="taste-workspace" aria-busy={loading}>
+    <div className={`taste-workspace${activeMobileSearch === 'rotation_song' ? ' is-last-mobile-search-open' : ''}`} aria-busy={loading}>
       <SearchPanel token={token} draft={draft} ratings={ratings} onAdd={addItem} />
       <section className="taste-editor-panel" aria-label="Current taste">
         {loadError && <p className="taste-inline-error" role="alert">{loadError}</p>}

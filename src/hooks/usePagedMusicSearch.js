@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 const RETRY_DELAY_MS = 1800
+const EMPTY_PAGE_RETRY_DELAY_MS = 1000
+const MAX_EMPTY_PAGE_RETRIES = 1
 
 function wait(ms) {
   return new Promise((resolve) => window.setTimeout(resolve, ms))
@@ -9,6 +11,10 @@ function wait(ms) {
 function isTerminalError(error) {
   const status = Number(error?.status)
   return status >= 400 && status < 500 && status !== 408 && status !== 429
+}
+
+function isMusicBrainzBusyError(error) {
+  return /the musicbrainz web server is currently busy\. please try again later\./i.test(String(error?.message || ''))
 }
 
 function itemKey(item) {
@@ -21,6 +27,7 @@ export default function usePagedMusicSearch() {
   const pagePending = useRef(false)
   const seenKeys = useRef(new Set())
   const nextOffset = useRef(0)
+  const loadMoreRef = useRef(null)
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
@@ -33,6 +40,7 @@ export default function usePagedMusicSearch() {
 
   const fetchPage = useCallback(async (search, offset, isFirstPage) => {
     const id = search.id
+    let emptyPageRetries = 0
     if (isFirstPage) setLoading(true)
     else setLoadingMore(true)
 
@@ -44,12 +52,16 @@ export default function usePagedMusicSearch() {
         if (!Array.isArray(page)) throw new Error('Search returned an invalid result list.')
 
         if (page.length === 0) {
-          if (isFirstPage) {
-            await wait(RETRY_DELAY_MS)
+          if (isFirstPage && emptyPageRetries < MAX_EMPTY_PAGE_RETRIES) {
+            emptyPageRetries += 1
+            await wait(EMPTY_PAGE_RETRY_DELAY_MS)
             continue
           }
+          if (isFirstPage) setItems([])
+          setError('')
           setHasMore(false)
           pagePending.current = false
+          setLoading(false)
           setLoadingMore(false)
           return
         }
@@ -70,6 +82,10 @@ export default function usePagedMusicSearch() {
         return
       } catch (requestError) {
         if (requestId.current !== id) return
+        if (isMusicBrainzBusyError(requestError)) {
+          setError('MusicBrainz is busy. Retrying...')
+          continue
+        }
         if (isTerminalError(requestError)) {
           setError(requestError.message || 'Search could not be completed.')
           setHasMore(false)
@@ -122,28 +138,37 @@ export default function usePagedMusicSearch() {
     if (!current || loading || loadingMore || pagePending.current || !hasMore) return
     void fetchPage(current, nextOffset.current, false)
   }, [fetchPage, hasMore, loading, loadingMore])
+  loadMoreRef.current = loadMore
 
   useEffect(() => {
     const node = sentinelNode
     const root = resultsRoot
-    if (!node || !root || !hasMore || loading || loadingMore) return undefined
+    if (!node || !root || !hasMore) return undefined
 
-    if (!('IntersectionObserver' in window)) {
-      const checkScrollPosition = () => {
-        const remaining = root.scrollHeight - root.scrollTop - root.clientHeight
-        if (remaining <= 120) loadMore()
-      }
-      root.addEventListener('scroll', checkScrollPosition, { passive: true })
-      checkScrollPosition()
-      return () => root.removeEventListener('scroll', checkScrollPosition)
+    const checkScrollPosition = () => {
+      const remaining = root.scrollHeight - root.scrollTop - root.clientHeight
+      if (remaining <= 120) loadMoreRef.current?.()
     }
+    root.addEventListener('scroll', checkScrollPosition, { passive: true })
+    checkScrollPosition()
 
-    const observer = new IntersectionObserver((entries) => {
-      if (entries.some((entry) => entry.isIntersecting)) loadMore()
-    }, { root, rootMargin: '120px 0px' })
-    observer.observe(node)
-    return () => observer.disconnect()
-  }, [hasMore, loading, loadingMore, loadMore, resultsRoot, sentinelNode])
+    const observer = 'IntersectionObserver' in window
+      ? new IntersectionObserver((entries) => {
+          if (entries.some((entry) => entry.isIntersecting)) loadMoreRef.current?.()
+        }, { root, rootMargin: '120px 0px' })
+      : null
+    observer?.observe(node)
+    return () => {
+      root.removeEventListener('scroll', checkScrollPosition)
+      observer?.disconnect()
+    }
+  }, [hasMore, resultsRoot, sentinelNode])
+
+  useEffect(() => {
+    if (!resultsRoot || !hasMore || loading || loadingMore) return
+    const remaining = resultsRoot.scrollHeight - resultsRoot.scrollTop - resultsRoot.clientHeight
+    if (remaining <= 120) loadMoreRef.current?.()
+  }, [hasMore, items, loading, loadingMore, resultsRoot])
 
   return { items, loading, loadingMore, error, hasMore, resultsRootCallback: resultsRef, sentinelCallback: sentinelRef, search, reset }
 }

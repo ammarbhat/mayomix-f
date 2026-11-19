@@ -28,7 +28,9 @@ async function performApiRequest(path, token, options) {
   if (!response.ok) {
     const message = typeof payload === 'object' && payload?.detail
       ? (Array.isArray(payload.detail) ? payload.detail.map((item) => item.msg).join(', ') : payload.detail)
-      : `Request failed (${response.status})`
+      : typeof payload === 'object' && typeof payload?.error === 'string'
+        ? payload.error
+        : `Request failed (${response.status})`
     const error = new Error(message)
     error.status = response.status
     throw error
@@ -216,6 +218,11 @@ function listFromPayload(payload) {
   }
   if (payload.mbid || payload.title || payload.name || payload.id) return [payload]
   return Object.values(payload).filter((value) => value && typeof value === 'object')
+}
+
+function searchListFromPayload(payload) {
+  if (typeof payload?.error === 'string' && payload.error.trim()) throw new Error(payload.error)
+  return listFromPayload(payload)
 }
 
 export function normalizeArtworkUrl(url, size = 250) {
@@ -582,7 +589,7 @@ export function normalizeUserResponse(user) {
 export async function searchAlbums(queryText, token, limit = 15, offset = 0) {
   const query = new URLSearchParams({ query: queryText, limit: String(limit), offset: String(offset) })
   const payload = await apiRequest(`/search/albums?${query}`, { token })
-  return listFromPayload(payload).map((entry) => {
+  return searchListFromPayload(payload).map((entry) => {
     const artistCredits = entry['artist-credit'] || entry.artist_credit || []
     const artist = Array.isArray(artistCredits)
       ? artistCredits.map((credit) => `${credit.name || credit.artist?.name || ''}${credit.joinphrase || ''}`).join('').trim()
@@ -607,7 +614,8 @@ export async function searchAlbums(queryText, token, limit = 15, offset = 0) {
 export async function searchArtists(queryText, limit = 6, offset = 0) {
   const query = new URLSearchParams({ query: queryText, limit: String(limit), offset: String(offset) })
   const payload = await apiRequest(`/search/artists?${query}`)
-  const artists = Array.isArray(payload?.artists) ? payload.artists : listFromPayload(payload)
+  const results = searchListFromPayload(payload)
+  const artists = Array.isArray(payload?.artists) ? payload.artists : results
   return artists.filter((entry) => entry && typeof entry === 'object').map((entry) => {
     const artist = entry.artist || entry
     return {
@@ -621,7 +629,7 @@ export async function searchArtists(queryText, limit = 6, offset = 0) {
 export async function searchSongs(queryText, limit = 10, offset = 0) {
   const query = new URLSearchParams({ query: queryText, limit: String(limit), offset: String(offset) })
   const payload = await apiRequest(`/search/songs?${query}`)
-  return listFromPayload(payload).map((entry) => {
+  return searchListFromPayload(payload).map((entry) => {
     const artistCredits = entry['artist-credit'] || entry.artist_credit || []
     const artist = Array.isArray(artistCredits)
       ? artistCredits.map((credit) => `${credit.name || credit.artist?.name || ''}${credit.joinphrase || ''}`).join('').trim()
