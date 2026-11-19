@@ -2,8 +2,10 @@
 .taste-workspace { width: min(100% - 48px, 990px); min-height: calc(100vh - 88px); display: grid; grid-template-columns: minmax(0, 1fr) minmax(390px, 1fr); gap: 12px; margin: 0 auto; padding: 30px 0 42px; }
 .taste-search-panel,.taste-editor-panel { min-width: 0; min-height: 650px; padding: 20px 22px; border-radius: 15px; background: #dedede; }
 .taste-search-panel { position: relative; box-sizing: border-box; height: auto; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
-.taste-search-form { position: relative; width: calc(100% - 14px); height: 48px; display: flex; align-items: center; margin: 0 auto 14px; border-bottom: 2px solid #777; }
+.taste-search-form { position: relative; width: calc(100% - 14px); height: 48px; flex: 0 0 48px; display: flex; align-items: center; margin: 0 auto 14px; border-bottom: 2px solid #777; }
+.taste-search-form:focus-within { border-bottom-color: #141414; }
 .taste-search-form input { width: 100%; min-width: 0; height: 100%; padding: 0 72px 0 14px; border: 0; outline: 0; background: transparent; color: #272727; text-align: center; font-size: 20px; }
+.taste-page .taste-search-form input:focus-visible { outline: 0; outline-offset: 0; }
 .taste-search-form input::placeholder { color: #777; }
 .taste-search-submit,.taste-search-clear { position: absolute; top: 50%; display: grid; place-items: center; padding: 0; border: 0; background: transparent; color: #141414; transform: translateY(-50%); cursor: pointer; }
 .taste-search-submit { right: 0; width: 42px; height: 42px; }
@@ -18,8 +20,8 @@
 .taste-result-art { position: relative; width: 68px; height: 68px; flex: 0 0 68px; display: grid; place-items: center; overflow: hidden; border-radius: 12px; background: #b9b9b9; color: #686868; font-size: 26px; }
 .taste-result-art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .taste-result-copy { min-width: 0; flex: 1; align-self: stretch; display: flex; flex-direction: column; justify-content: center; }
-.taste-result-copy h3 { display: -webkit-box; overflow: hidden; margin: 0; color: #f4f4f4; font-size: 15px; font-weight: 500; line-height: 1.28; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
-.taste-result-copy p { overflow: hidden; margin: 3px 0 0; color: #c6c6c6; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+.taste-result-copy h3 { margin: 0; color: #f4f4f4; font-size: 15px; font-weight: 500; line-height: 1.28; overflow-wrap: anywhere; }
+.taste-result-copy p { margin: 3px 0 0; color: #c6c6c6; font-size: 12px; line-height: 1.3; overflow-wrap: anywhere; }
 .taste-result-vinyls { margin-top: 7px; --rating-vinyl-size: 17px; --rating-vinyl-gap: 4px; }
 .taste-result-vinyls .vinyl-rating-base { opacity: .9; }
 .taste-result-vinyls .is-full .vinyl-rating-base { opacity: 1; }
@@ -109,8 +111,8 @@
   .taste-actions { gap: 7px; margin: 7px 0 0; padding-top: 8px; }
   .taste-clear-button,.taste-save-button { min-width: 0; width: 40%; min-height: 36px; padding: 5px 12px; }
   .taste-inline-search { display: flex; height: auto; gap: 8px; padding: 8px 10px 10px; overflow: visible; border-radius: 16px; background: #dedede; box-shadow: 0 2px 4px #0003; }
-  .taste-inline-search .taste-search-form { width: 100%; height: 42px; flex: 0 0 42px; margin: 0; padding: 0 76px 0 12px; border: 0; border-radius: 16px; background: #dedede; box-shadow: inset 0 1px 5px #0002; }
-  .taste-inline-search .taste-search-form:focus-within { box-shadow: inset 0 0 0 1px #aaa, inset 0 1px 5px #0002; }
+  .taste-inline-search .taste-search-form { width: 100%; height: 42px; flex: 0 0 42px; margin: 0; padding: 0 76px 0 12px; border: 0; border-bottom: 1px solid #777; border-radius: 0; background: transparent; box-shadow: none; }
+  .taste-inline-search .taste-search-form:focus-within { border-bottom-color: #141414; box-shadow: none; }
   .taste-inline-search .taste-search-form :focus-visible { outline: 0; }
   .taste-inline-search .taste-search-form input { padding: 0 4px; text-align: left; font-size: 16px; }
   .taste-inline-search .taste-search-submit { right: 38px; width: 34px; height: 34px; }
