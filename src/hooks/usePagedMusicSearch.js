@@ -126,10 +126,21 @@ export default function usePagedMusicSearch() {
   useEffect(() => {
     const node = sentinelNode
     const root = resultsRoot
-    if (!node || !root || !hasMore || loading || loadingMore || !('IntersectionObserver' in window)) return undefined
+    if (!node || !root || !hasMore || loading || loadingMore) return undefined
+
+    if (!('IntersectionObserver' in window)) {
+      const checkScrollPosition = () => {
+        const remaining = root.scrollHeight - root.scrollTop - root.clientHeight
+        if (remaining <= 120) loadMore()
+      }
+      root.addEventListener('scroll', checkScrollPosition, { passive: true })
+      checkScrollPosition()
+      return () => root.removeEventListener('scroll', checkScrollPosition)
+    }
+
     const observer = new IntersectionObserver((entries) => {
       if (entries.some((entry) => entry.isIntersecting)) loadMore()
-    }, { root, rootMargin: '120px' })
+    }, { root, rootMargin: '120px 0px' })
     observer.observe(node)
     return () => observer.disconnect()
   }, [hasMore, loading, loadingMore, loadMore, resultsRoot, sentinelNode])

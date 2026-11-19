@@ -313,12 +313,15 @@ function SearchPage() {
             <div className={`search-results${activeSearchTab === 'users' ? ' user-search-results' : ''}`} ref={activeSearchTab === 'albums' ? albumResultsRoot : undefined} role="tabpanel">
               {activeSearchTab === 'albums' && albumLoading && <p className="search-message is-loading" role="status">{albumError || 'Searching albums…'}</p>}
               {activeSearchTab === 'albums' && !albumLoading && !albumLoadingMore && albumError && <p className="search-message is-error" role="alert">{albumError}</p>}
-              {activeSearchTab === 'albums' && albumLoadingMore && <p className="search-message is-loading" role="status">{albumError || 'Loading more albums…'}</p>}
               {activeSearchTab === 'users' && userSearchLoading && <p className="search-message is-loading" role="status">Searching…</p>}
               {activeSearchTab === 'users' && searchError && !userSearchLoading && <p className="search-message is-error" role="alert">{searchError}</p>}
               {activeSearchTab === 'users' && !userSearchLoading && !searchError && submittedQuery && userResults.length === 0 && <p className="search-message" role="status">No users found for “{submittedQuery}”.</p>}
               {!albumLoading && activeSearchTab === 'albums' && albumResults.map((result, index) => <AlbumResult key={result.mbid || result.id || index} album={result} />)}
               {activeSearchTab === 'users' && userResults.map((result, index) => <UserResult key={result.id || result.user_id || result.username || index} user={result} token={token} />)}
+              {activeSearchTab === 'albums' && albumLoadingMore && <div className="search-load-more" role="status">
+                <span>Loading more albums…</span>
+                <span className="search-load-more__track" role="progressbar" aria-label="Loading more albums"><span /></span>
+              </div>}
               {activeSearchTab === 'albums' && albumHasMore && <div className="search-page-sentinel" ref={albumSentinel} aria-hidden="true" />}
             </div>
           </section>
