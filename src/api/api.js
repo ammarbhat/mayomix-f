@@ -257,6 +257,12 @@ function cachedItem(key) {
   return getMusicBrainzCacheItem(key)
 }
 
+function hasUsableMetadataTitle(title, mbid) {
+  const normalizedTitle = typeof title === 'string' ? title.trim() : ''
+  if (!normalizedTitle || normalizedTitle.toLowerCase() === String(mbid).trim().toLowerCase()) return false
+  return !/^(?:album|song|artist)(?: details unavailable)?$/i.test(normalizedTitle)
+}
+
 function getMusicBrainzMetadata(kind, mbid, token) {
   if (kind === 'recording') {
     return apiRequest(`/recordings/${encodeURIComponent(mbid)}`, { token, cache: false })
@@ -307,7 +313,7 @@ async function enrichMusicItem(item, kind, token) {
   if (!item.mbid) return { ...item, metadataLoading: false, metadataLoaded: true }
   const key = `${kind === 'recording' ? 'recording-v2' : kind}:${item.mbid}`
   const cached = cachedItem(key)
-  if (cached && !(kind === 'artist' && cached.title?.toLowerCase() === item.mbid.toLowerCase())) return {
+  if (cached && hasUsableMetadataTitle(cached.title, item.mbid)) return {
     ...cached,
     ...item,
     title: cached.title || item.title,
@@ -320,7 +326,7 @@ async function enrichMusicItem(item, kind, token) {
   try {
     const metadata = await getMusicBrainzMetadata(kind, item.mbid, token)
     const enriched = { ...item, ...metadata, id: item.id, rank: item.rank, liked: item.liked, mbid: item.mbid, metadataLoading: false, metadataLoaded: true }
-    saveMusicBrainzCacheItem(key, enriched)
+    if (hasUsableMetadataTitle(enriched.title, item.mbid)) saveMusicBrainzCacheItem(key, enriched)
     return enriched
   } catch {
     return { ...item, metadataLoading: false, metadataLoaded: true }

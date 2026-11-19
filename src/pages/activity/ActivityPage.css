@@ -32,7 +32,7 @@
 .activity-author strong { font-size: 18px; line-height: 1.05; font-weight: 500; }
 .activity-author small { color: #666; font-size: 14px; line-height: 1.05; }
 .activity-entry-header time { margin-left: auto; color: #666; font-size: 15px; white-space: nowrap; }
-.activity-review-card { position: relative; margin-left: 18px; padding: 9px 10px 13px; border-radius: 17px; background: #dedede; color: #252525; box-shadow: 0 3px 5px #0004; }
+.activity-review-card { position: relative; margin-left: 18px; padding: 9px 10px 13px; border-radius: 17px; background: #B7E7AF; color: #252525; box-shadow: 0 3px 5px #0004; }
 .activity-review-card.is-buffering > :not(.activity-review-buffering) { opacity: .42; }
 .activity-review-buffering { position: absolute; z-index: 1; inset: 0; display: grid; place-items: center; border-radius: inherit; color: #252525; pointer-events: none; }
 .activity-album-top { min-height: 84px; display: flex; align-items: center; gap: 20px; }
