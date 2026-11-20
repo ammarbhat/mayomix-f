@@ -186,7 +186,13 @@ function ActivityPage() {
   const [sent, setSent] = useState([])
   const [connections, setConnections] = useState([])
   const [activeConnectionTab, setActiveConnectionTab] = useState('requests')
-  const [connectionsExpanded, setConnectionsExpanded] = useState(false)
+  const [connectionsExpanded, setConnectionsExpanded] = useState(() => {
+    try {
+      return window.sessionStorage.getItem('mayomix.activity.connections-expanded') === 'true'
+    } catch {
+      return false
+    }
+  })
   const [activity, setActivity] = useState([])
   const [pendingError, setPendingError] = useState('')
   const [sentError, setSentError] = useState('')
@@ -267,45 +273,57 @@ function ActivityPage() {
     if (window.matchMedia('(max-width: 760px)').matches) window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
+  function toggleConnections() {
+    const nextExpanded = !connectionsExpanded
+    setConnectionsExpanded(nextExpanded)
+    try {
+      window.sessionStorage.setItem('mayomix.activity.connections-expanded', String(nextExpanded))
+    } catch {
+      // Keep the control usable when browser storage is unavailable.
+    }
+  }
+
   return (
     <main className="activity-page">
       <AppHeader />
       <div className="activity-workspace">
         <section className={`activity-connections-panel${connectionsExpanded ? ' is-expanded' : ''}`} aria-label="Connections">
           <h1>Connections</h1>
-          <button className="activity-connections-toggle" type="button" aria-expanded={connectionsExpanded} aria-controls="mobile-connections-content" onClick={() => setConnectionsExpanded((expanded) => !expanded)}>
+          <button className="activity-connections-toggle" type="button" aria-expanded={connectionsExpanded} aria-controls="mobile-connections-content" onClick={toggleConnections}>
             <span>Connections</span>
             {!connectionsExpanded && <span className="activity-connections-count">({pending.length})</span>}
             <span className="activity-connections-chevron" aria-hidden="true" />
           </button>
           <div id="mobile-connections-content" className={`activity-connections-content${connectionsExpanded ? ' is-expanded' : ''}`}>
-            <div className="connection-tabs" role="group" aria-label="Connection lists">
-              {[['requests', 'Requests'], ['sent', 'Sent'], ['connected', 'Connected']].map(([tab, label]) => <button key={tab} id={`connection-tab-${tab}`} className={activeConnectionTab === tab ? 'is-active' : ''} type="button" aria-pressed={activeConnectionTab === tab} aria-controls="connection-tab-panel" onClick={() => setActiveConnectionTab(tab)}>{label}</button>)}
-            </div>
-            <section className="connection-group" id="connection-tab-panel" role="tabpanel" aria-labelledby={`connection-tab-${activeConnectionTab}`} aria-label={`${activeConnectionTab} connections`}>
-              <div className="connection-list" aria-busy={loading}>
-                {loading && <p className="activity-empty">Loading {activeConnectionTab === 'requests' ? 'requests' : activeConnectionTab === 'sent' ? 'sent requests' : 'connections'}…</p>}
-                {!loading && activeConnectionTab === 'requests' && pendingError && <p className="activity-empty is-error" role="alert">{pendingError}</p>}
-                {!loading && activeConnectionTab === 'sent' && sentError && <p className="activity-empty is-error" role="alert">{sentError}</p>}
-                {!loading && activeConnectionTab === 'connected' && connectionsError && <p className="activity-empty is-error" role="alert">{connectionsError}</p>}
-                {!loading && activeConnectionTab === 'requests' && !pendingError && pending.length === 0 && <p className="activity-empty">No requests</p>}
-                {!loading && activeConnectionTab === 'sent' && !sentError && sent.length === 0 && <p className="activity-empty">No sent requests</p>}
-                {!loading && activeConnectionTab === 'connected' && !connectionsError && connections.length === 0 && <p className="activity-empty">No connections yet</p>}
-                {!loading && activeConnectionTab === 'requests' && pending.map((connection, index) => {
-                  const id = connection.con_id ?? connection.connection_id ?? connection.id ?? `pending-${index}`
-                  return <ConnectionCard key={id} connection={connection} incoming section="requests" onAccept={(connectionId) => updateConnection(connectionId, 'accept', 'requests')} onDelete={(connectionId, person, item) => requestConnectionRemoval(connectionId, 'requests', person, item)} busy={busyId === id} />
-                })}
-                {!loading && activeConnectionTab === 'sent' && sent.map((connection, index) => {
-                  const id = connection.con_id ?? connection.connection_id ?? connection.id ?? `sent-${index}`
-                  return <ConnectionCard key={id} connection={connection} incoming={false} section="sent" onDelete={(connectionId, person, item) => requestConnectionRemoval(connectionId, 'sent', person, item)} busy={busyId === id} />
-                })}
-                {!loading && activeConnectionTab === 'connected' && connections.map((connection, index) => {
-                  const id = connection.con_id ?? connection.connection_id ?? connection.id ?? `connected-${index}`
-                  return <ConnectionCard key={id} connection={connection} incoming={false} section="connected" onDelete={(connectionId, person, item) => requestConnectionRemoval(connectionId, 'connected', person, item)} busy={busyId === id} />
-                })}
+            <div className="activity-connections-inner">
+              <div className={`connection-tabs is-${activeConnectionTab}-active`} role="group" aria-label="Connection lists">
+                {[['requests', 'Requests'], ['sent', 'Sent'], ['connected', 'Connected']].map(([tab, label]) => <button key={tab} id={`connection-tab-${tab}`} className={activeConnectionTab === tab ? 'is-active' : ''} type="button" aria-pressed={activeConnectionTab === tab} aria-controls="connection-tab-panel" onClick={() => setActiveConnectionTab(tab)}>{label}</button>)}
               </div>
-            </section>
-            {actionError && <p className="activity-action-error" role="alert">{actionError}</p>}
+              <section className="connection-group" key={activeConnectionTab} id="connection-tab-panel" role="tabpanel" aria-labelledby={`connection-tab-${activeConnectionTab}`} aria-label={`${activeConnectionTab} connections`}>
+                <div className="connection-list" aria-busy={loading}>
+                  {loading && <p className="activity-empty">Loading {activeConnectionTab === 'requests' ? 'requests' : activeConnectionTab === 'sent' ? 'sent requests' : 'connections'}…</p>}
+                  {!loading && activeConnectionTab === 'requests' && pendingError && <p className="activity-empty is-error" role="alert">{pendingError}</p>}
+                  {!loading && activeConnectionTab === 'sent' && sentError && <p className="activity-empty is-error" role="alert">{sentError}</p>}
+                  {!loading && activeConnectionTab === 'connected' && connectionsError && <p className="activity-empty is-error" role="alert">{connectionsError}</p>}
+                  {!loading && activeConnectionTab === 'requests' && !pendingError && pending.length === 0 && <p className="activity-empty">No requests</p>}
+                  {!loading && activeConnectionTab === 'sent' && !sentError && sent.length === 0 && <p className="activity-empty">No sent requests</p>}
+                  {!loading && activeConnectionTab === 'connected' && !connectionsError && connections.length === 0 && <p className="activity-empty">No connections yet</p>}
+                  {!loading && activeConnectionTab === 'requests' && pending.map((connection, index) => {
+                    const id = connection.con_id ?? connection.connection_id ?? connection.id ?? `pending-${index}`
+                    return <ConnectionCard key={id} connection={connection} incoming section="requests" onAccept={(connectionId) => updateConnection(connectionId, 'accept', 'requests')} onDelete={(connectionId, person, item) => requestConnectionRemoval(connectionId, 'requests', person, item)} busy={busyId === id} />
+                  })}
+                  {!loading && activeConnectionTab === 'sent' && sent.map((connection, index) => {
+                    const id = connection.con_id ?? connection.connection_id ?? connection.id ?? `sent-${index}`
+                    return <ConnectionCard key={id} connection={connection} incoming={false} section="sent" onDelete={(connectionId, person, item) => requestConnectionRemoval(connectionId, 'sent', person, item)} busy={busyId === id} />
+                  })}
+                  {!loading && activeConnectionTab === 'connected' && connections.map((connection, index) => {
+                    const id = connection.con_id ?? connection.connection_id ?? connection.id ?? `connected-${index}`
+                    return <ConnectionCard key={id} connection={connection} incoming={false} section="connected" onDelete={(connectionId, person, item) => requestConnectionRemoval(connectionId, 'connected', person, item)} busy={busyId === id} />
+                  })}
+                </div>
+              </section>
+              {actionError && <p className="activity-action-error" role="alert">{actionError}</p>}
+            </div>
           </div>
         </section>
         <section className="activity-feed-panel" aria-label="Activity" aria-busy={loading}>
