@@ -563,20 +563,33 @@ export async function cacheProfileArtwork(username, imageUrls) {
 
 export async function getAlbumTracklist(mbid, album) {
   return queryClient.fetchQuery({
-    queryKey: ['album', mbid, 'tracklist-v2'],
+    queryKey: ['album', mbid, 'tracklist-v3'],
     staleTime: QUERY_FRESHNESS.albumMetadata,
+    retry: false,
     queryFn: async () => {
       const releases = album?.releases || album?.meta?.releases || []
       const releaseId = releases.find((release) => release.id)?.id
       if (!releaseId) return []
 
-      const payload = await apiRequest(`/albums/${encodeURIComponent(releaseId)}/tracklist`, { cache: false })
-      if (Array.isArray(payload)) return payload
-      if (!Array.isArray(payload?.media)) return []
+      let lastError
+      for (let attempt = 0; attempt < 4; attempt += 1) {
+        if (attempt > 0) await new Promise((resolve) => setTimeout(resolve, 1000))
+        try {
+          const payload = await apiRequest(`/albums/${encodeURIComponent(releaseId)}/tracklist`, { cache: false })
+          const tracks = Array.isArray(payload)
+            ? payload
+            : Array.isArray(payload?.media)
+              ? payload.media.flatMap((medium) => (Array.isArray(medium.tracks) ? medium.tracks : []))
+              : []
+          if (tracks.length) return tracks
+          lastError = new Error('Tracklist response was empty.')
+        } catch (error) {
+          lastError = error
+        }
+      }
 
-      return payload.media.flatMap((medium) => (
-        Array.isArray(medium.tracks) ? medium.tracks : []
-      ))
+      if (lastError) throw lastError
+      return []
     },
   })
 }
