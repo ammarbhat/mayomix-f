@@ -305,7 +305,7 @@ function SearchPage() {
     <main className="search-page">
       <AppHeader alwaysShowMobileNavigation />
       <section className={`search-workspace${expanded ? ' is-expanded' : ''}`}>
-        <form className={`main-search-form${expanded ? ' is-expanded' : ''}`} onSubmit={handleSubmit}>
+        <form className={`main-search-form${expanded ? ' is-expanded' : ''}`} onSubmit={handleSubmit} noValidate>
           <input
             ref={inputRef}
             aria-label="Search albums and users"

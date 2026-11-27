@@ -115,7 +115,7 @@ function MobileProfileEditor({
       </section>
       <div className="mobile-profile-field"><label htmlFor="mobile-edit-name">Name</label><input id="mobile-edit-name" value={profile.name} onChange={(event) => setProfile((current) => ({ ...current, name: event.target.value }))} autoComplete="name" /></div>
       <div className="mobile-profile-field"><label htmlFor="mobile-edit-username">Username</label><input id="mobile-edit-username" value={profile.username} onChange={(event) => setProfile((current) => ({ ...current, username: event.target.value }))} autoComplete="username" /></div>
-      <div className="mobile-profile-field mobile-profile-bio"><label htmlFor="mobile-edit-bio">Bio</label><textarea id="mobile-edit-bio" maxLength={100} value={profile.bio} onChange={(event) => setProfile((current) => ({ ...current, bio: event.target.value }))} /><small>{profile.bio.length}/100</small></div>
+      <div className="mobile-profile-field mobile-profile-bio"><label htmlFor="mobile-edit-bio">Bio</label><textarea className="resize-none" id="mobile-edit-bio" maxLength={100} value={profile.bio} onChange={(event) => setProfile((current) => ({ ...current, bio: event.target.value }))} /><small>{profile.bio.length}/100</small></div>
       <section className="mobile-profile-ranked-summary">
         <h2>Top Genres</h2>
         <div className="mobile-summary-rank-list" aria-label="Top genres">
@@ -429,7 +429,7 @@ function EditProfilePage({ embedded = false }) {
         </div>
       </section>
       <div className="edit-field-row"><label htmlFor="edit-name">Name</label><input id="edit-name" value={profile.name} onChange={(event) => setProfile({ ...profile, name: event.target.value })} required /></div>
-      <div className="edit-field-row edit-bio-row"><label htmlFor="edit-bio">Bio</label><textarea id="edit-bio" maxLength={100} value={profile.bio} onChange={(event) => setProfile({ ...profile, bio: event.target.value })} /><small>{profile.bio.length}/100</small></div>
+      <div className="edit-field-row edit-bio-row"><label htmlFor="edit-bio">Bio</label><textarea className="resize-none" id="edit-bio" maxLength={100} value={profile.bio} onChange={(event) => setProfile({ ...profile, bio: event.target.value })} /><small>{profile.bio.length}/100</small></div>
       <section className="edit-ranked-section"><h2>Top Genres</h2><div className="edit-ranked-controls"><RankedList title="Top genres" items={genres} onRemove={(index) => setGenres((items) => items.filter((_, i) => i !== index))} onReorder={(from, to) => reorder(setGenres, genres, from, to)} /><button className="edit-picker-button" type="button" onClick={() => setGenreMenu((open) => !open)} aria-expanded={genreMenu}>Select Genres</button>
         {genreMenu && <div className="edit-genre-menu" role="group" aria-label="Available genres">{GENRES.filter((genre) => !genres.some((entry) => entry.title === genre)).map((genre) => <button type="button" key={genre} disabled={genres.length >= 3} onClick={() => addGenre(genre)}>{genre}</button>)}</div>}
       </div></section>

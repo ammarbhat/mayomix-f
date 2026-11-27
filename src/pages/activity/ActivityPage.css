@@ -107,6 +107,7 @@
     background: #5d5d5d;
   }
   .connection-list .activity-empty { color: #fff; }
+  .connection-list,.activity-feed { scrollbar-color: #888 #5d5d5d; scrollbar-width: thin; }
   .connection-list::-webkit-scrollbar,
   .activity-feed::-webkit-scrollbar { width: 20px; }
   .connection-list::-webkit-scrollbar-track,

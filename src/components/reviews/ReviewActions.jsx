@@ -87,7 +87,7 @@ function ReviewActions({ review, token, onSaved, onDeleted }) {
     }}>
       {dialogMode === 'edit' && <form className="review-actions-edit" onSubmit={saveReview} noValidate>
         <button className="review-actions-close" type="button" aria-label="Close edit review" onClick={closeDialog}><img src="/images/close-button.png" alt="" /></button>
-        <textarea maxLength={400} aria-label="Your review" value={reviewText} onChange={(event) => setReviewText(event.target.value)} />
+        <textarea className="resize-none" maxLength={400} aria-label="Your review" value={reviewText} onChange={(event) => setReviewText(event.target.value)} />
         <div className="review-actions-edit-footer">
           <div className="review-actions-rating" role="group" aria-label={`Rating: ${rating} out of 10`}>
             {Array.from({ length: 5 }, (_, index) => {

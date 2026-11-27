@@ -4,6 +4,7 @@ import LoginPage from '../pages/auth/LoginPage.jsx'
 import ProfilePage from '../pages/profile/ProfilePage.jsx'
 import SearchPage from '../pages/search/SearchPage.jsx'
 import UserReviewsPage from '../pages/reviews/UserReviewsPage.jsx'
+import AlbumReviewsPage from '../pages/reviews/AlbumReviewsPage.jsx'
 import AlbumPage from '../pages/albums/AlbumPage.jsx'
 import ActivityPage from '../pages/activity/ActivityPage.jsx'
 import TastePage from '../pages/taste/TastePage.jsx'
@@ -25,6 +26,7 @@ function App() {
       <Route path="/users/:username/reviews" element={<UserReviewsPage />} />
       <Route path="/search" element={<SearchPage />} />
       <Route path="/albums/:mbid" element={<AlbumPage />} />
+      <Route path="/albums/:mbid/reviews" element={<AlbumReviewsPage />} />
       <Route path="/activity" element={<ActivityPage />} />
       <Route path="/taste" element={<TastePage />} />
       <Route path="/edit-profile" element={<EditProfilePage />} />

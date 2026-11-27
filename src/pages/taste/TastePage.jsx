@@ -127,7 +127,7 @@ function SearchPanel({ token, draft, ratings, onAdd, mobileTargetSection, onClos
 
   return (
     <section className={`taste-search-panel${mobileTargetSection ? ` taste-inline-search${mobileTargetSection.kind === 'album' ? ' taste-inline-search-albums' : ''}` : ''}`} aria-label={mobileTargetSection ? `Search ${mobileTargetSection.kind === 'album' ? 'albums' : 'songs'} for ${mobileTargetSection.title}` : 'Find music'}>
-      <form className="taste-search-form" onSubmit={submit}>
+      <form className="taste-search-form" onSubmit={submit} noValidate>
         <label className="visually-hidden" htmlFor={inputId}>Search {mode === 'album' ? 'albums' : 'songs'}</label>
         <input id={inputId} ref={inputRef} value={query} onChange={(event) => setQuery(event.target.value)} onPointerDown={scrollSearchSectionIntoView} onFocus={scrollSearchSectionIntoView} placeholder={mobileTargetSection ? `Search ${mode === 'album' ? 'albums' : 'songs'}` : 'Search music'} autoComplete="off" />
         {query && <button type="button" className="taste-search-clear" aria-label="Clear search" onClick={() => { setQuery(''); resetMusicSearch(); setSubmitted(false); inputRef.current?.focus() }}>×</button>}

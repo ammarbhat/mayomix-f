@@ -117,9 +117,8 @@
 .search-tabs button { position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; padding: 8px 18px; border: 0; border-radius: 25px; background: transparent; color: #202020; font-size: 24px; cursor: pointer; transition: color .18s ease; }
 .search-tabs button.is-active { color: #202020; }
 .expanded-search-panel button:focus-visible { outline: 2px solid #171717; outline-offset: 2px; }
-.search-results { width: min(100%, 840px); min-height: 0; flex: 1; display: grid; align-content: start; gap: 9px; margin: 0 auto; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; -ms-overflow-style: none; }
-.top-rated-list::-webkit-scrollbar,
-.search-results::-webkit-scrollbar { display: none; width: 0; height: 0; }
+.search-results { width: min(100%, 840px); min-height: 0; flex: 1; display: grid; align-content: start; gap: 9px; margin: 0 auto; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-color: #8c8c8c #4d4d4d; scrollbar-width: thin; }
+.top-rated-list { scrollbar-color: #8c8c8c #4d4d4d; scrollbar-width: thin; }
 .search-hint,
 .search-results .search-message { color: #626262; }
 .search-result-card { min-width: 0; min-height: 121px; display: flex; align-items: center; gap: 18px; padding: 11px; border-radius: 15px; background: #565656; color: #f4f4f4; text-decoration: none; transition: background .16s ease; }

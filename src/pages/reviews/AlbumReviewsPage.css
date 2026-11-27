@@ -1,0 +1,135 @@
+.album-reviews-page {
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: #222;
+  background: #5e5e5e;
+}
+
+.album-reviews-wrap {
+  width: 100%;
+  height: 0;
+  min-height: 0;
+  flex: 1;
+  padding: 14px clamp(20px, 3.8vw, 50px);
+}
+
+.album-reviews-board {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 16px;
+  border-radius: 18px;
+  background: #fff;
+}
+
+.album-reviews-heading {
+  position: relative;
+  width: min(100%, 775px);
+  flex: 0 0 auto;
+  margin: 0 auto 18px;
+  padding: 0 44px 4px;
+  border-bottom: 1px solid #111;
+  text-align: center;
+}
+
+.album-reviews-heading h1 { margin: 0; color: #222; font-size: 30px; font-weight: 500; line-height: 1.25; }
+.album-reviews-back { display: none; }
+.album-reviews-back:focus-visible { outline: 2px solid #111; outline-offset: 2px; }
+
+.album-reviews-loading { min-height: 220px; flex: 1; display: grid; place-items: center; }
+.album-reviews-list { min-height: 0; flex: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; align-items: start; gap: 18px 24px; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; }
+
+.album-review-card {
+  position: relative;
+  min-width: 0;
+  padding: 14px 17px 16px;
+  border-radius: 17px;
+  background: #b7e7af;
+  color: #4b4b4b;
+}
+
+.album-review-card .review-actions { position: absolute; top: 10px; right: 13px; }
+.album-review-card-top { display: flex; align-items: center; gap: 12px; min-width: 0; padding-right: 28px; }
+.album-review-card-top > span { overflow: hidden; color: #4b4b4b; text-overflow: ellipsis; white-space: nowrap; font-size: 16px; line-height: 1.4; }
+.album-review-card-rating { --rating-vinyl-size: 18px; --rating-vinyl-gap: 3px; flex: 0 0 auto; }
+.album-review-card > p { margin: 12px 0 0; color: #4b4b4b; font-size: 16px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+.album-review-compose-trigger {
+  min-height: 44px;
+  margin: 0 0 14px;
+  padding: 8px 16px;
+  border: 0;
+  border-radius: 13px;
+  background: #252525;
+  color: #eee;
+  cursor: pointer;
+  font: inherit;
+}
+
+.album-review-compose-trigger:hover { background: #333; }
+.album-review-compose-trigger:focus-visible,.album-reviews-post:focus-visible,.album-reviews-vinyl:focus-visible { outline: 2px solid #111; outline-offset: 3px; }
+
+.album-reviews-composer {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0 0 14px;
+  padding: 16px;
+  border: 1px solid #aaa;
+  border-radius: 16px;
+  background: #dedede;
+}
+
+.album-reviews-composer textarea {
+  width: 100%;
+  min-height: 128px;
+  padding: 8px;
+  resize: none;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #222;
+  font: inherit;
+  line-height: 1.45;
+}
+
+.album-reviews-composer textarea:focus-visible { outline: 2px solid #555; }
+.album-reviews-composer-footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.album-reviews-rating { display: flex; align-items: center; gap: 4px; }
+.album-reviews-vinyl { position: relative; width: 32px; height: 32px; padding: 0; overflow: hidden; border: 0; border-radius: 50%; background: transparent; cursor: pointer; }
+.album-reviews-vinyl img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.album-reviews-vinyl-empty { opacity: .23; }
+.album-reviews-vinyl.is-full .album-reviews-vinyl-empty,.album-reviews-vinyl.is-half .album-reviews-vinyl-empty { opacity: 0; }
+.album-reviews-vinyl-fill.is-half { width: 50%; right: auto; object-fit: fill; }
+.album-reviews-post { min-width: 88px; padding: 8px 22px; border: 0; border-radius: 20px; background: #aaa; color: #111; cursor: pointer; font: inherit; }
+.album-reviews-post:disabled { opacity: .6; cursor: wait; }
+.album-reviews-notice,.album-reviews-message { margin: 0 0 14px; color: #626262; text-align: center; }
+.album-reviews-message { padding: 24px; }
+.album-reviews-message.is-error { color: #a52828; }
+
+@media (max-width: 760px) {
+  .album-reviews-wrap { padding: 10px 14px calc(78px + env(safe-area-inset-bottom)); }
+  .album-reviews-board { padding: 14px; border-radius: 14px; }
+  .album-reviews-heading { margin-bottom: 18px; }
+  .album-reviews-heading h1 { font-size: 25px; }
+  .album-reviews-back { position: absolute; top: 0; left: 0; width: 36px; height: 32px; display: grid; place-items: center; color: #222; }
+  .album-reviews-back svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .album-reviews-list { grid-template-columns: minmax(0, 1fr); gap: 12px; padding-right: 2px; }
+  .album-review-card { padding: 11px 12px 13px; border-radius: 13px; }
+  .album-review-card-top { padding-right: 28px; }
+  .album-review-card-top > span { font-size: 16px; }
+  .album-review-card-rating { --rating-vinyl-size: 18px; --rating-vinyl-gap: 3px; }
+  .album-review-card > p { margin-top: 14px; font-size: 16px; }
+  .album-review-compose-trigger { margin-left: 8px; }
+  .album-reviews-composer { margin-right: 8px; margin-left: 8px; }
+}
+
+@media (max-width: 420px) {
+  .album-review-card-top { gap: 10px; }
+}

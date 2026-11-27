@@ -149,7 +149,8 @@ The application uses React Router for client-side navigation.
 | `/users/:username` | Public user profile |
 | `/users/:username/reviews` | User review history |
 | `/search` | Search users and music |
-| `/albums/:mbid` | Album details and reviews |
+| `/albums/:mbid` | Album details and tracklist |
+| `/albums/:mbid/reviews` | Album review history and review composer |
 | `/activity` | Social activity and connection requests |
 | `/taste` | Manage personal taste lists |
 | `/edit-profile` | Edit profile information |

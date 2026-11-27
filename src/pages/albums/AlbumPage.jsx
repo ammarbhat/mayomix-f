@@ -1,29 +1,20 @@
-import { useEffect, useState } from 'react'
-import { useParams } from 'react-router'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { Link, useParams } from 'react-router'
 import AppHeader from '../../components/layout/AppHeader.jsx'
-import { apiRequest, clearStoredToken, createAlbumReview, getAlbumDetails, getAlbumReviews, getStoredToken, getUserReviews, getAlbumTracklist, itemDetails } from '../../api/api.js'
-import RatingVinyls from '../../components/ratings/RatingVinyls.jsx'
+import { clearStoredToken, getAlbumDetails, getStoredToken, getAlbumTracklist, itemDetails } from '../../api/api.js'
 import MetadataBuffering from '../../components/feedback/MetadataBuffering.jsx'
-import ReviewActions from '../../components/reviews/ReviewActions.jsx'
 import './AlbumPage.css'
 
 function AlbumPage() {
   const { mbid } = useParams()
   const token = getStoredToken()
   const [album, setAlbum] = useState(null)
-  const [reviews, setReviews] = useState([])
   const [loading, setLoading] = useState(true)
   const [tracklistLoading, setTracklistLoading] = useState(true)
   const [error, setError] = useState('')
-  const [reviewsError, setReviewsError] = useState('')
-  const [composerOpen, setComposerOpen] = useState(false)
-  const [reviewCheck, setReviewCheck] = useState('checking')
-  const [ownReview, setOwnReview] = useState(null)
-  const [currentUsername, setCurrentUsername] = useState('')
-  const [reviewText, setReviewText] = useState('')
-  const [rating, setRating] = useState(0)
-  const [posting, setPosting] = useState(false)
-  const [notice, setNotice] = useState('')
+  const [tracklistExpanded, setTracklistExpanded] = useState(false)
+  const [tracklistHeights, setTracklistHeights] = useState(null)
+  const tracklistRef = useRef(null)
 
   useEffect(() => {
     if (!token) { window.location.replace('/login'); return undefined }
@@ -33,18 +24,10 @@ function AlbumPage() {
       setLoading(true)
       setTracklistLoading(true)
       setError('')
-      setReviewCheck('checking')
-      setOwnReview(null)
-      setCurrentUsername('')
-      setComposerOpen(false)
+      setTracklistExpanded(false)
+      setTracklistHeights(null)
       try {
-        const [detailsResult, reviewsResult, profileResult] = await Promise.allSettled([
-          getAlbumDetails(mbid, token),
-          getAlbumReviews(mbid, token),
-          apiRequest('/users/me', { token }),
-        ])
-        if (detailsResult.status === 'rejected') throw detailsResult.reason
-        const details = detailsResult.value
+        const details = await getAlbumDetails(mbid, token)
         if (cancelled) return
         setAlbum(details)
         setLoading(false)
@@ -57,39 +40,6 @@ function AlbumPage() {
           .finally(() => {
             if (!cancelled) setTracklistLoading(false)
           })
-        if (reviewsResult.status === 'fulfilled') {
-          setReviews(reviewsResult.value)
-          setReviewsError('')
-        } else {
-          setReviews([])
-          setReviewsError(reviewsResult.reason?.message || 'Reviews could not be loaded.')
-        }
-        if (profileResult.status === 'fulfilled') {
-          try {
-            const username = profileResult.value.username
-            setCurrentUsername(username)
-            let matchingReview = null
-            let offset = 0
-            const pageSize = 29
-            while (!matchingReview) {
-              const ownReviews = await getUserReviews(username, token, pageSize, offset).catch((reviewError) => {
-                if (reviewError.status === 404 || /404|not found/i.test(reviewError.message)) return []
-                throw reviewError
-              })
-              if (cancelled) return
-              matchingReview = ownReviews.find((review) => String(review.mbid || review.album_mbid || review.album?.mbid || '') === String(mbid)) || null
-              if (ownReviews.length < pageSize) break
-              offset += pageSize
-            }
-            setOwnReview(matchingReview)
-            setReviewCheck(matchingReview ? 'reviewed' : 'available')
-            if (!matchingReview && window.matchMedia('(max-width: 760px)').matches) setComposerOpen(true)
-          } catch {
-            if (!cancelled) setReviewCheck('error')
-          }
-        } else {
-          setReviewCheck('error')
-        }
       } catch (requestError) {
         if (!cancelled) {
           if (/401|unauthorized|unauthenticated|not authenticated|credentials/i.test(requestError.message)) {
@@ -108,39 +58,6 @@ function AlbumPage() {
     return () => { cancelled = true }
   }, [mbid, token])
 
-  async function submitReview(event) {
-    event.preventDefault()
-    if (!reviewText.trim()) { setNotice('Write a few words about the album first.'); return }
-    if (!rating) { setNotice('Choose a vinyl rating first.'); return }
-    setPosting(true)
-    setNotice('')
-    try {
-      await createAlbumReview(mbid, reviewText.trim(), rating, token)
-      const updated = await getAlbumReviews(mbid, token)
-      setReviews(updated)
-      setReviewCheck('reviewed')
-      setReviewText('')
-      setComposerOpen(false)
-      setNotice('Your review was posted.')
-    } catch (requestError) {
-      setNotice(/409|already/i.test(requestError.message) ? 'You have already reviewed this album.' : requestError.message || 'Could not post your review.')
-    } finally { setPosting(false) }
-  }
-
-  function updateOwnReview(updated) {
-    const sameReview = (candidate) => String(candidate.id || candidate.review_id) === String(updated.id || updated.review_id)
-    setOwnReview(updated)
-    setReviews((current) => current.map((review) => sameReview(review) ? updated : review))
-  }
-
-  function removeOwnReview(removed) {
-    const sameReview = (candidate) => String(candidate.id || candidate.review_id) === String(removed.id || removed.review_id)
-    setReviews((current) => current.filter((review) => !sameReview(review)))
-    setOwnReview(null)
-    setReviewCheck('available')
-    setNotice('Your review was deleted.')
-  }
-
   const details = itemDetails(album || {})
   const title = details.title && details.title !== mbid ? details.title : 'Album'
   const artistCredits = album?.['artist-credit'] || album?.artist_credit || album?.meta?.['artist-credit'] || album?.meta?.artist_credit || details['artist-credit'] || details.artist_credit || []
@@ -154,9 +71,42 @@ function AlbumPage() {
   const year = album?.['first-release-date']?.slice(0, 4) || album?.year || ''
   const genre = (album?.genres?.[0]?.name || 'Pop').replace(/\b[a-z]/g, (letter) => letter.toUpperCase())
   const tracks = album?.tracks || album?.tracklist || album?.media?.flatMap((medium) => medium.tracks || []) || []
-  const displayedReviews = [...reviews]
-  if (ownReview && !displayedReviews.some((review) => String(review.id || review.review_id) === String(ownReview.id || ownReview.review_id))) displayedReviews.push(ownReview)
   const albumMetadataLoading = loading || tracklistLoading
+  const hasTracklistDisclosure = tracks.length > 13
+  const tracklistId = `tracklist-${mbid}`
+
+  useLayoutEffect(() => {
+    const list = tracklistRef.current
+    if (!list || tracks.length <= 13) {
+      setTracklistHeights(null)
+      return undefined
+    }
+
+    let frame = 0
+    const measure = () => {
+      const items = list.querySelectorAll('li')
+      if (items.length <= 13) return
+      const listTop = list.getBoundingClientRect().top
+      const collapsed = Math.ceil(items[12].getBoundingClientRect().bottom - listTop)
+      const expanded = Math.ceil(list.scrollHeight)
+      setTracklistHeights((current) => current?.collapsed === collapsed && current?.expanded === expanded ? current : { collapsed, expanded })
+    }
+    const queueMeasure = () => {
+      window.cancelAnimationFrame(frame)
+      frame = window.requestAnimationFrame(measure)
+    }
+    measure()
+    const observer = new ResizeObserver(queueMeasure)
+    observer.observe(list)
+    return () => {
+      window.cancelAnimationFrame(frame)
+      observer.disconnect()
+    }
+  }, [tracks])
+
+  const tracklistFrameStyle = hasTracklistDisclosure && tracklistHeights
+    ? { height: `${tracklistExpanded ? tracklistHeights.expanded : tracklistHeights.collapsed}px` }
+    : undefined
 
   return <main className="album-page">
       <AppHeader />
@@ -169,48 +119,20 @@ function AlbumPage() {
             <div className="album-cover">{details.image && <img src={details.image} alt={`${title} cover`} onError={(event) => event.currentTarget.remove()} />}</div>
             <h1>{title}</h1>
             <p>{artist}<span>{year ? `${genre} | ${year}` : ''}</span></p>
-            {reviewCheck === 'available' && <button className="album-review-toggle album-review-toggle-desktop" type="button" aria-label={composerOpen ? 'Close review composer' : 'Write an album review'} aria-expanded={composerOpen} onClick={() => { setComposerOpen((open) => !open); setNotice('') }}><span>{composerOpen ? '×' : '+'}</span></button>}
           </div>
           <div className="album-track-heading">Tracklist</div>
           <div className="album-track-panel">
-            {tracks.length ? <ol>{tracks.map((track, index) => <li key={track.id || `${track.title}-${index}`}>{track.title || track.recording?.title || `Track ${index + 1}`}</li>)}</ol> : <p className="album-no-tracks">Tracklist unavailable.</p>}
-            <span className="album-down-mark" aria-hidden="true">⌄</span>
-          </div>
-          {reviewCheck === 'available' && <button className="album-review-toggle album-review-toggle-mobile" type="button" aria-label={composerOpen ? 'Close review composer' : 'Write an album review'} aria-expanded={composerOpen} onClick={() => { setComposerOpen((open) => !open); setNotice('') }}>Reviews</button>}
-        </section>
-        {reviewCheck === 'available' && composerOpen && <form className="album-review-composer" onSubmit={submitReview}>
-            <button className="composer-close" type="button" aria-label="Close review composer" onClick={() => setComposerOpen(false)}>×</button>
-            <textarea maxLength={400} value={reviewText} onChange={(event) => setReviewText(event.target.value)} placeholder="What do you think of this album?" aria-label="Your album review" />
-            <div className="composer-footer">
-              <div className="composer-rating" aria-label="Album rating">
-                {Array.from({ length: 5 }, (_, index) => {
-                  const fullValue = (index + 1) * 2
-                  const state = rating >= fullValue ? 'full' : rating === fullValue - 1 ? 'half' : 'empty'
-                  const nextState = state === 'empty' ? 'full' : state === 'full' ? 'half' : 'reset'
-                  const nextRating = state === 'empty' ? fullValue : state === 'full' ? fullValue - 1 : 0
-                  return <button key={index} type="button" className={`vinyl-rating-button is-${state}`} aria-label={`${index + 1}${state === 'full' ? ' full' : state === 'half' ? ' half' : ''} vinyl${state === 'empty' ? '' : `, ${rating} out of 10 total`}. Click to ${nextState === 'reset' ? 'reset rating' : `set ${nextRating} out of 10`}`} aria-pressed={state !== 'empty'} onClick={() => setRating(nextRating)}>
-                    <img className="vinyl-rating-empty" src="/images/vinyl.png" alt="" />
-                    {state === 'full' && <img className="vinyl-rating-fill" src="/images/vinyl.png" alt="" />}
-                    {state === 'half' && <img className="vinyl-rating-fill is-half" src="/images/vinyl-half.png" alt="" />}
-                  </button>
-                })}
-                <span>{rating ? `${rating}/10` : 'Rate'}</span>
+            {tracks.length ? <>
+              <div id={tracklistId} className={`album-tracklist-frame${tracklistExpanded ? ' is-expanded' : ''}`} style={tracklistFrameStyle}>
+                <ol ref={tracklistRef}>{tracks.map((track, index) => <li key={track.id || `${track.title}-${index}`}>{track.title || track.recording?.title || `Track ${index + 1}`}</li>)}</ol>
               </div>
-              <button className="composer-post" type="submit" disabled={posting}>{posting ? 'POSTING…' : 'POST'}</button>
-            </div>
-            {notice && <p className="composer-notice" role="status">{notice}</p>}
-        </form>}
-        {notice && !composerOpen && <p className="album-post-notice" role="status">{notice}</p>}
-        <section className="album-reviews-panel" aria-label="Album reviews">
-          {reviewsError && <p className="album-empty-reviews" role="status">Reviews are temporarily unavailable.</p>}
-          {displayedReviews.length ? displayedReviews.map((review, index) => {
-            const isOwnReview = Boolean(ownReview && String(review.id || review.review_id) === String(ownReview.id || ownReview.review_id))
-            return <article className="album-review-entry" key={review.id || review.review_id || index}>
-            {isOwnReview && <ReviewActions review={ownReview} token={token} onSaved={updateOwnReview} onDeleted={removeOwnReview} />}
-            <span>@{review.username || review.user?.username || review.reviewer?.username || review.author?.username || (isOwnReview ? currentUsername : '') || 'listener'}</span>
-            <p>{review.review_str || review.review_text || ''}</p>
-            <RatingVinyls className="album-review-rating" size="small" rating={review.rating} />
-          </article>}) : !loading && !error ? <p className="album-empty-reviews">No reviews yet. Start the conversation.</p> : null}
+              {hasTracklistDisclosure && <button className="album-tracklist-toggle" type="button" aria-controls={tracklistId} aria-expanded={tracklistExpanded} onClick={() => setTracklistExpanded((expanded) => !expanded)}>
+                <span className="sr-only">{tracklistExpanded ? 'Show the first 13 tracks' : `Show all ${tracks.length} tracks`}</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 8 7 7 7-7" /></svg>
+              </button>}
+            </> : <p className="album-no-tracks">Tracklist unavailable.</p>}
+          </div>
+          <Link className="album-reviews-link" to={`/albums/${encodeURIComponent(mbid)}/reviews`}>Reviews</Link>
         </section>
         </>}
       </section>

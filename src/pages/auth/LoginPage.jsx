@@ -71,7 +71,7 @@ function LoginPage() {
       <section className="login-panel">
         <div className="login-form-wrap">
           <h1>{isSigningUp ? 'Create account' : 'Sign in'}</h1>
-          <form className="login-form" onSubmit={handleSubmit}>
+          <form className="login-form" onSubmit={handleSubmit} noValidate>
             {isSigningUp && <>
               <label htmlFor="login-name">Name</label>
               <input id="login-name" name="name" autoComplete="name" placeholder="Your name" required />
