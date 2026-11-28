@@ -73,7 +73,7 @@
 }
 
 .album-review-compose-trigger:hover { background: #333; }
-.album-review-compose-trigger:focus-visible,.album-reviews-post:focus-visible,.album-reviews-vinyl:focus-visible { outline: 2px solid #111; outline-offset: 3px; }
+.album-review-compose-trigger:focus-visible,.album-reviews-post:focus-visible { outline: 2px solid #111; outline-offset: 3px; }
 
 .album-reviews-composer {
   display: flex;
@@ -101,12 +101,7 @@
 
 .album-reviews-composer textarea:focus-visible { outline: 2px solid #555; }
 .album-reviews-composer-footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-.album-reviews-rating { display: flex; align-items: center; gap: 4px; }
-.album-reviews-vinyl { position: relative; width: 32px; height: 32px; padding: 0; overflow: hidden; border: 0; border-radius: 50%; background: transparent; cursor: pointer; }
-.album-reviews-vinyl img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
-.album-reviews-vinyl-empty { opacity: .23; }
-.album-reviews-vinyl.is-full .album-reviews-vinyl-empty,.album-reviews-vinyl.is-half .album-reviews-vinyl-empty { opacity: 0; }
-.album-reviews-vinyl-fill.is-half { width: 50%; right: auto; object-fit: fill; }
+.album-reviews-rating { --vinyl-picker-size: 32px; --vinyl-picker-gap: 4px; }
 .album-reviews-post { min-width: 88px; padding: 8px 22px; border: 0; border-radius: 20px; background: #aaa; color: #111; cursor: pointer; font: inherit; }
 .album-reviews-post:disabled { opacity: .6; cursor: wait; }
 .album-reviews-notice,.album-reviews-message { margin: 0 0 14px; color: #626262; text-align: center; }

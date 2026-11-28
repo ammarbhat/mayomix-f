@@ -4,6 +4,7 @@ import { apiRequest, clearStoredToken, createAlbumReview, getAlbumDetails, getAl
 import AppHeader from '../../components/layout/AppHeader.jsx'
 import MetadataBuffering from '../../components/feedback/MetadataBuffering.jsx'
 import RatingVinyls from '../../components/ratings/RatingVinyls.jsx'
+import VinylRatingPicker from '../../components/ratings/VinylRatingPicker.jsx'
 import ReviewActions from '../../components/reviews/ReviewActions.jsx'
 import './AlbumReviewsPage.css'
 
@@ -154,18 +155,7 @@ function AlbumReviewsPage() {
           {reviewCheck === 'available' && composerOpen && <form className="album-reviews-composer" onSubmit={submitReview} noValidate>
             <textarea className="resize-none" maxLength={400} value={reviewText} onChange={(event) => setReviewText(event.target.value)} placeholder="What do you think of this album?" aria-label="Your album review" />
             <div className="album-reviews-composer-footer">
-              <div className="album-reviews-rating" role="group" aria-label={`Rating: ${rating} out of 10`}>
-                {Array.from({ length: 5 }, (_, index) => {
-                  const fullValue = (index + 1) * 2
-                  const state = rating >= fullValue ? 'full' : rating === fullValue - 1 ? 'half' : 'empty'
-                  const nextRating = state === 'empty' ? fullValue : state === 'full' ? fullValue - 1 : 0
-                  return <button key={index} type="button" className={`album-reviews-vinyl is-${state}`} aria-label={`Set rating to ${nextRating} out of 10`} aria-pressed={state !== 'empty'} onClick={() => setRating(nextRating)}>
-                    <img className="album-reviews-vinyl-empty" src="/images/vinyl.png" alt="" />
-                    {state === 'full' && <img className="album-reviews-vinyl-fill" src="/images/vinyl.png" alt="" />}
-                    {state === 'half' && <img className="album-reviews-vinyl-fill is-half" src="/images/vinyl-half.png" alt="" />}
-                  </button>
-                })}
-              </div>
+              <VinylRatingPicker className="album-reviews-rating" value={rating} onChange={setRating} />
               <button className="album-reviews-post" type="submit" disabled={posting}>{posting ? 'Posting…' : 'Post'}</button>
             </div>
             {notice && <p className="album-reviews-notice" role="status">{notice}</p>}

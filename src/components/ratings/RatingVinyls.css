@@ -6,5 +6,4 @@
 .rating-vinyls .vinyl-rating img { position: absolute; top: 0; left: 0; display: block; height: 100%; object-fit: fill; }
 .rating-vinyls .vinyl-rating-base,.rating-vinyls .vinyl-rating-full { width: 100%; }
 .rating-vinyls .vinyl-rating-base { opacity: .17; }
-.rating-vinyls .is-full .vinyl-rating-base,.rating-vinyls .is-half .vinyl-rating-base { opacity: 0; }
 .rating-vinyls .vinyl-rating-half { width: 50%; }

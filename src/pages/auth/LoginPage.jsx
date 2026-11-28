@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router'
 import { signIn, signUp } from '../../api/api.js'
+import { preloadVinylAssets } from '../../app/vinylAssets.js'
 import { GENRES } from '../../data/genreOptions.js'
 import './LoginPage.css'
 
@@ -43,6 +44,7 @@ function LoginPage() {
         }, password)
       }
       await signIn(username, password)
+      void preloadVinylAssets()
       window.location.assign('/profile')
     } catch (requestError) {
       setError(requestError.message || (isSigningUp ? 'Could not create your account.' : 'Could not sign in. Check the API and your login details.'))

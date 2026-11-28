@@ -1,10 +1,45 @@
 const ALBUM_ART_CACHE = 'mayomix-album-art-v1'
 const ALBUM_ART_META_CACHE = 'mayomix-album-art-meta-v1'
 const PROFILE_ART_CACHE = 'mayomix-profile-art-v1'
+const STATIC_ASSET_CACHE = 'mayomix-static-assets-v1'
+const VINYL_ASSET_PATHS = ['/images/vinyl.png', '/images/vinyl-half.png']
 const ALBUM_ART_MAX_AGE = 30 * 24 * 60 * 60 * 1000
 const ALBUM_ART_LIMIT = 300
 const PROFILE_ART_LIMIT = 20
 const profileArtworkJobs = new Map()
+
+function isVinylAsset(request) {
+  if (request.method !== 'GET') return false
+  try {
+    const url = new URL(request.url)
+    return url.origin === self.location.origin && VINYL_ASSET_PATHS.includes(url.pathname)
+  } catch {
+    return false
+  }
+}
+
+async function cacheVinylAssets() {
+  const cache = await caches.open(STATIC_ASSET_CACHE)
+  await Promise.all(VINYL_ASSET_PATHS.map(async (path) => {
+    const request = new Request(new URL(path, self.location.origin))
+    if (await cache.match(request)) return
+    try {
+      const response = await fetch(request)
+      if (response.ok) await cache.put(request, response)
+    } catch {
+      // Asset caching is opportunistic; the browser cache remains a fallback.
+    }
+  }))
+}
+
+async function cacheVinylResponse(request) {
+  const cache = await caches.open(STATIC_ASSET_CACHE)
+  const cached = await cache.match(request)
+  if (cached) return cached
+  const response = await fetch(request)
+  if (response.ok) await cache.put(request, response.clone())
+  return response
+}
 
 function isAlbumArtwork(request) {
   if (request.method !== 'GET') return false
@@ -95,7 +130,7 @@ async function cacheProfileArtwork(urls) {
 }
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(self.skipWaiting())
+  event.waitUntil(Promise.all([self.skipWaiting(), cacheVinylAssets()]))
 })
 
 self.addEventListener('activate', (event) => {
@@ -111,6 +146,10 @@ self.addEventListener('activate', (event) => {
 })
 
 self.addEventListener('message', (event) => {
+  if (event.data?.type === 'CACHE_VINYL_ASSETS') {
+    event.waitUntil(cacheVinylAssets())
+    return
+  }
   if (event.data?.type !== 'CACHE_PROFILE_ARTWORK' || !Array.isArray(event.data.urls)) return
   const urls = [...new Set(event.data.urls.filter((url) => typeof url === 'string'
     && isAlbumArtwork(new Request(url))))]
@@ -118,6 +157,10 @@ self.addEventListener('message', (event) => {
 })
 
 self.addEventListener('fetch', (event) => {
+  if (isVinylAsset(event.request)) {
+    event.respondWith(cacheVinylResponse(event.request))
+    return
+  }
   if (!isAlbumArtwork(event.request)) return
 
   let finishCacheWrite

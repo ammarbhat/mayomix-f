@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { apiRequest } from '../../api/api.js'
+import VinylRatingPicker from '../ratings/VinylRatingPicker.jsx'
 import './ReviewActions.css'
 
 function ReviewActions({ review, token, onSaved, onDeleted }) {
@@ -89,19 +90,7 @@ function ReviewActions({ review, token, onSaved, onDeleted }) {
         <button className="review-actions-close" type="button" aria-label="Close edit review" onClick={closeDialog}><img src="/images/close-button.png" alt="" /></button>
         <textarea className="resize-none" maxLength={400} aria-label="Your review" value={reviewText} onChange={(event) => setReviewText(event.target.value)} />
         <div className="review-actions-edit-footer">
-          <div className="review-actions-rating" role="group" aria-label={`Rating: ${rating} out of 10`}>
-            {Array.from({ length: 5 }, (_, index) => {
-              const disc = index + 1
-              const state = rating >= disc * 2 ? 'full' : rating === disc * 2 - 1 ? 'half' : 'empty'
-              return <span className={`review-actions-vinyl is-${state}`} key={disc}>
-                <img className="review-actions-vinyl-base" src="/images/vinyl.png" alt="" />
-                {state === 'full' && <img className="review-actions-vinyl-fill" src="/images/vinyl.png" alt="" />}
-                {state === 'half' && <img className="review-actions-vinyl-fill is-half" src="/images/vinyl-half.png" alt="" />}
-                <button type="button" aria-label={`Rate ${disc * 2 - 1} out of 10`} aria-pressed={rating === disc * 2 - 1} onClick={() => setRating(disc * 2 - 1)} />
-                <button type="button" aria-label={`Rate ${disc * 2} out of 10`} aria-pressed={rating === disc * 2} onClick={() => setRating(disc * 2)} />
-              </span>
-            })}
-          </div>
+          <VinylRatingPicker className="review-actions-rating" value={rating} onChange={setRating} />
           <div className="review-actions-dialog-buttons"><button type="button" className="review-actions-cancel" onClick={closeDialog}>Cancel</button><button type="submit" className="review-actions-post" disabled={busy}>{busy ? 'Posting…' : 'POST'}</button></div>
         </div>
         {error && <p className="review-actions-error" role="alert">{error}</p>}
